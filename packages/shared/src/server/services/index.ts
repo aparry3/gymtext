@@ -36,6 +36,21 @@ export { createShortLinkService } from './domain/links/shortLinkService';
 export { createReferralService } from './domain/referral/referralService';
 export { createAdminAuthService } from './domain/auth/adminAuthService';
 export { createUserAuthService } from './domain/auth/userAuthService';
+// Messaging constants
+export {
+  WELCOME_MESSAGE,
+  STOP_CONFIRMATION,
+  STOP_ALREADY_INACTIVE,
+  STOP_ERROR,
+  START_REACTIVATED,
+  START_ALREADY_ACTIVE,
+  START_REQUIRES_NEW_SUB,
+  START_NO_ACCOUNT,
+  START_ERROR,
+  HELP_MESSAGE,
+  UNKNOWN_USER_MESSAGE,
+} from './orchestration/messagingConstants';
+
 // Orchestration service factory functions
 export { createDailyMessageService } from './orchestration/dailyMessageService';
 export { createWeeklyMessageService } from './orchestration/weeklyMessageService';
@@ -54,7 +69,7 @@ export { createMessagingAgentService } from './agents/messaging/messagingAgentSe
 export type { UserServiceInstance, CreateUserRequest } from './domain/user/userService';
 export type { FitnessProfileServiceInstance, ProfileUpdateResult } from './domain/user/fitnessProfileService';
 export type { OnboardingDataServiceInstance } from './domain/user/onboardingDataService';
-export type { MessageServiceInstance, IngestMessageParams, IngestMessageResult, StoreInboundMessageParams } from './domain/messaging/messageService';
+export type { MessageServiceInstance, KeywordResult, IngestMessageParams, IngestMessageResult, StoreInboundMessageParams } from './domain/messaging/messageService';
 export type { QueueServiceInstance } from './domain/messaging/queueService';
 export type { FitnessPlanServiceInstance } from './domain/training/fitnessPlanService';
 

@@ -4,7 +4,35 @@ import { inngest } from '../../../connections/inngest/client';
 import { getTwilioSecrets } from '@/server/config';
 import type { RepositoryContainer } from '../../../repositories/factory';
 import type { UserServiceInstance } from '../user/userService';
+import type { SubscriptionServiceInstance } from '../subscription/subscriptionService';
 import type { Json } from '../../../models/_types';
+import {
+  STOP_CONFIRMATION,
+  STOP_ALREADY_INACTIVE,
+  STOP_ERROR,
+  START_REACTIVATED,
+  START_ALREADY_ACTIVE,
+  START_REQUIRES_NEW_SUB,
+  START_ERROR,
+  HELP_MESSAGE,
+} from '../../orchestration/messagingConstants';
+
+// Keywords for subscription management (case-insensitive)
+const STOP_KEYWORDS = ['STOP', 'STOPALL', 'UNSUBSCRIBE', 'CANCEL', 'END', 'QUIT'];
+const START_KEYWORDS = ['START', 'UNSTOP', 'RESUME'];
+const HELP_KEYWORDS = ['HELP', 'INFO', 'SUPPORT'];
+
+function isStopCommand(message: string): boolean {
+  return STOP_KEYWORDS.includes(message.trim().toUpperCase());
+}
+
+function isStartCommand(message: string): boolean {
+  return START_KEYWORDS.includes(message.trim().toUpperCase());
+}
+
+function isHelpCommand(message: string): boolean {
+  return HELP_KEYWORDS.includes(message.trim().toUpperCase());
+}
 
 /**
  * Parameters for storing an inbound message
@@ -15,6 +43,7 @@ export interface StoreInboundMessageParams {
   to: string;
   content: string;
   twilioData?: Record<string, unknown>;
+  messageType?: string;
 }
 
 /**
@@ -29,6 +58,7 @@ export interface StoreOutboundMessageParams {
   providerMessageId?: string;
   metadata?: Record<string, unknown>;
   deliveryStatus?: MessageDeliveryStatus;
+  messageType?: string;
 }
 
 /**
@@ -40,6 +70,15 @@ export interface IngestMessageParams {
   from: string;
   to: string;
   twilioData?: Record<string, unknown>;
+}
+
+/**
+ * Result of keyword detection and handling
+ */
+export interface KeywordResult {
+  handled: boolean;
+  keyword?: 'stop' | 'start' | 'help';
+  responseMessage?: string;
 }
 
 /**
@@ -59,6 +98,13 @@ export interface IngestMessageResult {
  * Does NOT handle sending - that's the MessagingOrchestrator's job.
  */
 export interface MessageServiceInstance {
+  handleKeyword(params: {
+    user: UserWithProfile;
+    content: string;
+    from: string;
+    to: string;
+    twilioData?: Record<string, unknown>;
+  }): Promise<KeywordResult>;
   storeInboundMessage(params: StoreInboundMessageParams): Promise<Message | null>;
   storeOutboundMessage(params: StoreOutboundMessageParams): Promise<Message | null>;
   getMessages(clientId: string, limit?: number, offset?: number): Promise<Message[]>;
@@ -86,6 +132,7 @@ export interface MessageServiceInstance {
  */
 export interface MessageServiceDeps {
   user: UserServiceInstance;
+  subscription: SubscriptionServiceInstance;
 }
 
 /**
@@ -100,8 +147,85 @@ export function createMessageService(
   deps: MessageServiceDeps
 ): MessageServiceInstance {
   const instance: MessageServiceInstance = {
+    async handleKeyword(params: {
+      user: UserWithProfile;
+      content: string;
+      from: string;
+      to: string;
+      twilioData?: Record<string, unknown>;
+    }): Promise<KeywordResult> {
+      const { user, content, from, to, twilioData } = params;
+
+      if (isStopCommand(content)) {
+        await this.storeInboundMessage({
+          clientId: user.id, from, to, content, twilioData, messageType: 'keyword',
+        });
+
+        if (!user.messagingOptIn) {
+          return { handled: true, keyword: 'stop', responseMessage: STOP_ALREADY_INACTIVE };
+        }
+
+        await deps.user.updateUser(user.id, {
+          messagingOptIn: false,
+          messagingOptInDate: null,
+        });
+
+        const result = await deps.subscription.cancelSubscription(user.id);
+
+        let responseMessage: string;
+        if (result.success && result.periodEndDate) {
+          const formattedDate = result.periodEndDate.toLocaleDateString('en-US', {
+            month: 'long', day: 'numeric',
+          });
+          responseMessage = STOP_CONFIRMATION.replace('{periodEndDate}', formattedDate);
+        } else if (result.error === 'No active subscription found') {
+          responseMessage = STOP_ALREADY_INACTIVE;
+        } else {
+          responseMessage = STOP_ERROR;
+        }
+
+        return { handled: true, keyword: 'stop', responseMessage };
+      }
+
+      if (isStartCommand(content)) {
+        await this.storeInboundMessage({
+          clientId: user.id, from, to, content, twilioData, messageType: 'keyword',
+        });
+
+        await deps.user.updateUser(user.id, {
+          messagingOptIn: true,
+          messagingOptInDate: new Date(),
+        });
+
+        const result = await deps.subscription.reactivateSubscription(user.id);
+
+        let responseMessage: string;
+        if (result.success && result.reactivated) {
+          responseMessage = START_REACTIVATED;
+        } else if (result.requiresNewSubscription && result.checkoutUrl) {
+          responseMessage = START_REQUIRES_NEW_SUB.replace('{checkoutUrl}', result.checkoutUrl);
+        } else if (result.success && !result.requiresNewSubscription && !result.reactivated) {
+          responseMessage = START_ALREADY_ACTIVE;
+        } else {
+          responseMessage = START_ERROR;
+        }
+
+        return { handled: true, keyword: 'start', responseMessage };
+      }
+
+      if (isHelpCommand(content)) {
+        await this.storeInboundMessage({
+          clientId: user.id, from, to, content, twilioData, messageType: 'keyword',
+        });
+
+        return { handled: true, keyword: 'help', responseMessage: HELP_MESSAGE };
+      }
+
+      return { handled: false };
+    },
+
     async storeInboundMessage(params: StoreInboundMessageParams): Promise<Message | null> {
-      const { clientId, from, to, content, twilioData } = params;
+      const { clientId, from, to, content, twilioData, messageType = 'conversation' } = params;
 
       const message = await repos.message.create({
         clientId: clientId,
@@ -112,6 +236,7 @@ export function createMessageService(
         provider: 'twilio',
         providerMessageId: (twilioData?.MessageSid as string) || null,
         metadata: (twilioData || {}) as Json,
+        messageType,
       });
 
       return message;
@@ -127,6 +252,7 @@ export function createMessageService(
         providerMessageId,
         metadata,
         deliveryStatus = 'queued',
+        messageType = 'conversation',
       } = params;
 
       const user = await deps.user.getUser(clientId);
@@ -146,6 +272,7 @@ export function createMessageService(
         deliveryStatus,
         deliveryAttempts: deliveryStatus === 'queued' ? 0 : 1,
         lastDeliveryAttemptAt: deliveryStatus === 'queued' ? null : new Date(),
+        messageType,
       });
 
       return message;

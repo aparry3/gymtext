@@ -110,7 +110,7 @@ export function TextInputQuestion({
 
   const hasValidInput = question.required ? (isPhone ? getPhoneDigits(value).length === 10 : value.trim().length > 0) : true;
   // For phone questions, require both consent checkboxes to be checked
-  const canContinue = hasValidInput && (isPhone ? smsConsented && termsAccepted : true);
+  const canContinue = hasValidInput && (isPhone ? termsAccepted : true);
 
   return (
     <div className="flex flex-col gap-6">
@@ -162,7 +162,7 @@ export function TextInputQuestion({
               By checking this box, I agree to receive recurring automated fitness and workout text messages from GymText
               at the mobile number provided. You will receive daily workout messages. Message frequency may vary. Message
               and data rates may apply. Reply HELP for help or STOP to cancel. Your mobile information will not be shared
-              with third parties.
+              with third parties. Consent is not required to make a purchase.
             </span>
           </label>
 

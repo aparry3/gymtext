@@ -135,7 +135,7 @@ export function createServices(repos: RepositoryContainer, clients?: ExternalCli
   const workoutInstance = createWorkoutInstanceService(repos.workoutInstance);
 
   // Phase 2: Services with service deps
-  const message = createMessageService(repos, { user });
+  const message = createMessageService(repos, { user, subscription });
 
   // Lazy external-client services
   let _referral: ReferralServiceInstance | null = null;

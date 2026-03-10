@@ -182,6 +182,11 @@ export function createWeeklyMessageService(
           }
         }
 
+        if (user.messagingOptIn !== true) {
+          console.log(`[WeeklyMessageService] Skipping SMS for user ${user.id} - no SMS consent`);
+          return { success: true, userId: user.id };
+        }
+
         const queuedMessages: QueuedMessageContent[] = [{ content: breakdownMessage, mediaUrls }];
 
         // Queue the message instead of sending immediately

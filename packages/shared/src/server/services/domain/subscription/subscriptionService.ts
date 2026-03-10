@@ -39,6 +39,10 @@ export interface SubscriptionServiceInstance {
   hasActiveSubscription(userId: string): Promise<boolean>;
 }
 
+function isNonStripeSubscription(stripeSubscriptionId: string): boolean {
+  return stripeSubscriptionId.startsWith('sub_test_') || stripeSubscriptionId.startsWith('free_legacy_');
+}
+
 /**
  * Create a SubscriptionService instance with injected repositories
  * Note: Stripe client is shared (reads from env at module load)
@@ -100,6 +104,15 @@ export function createSubscriptionService(repos: RepositoryContainer): Subscript
           return { success: false, error: 'No active subscription found' };
         }
 
+        if (isNonStripeSubscription(subscription.stripeSubscriptionId)) {
+          console.log(`[SubscriptionService] Non-Stripe subscription ${subscription.stripeSubscriptionId} - skipping Stripe, updating local DB`);
+          await repos.subscription.scheduleCancellation(subscription.stripeSubscriptionId);
+          return {
+            success: true,
+            periodEndDate: new Date(subscription.currentPeriodEnd),
+          };
+        }
+
         const stripeSubscription = await stripe.subscriptions.update(subscription.stripeSubscriptionId, {
           cancel_at_period_end: true,
         });
@@ -136,11 +149,8 @@ export function createSubscriptionService(repos: RepositoryContainer): Subscript
         }
 
         const canceledAt = new Date();
-        const isLegacySubscription = subscription.stripeSubscriptionId.startsWith('free_legacy_');
-
-        if (isLegacySubscription) {
-          // Legacy subscriptions are not in Stripe - just update local DB
-          console.log(`[SubscriptionService] Legacy subscription ${subscription.stripeSubscriptionId} - skipping Stripe, updating local DB`);
+        if (isNonStripeSubscription(subscription.stripeSubscriptionId)) {
+          console.log(`[SubscriptionService] Non-Stripe subscription ${subscription.stripeSubscriptionId} - skipping Stripe, updating local DB`);
         } else {
           // Immediately cancel in Stripe (with prorated refund by default)
           await stripe.subscriptions.cancel(
@@ -181,6 +191,12 @@ export function createSubscriptionService(repos: RepositoryContainer): Subscript
         }
 
         if (subscription.status === 'cancel_pending') {
+          if (isNonStripeSubscription(subscription.stripeSubscriptionId)) {
+            console.log(`[SubscriptionService] Non-Stripe subscription ${subscription.stripeSubscriptionId} - skipping Stripe, reactivating locally`);
+            await repos.subscription.reactivate(subscription.stripeSubscriptionId);
+            return { success: true, reactivated: true, requiresNewSubscription: false };
+          }
+
           try {
             const stripeSubscription = await stripe.subscriptions.retrieve(subscription.stripeSubscriptionId);
 

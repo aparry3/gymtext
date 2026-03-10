@@ -1,16 +1,13 @@
 import { getServices } from '@/lib/context';
 import { NextRequest, NextResponse } from 'next/server';
 import twilio from 'twilio';
+import { UNKNOWN_USER_MESSAGE } from '@gymtext/shared/server';
 
-const STOP_KEYWORDS = ['STOP', 'STOPALL', 'UNSUBSCRIBE', 'CANCEL', 'END', 'QUIT'];
-const START_KEYWORDS = ['START', 'UNSTOP', 'RESUME'];
-
-function isStopCommand(message: string): boolean {
-  return STOP_KEYWORDS.includes(message.trim().toUpperCase());
-}
-
-function isStartCommand(message: string): boolean {
-  return START_KEYWORDS.includes(message.trim().toUpperCase());
+function twimlResponse(twiml: twilio.twiml.MessagingResponse): NextResponse {
+  return new NextResponse(twiml.toString(), {
+    status: 200,
+    headers: { 'Content-Type': 'text/xml' },
+  });
 }
 
 export async function POST(req: NextRequest) {
@@ -35,88 +32,31 @@ export async function POST(req: NextRequest) {
     const user = await services.user.getUserByPhone(phoneNumber);
 
     if (!user) {
-      twiml.message('Sign up now! https://www.gymtext.co/');
-      return new NextResponse(twiml.toString(), {
-        status: 200,
-        headers: { 'Content-Type': 'text/xml' },
-      });
+      twiml.message(UNKNOWN_USER_MESSAGE);
+      return twimlResponse(twiml);
     }
 
     const userWithProfile = await services.user.getUser(user.id);
 
     if (!userWithProfile) {
       twiml.message('Sorry, I had trouble loading your profile.');
-      return new NextResponse(twiml.toString(), {
-        status: 200,
-        headers: { 'Content-Type': 'text/xml' },
-      });
+      return twimlResponse(twiml);
     }
 
-    // Handle STOP/START commands (same as SMS)
-    if (isStopCommand(incomingMessage)) {
-      const result = await services.subscription.cancelSubscription(user.id);
-      
-      await services.message.storeInboundMessage({
-        clientId: user.id,
-        from,
-        to,
-        content: incomingMessage,
-        twilioData: body,
-      });
-
-      let confirmationMessage: string;
-      if (result.success && result.periodEndDate) {
-        const formattedDate = result.periodEndDate.toLocaleDateString('en-US', {
-          month: 'long',
-          day: 'numeric',
-        });
-        confirmationMessage = `You've been unsubscribed from GymText. You'll have access until ${formattedDate}. Reply START anytime to reactivate.`;
-      } else {
-        confirmationMessage = `Sorry, there was an issue. Please contact support.`;
-      }
-
+    // Handle keyword commands (STOP/START/HELP)
+    const keywordResult = await services.message.handleKeyword({
+      user: userWithProfile, content: incomingMessage, from, to, twilioData: body,
+    });
+    if (keywordResult.handled) {
       await services.messagingOrchestrator.sendImmediate(
         userWithProfile,
-        confirmationMessage,
+        keywordResult.responseMessage!,
         undefined,
-        'whatsapp'
+        'whatsapp',
+        'keyword'
       );
-
       twiml.message('');
-      return new NextResponse(twiml.toString(), {
-        status: 200,
-        headers: { 'Content-Type': 'text/xml' },
-      });
-    }
-
-    if (isStartCommand(incomingMessage)) {
-      const result = await services.subscription.reactivateSubscription(user.id);
-      
-      await services.message.storeInboundMessage({
-        clientId: user.id,
-        from,
-        to,
-        content: incomingMessage,
-        twilioData: body,
-      });
-
-      let confirmationMessage = 'Welcome back to GymText!';
-      if (result.requiresNewSubscription && result.checkoutUrl) {
-        confirmationMessage = `Your subscription has ended. Resubscribe here: ${result.checkoutUrl}`;
-      }
-
-      await services.messagingOrchestrator.sendImmediate(
-        userWithProfile,
-        confirmationMessage,
-        undefined,
-        'whatsapp'
-      );
-
-      twiml.message('');
-      return new NextResponse(twiml.toString(), {
-        status: 200,
-        headers: { 'Content-Type': 'text/xml' },
-      });
+      return twimlResponse(twiml);
     }
 
     // Ingest message for chat agent processing
@@ -129,21 +69,14 @@ export async function POST(req: NextRequest) {
     });
 
     twiml.message(result.ackMessage);
-
-    return new NextResponse(twiml.toString(), {
-      status: 200,
-      headers: { 'Content-Type': 'text/xml' },
-    });
+    return twimlResponse(twiml);
   } catch (error) {
     console.error('Error processing WhatsApp webhook:', error);
-    
+
     const MessagingResponse = twilio.twiml.MessagingResponse;
     const twiml = new MessagingResponse();
     twiml.message('Sorry, something went wrong. Please try again later.');
 
-    return new NextResponse(twiml.toString(), {
-      status: 200,
-      headers: { 'Content-Type': 'text/xml' },
-    });
+    return twimlResponse(twiml);
   }
 }
