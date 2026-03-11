@@ -21,6 +21,9 @@ export default {
         'msj-purple': '#4c1d95',
         'msj-gold': '#fbbf24',
         'msj-dark': '#1a1a1a',
+        // Next Level Basketball / Rhynia Henry theme
+        'nlb-orange': '#ea580c',
+        'nlb-dark': '#1a1a1a',
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",

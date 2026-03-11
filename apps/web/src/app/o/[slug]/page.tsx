@@ -2,8 +2,10 @@ import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { ClatcheyLandingPage } from '@/components/pages/owner-landing/ClatcheyLandingPage';
 import { MikeyLandingPage } from '@/components/pages/owner-landing/MikeyLandingPage';
+import { NextLevelLandingPage } from '@/components/pages/owner-landing/next-level-basketball';
 import './clatchey.css';
 import './mikey.css';
+import './next-level.css';
 
 interface OwnerLandingPageProps {
   params: Promise<{ slug: string }>;
@@ -18,6 +20,10 @@ const OWNER_PAGES: Record<string, { displayName: string; avatarUrl: string }> = 
   mikeyswiercz: {
     displayName: 'Mikey Swiercz',
     avatarUrl: '/coaches/mikey-swiercz/Hopkins-Cp.JPG',
+  },
+  nextlevelbasketball: {
+    displayName: 'Coach Rhynia Henry',
+    avatarUrl: '/coaches/next-level/rhynia-henry.jpg',
   },
 };
 
@@ -59,6 +65,20 @@ export async function generateMetadata({ params }: OwnerLandingPageProps): Promi
     };
   }
 
+  if (slug === 'nextlevelbasketball') {
+    return {
+      title: 'Train with Coach Rhynia Henry | Next Level Basketball x GymText',
+      description:
+        'Get elite basketball skills training from AFAA-certified trainer Rhynia Henry. Fundamentals, conditioning, and the signature FIRE Workout — delivered via SMS.',
+      openGraph: {
+        title: 'Train with Coach Rhynia Henry | Next Level Basketball x GymText',
+        description:
+          'Elite basketball skills development from certified trainer Rhynia Henry. Fundamentals-first training delivered to your phone.',
+        type: 'website',
+      },
+    };
+  }
+
   return {
     title: `Train with ${owner.displayName} | GymText`,
     description: `Get personalized training from ${owner.displayName} delivered via SMS.`,
@@ -67,12 +87,12 @@ export async function generateMetadata({ params }: OwnerLandingPageProps): Promi
 
 export default async function OwnerLandingPage({ params }: OwnerLandingPageProps) {
   const { slug } = await params;
+  const owner = OWNER_PAGES[slug];
 
-  if (!OWNER_PAGES[slug]) {
+  if (!owner) {
     notFound();
   }
 
-  // For now, only render specific coach landing pages
   if (slug === 'coachclatchey') {
     return <ClatcheyLandingPage />;
   }
@@ -81,6 +101,9 @@ export default async function OwnerLandingPage({ params }: OwnerLandingPageProps
     return <MikeyLandingPage />;
   }
 
-  // Future: Support different owner templates based on ownerType
+  if (slug === 'nextlevelbasketball') {
+    return <NextLevelLandingPage owner={owner as any} />;
+  }
+
   notFound();
 }
