@@ -34,7 +34,7 @@ export function NextLevelHero() {
 
         <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-gray-300 max-w-3xl mx-auto mb-8 md:mb-10 font-light px-2">
           Coach Rhynia Henry has been developing elite basketball skills since 2011.
-          <br className="hidden md:block" /> Now her championship-caliber training is in your pocket.
+          <br className="hidden md:block" /> Now his championship-caliber training is in your pocket.
         </p>
 
         <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">

@@ -36,14 +36,14 @@ export function NextLevelBioSection() {
             <div className="prose prose-base md:prose-lg text-gray-600 space-y-4 md:space-y-6">
               <p>
                 Since 2011, Rhynia Henry has been transforming young athletes into skilled basketball
-                players through her signature training methodology. A{' '}
-                <strong>Bolton High School and Rhodes College basketball standout</strong>, she
+                players through his signature training methodology. A{' '}
+                <strong>Bolton High School and Rhodes College basketball standout</strong>, he
                 brings elite playing experience and deep coaching knowledge to every session.
               </p>
               <p>
                 As an <strong>AFAA-certified personal trainer</strong> and CPR-certified coach,
                 Rhynia founded Next Level Basketball Training and Development with a clear mission:
-                deliver fundamental skills training that creates real, measurable improvement. Her
+                deliver fundamental skills training that creates real, measurable improvement. His
                 programs run at both the{' '}
                 <strong>Singleton Community Center and the Memphis Jewish Community Center</strong>,
                 serving athletes across the Memphis area.
@@ -51,7 +51,7 @@ export function NextLevelBioSection() {
               <p>
                 Rhynia is also the creator of{' '}
                 <strong>The FIRE Workout</strong> — a high-intensity training program that combines
-                basketball-specific conditioning with strength and speed development. Her classes are
+                basketball-specific conditioning with strength and speed development. His classes are
                 in such high demand that sessions regularly fill to capacity.
               </p>
             </div>

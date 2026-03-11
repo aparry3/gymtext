@@ -18,7 +18,7 @@ const TESTIMONIALS: Testimonial[] = [
     role: 'FIRE Workout Participant',
   },
   {
-    quote: 'My son has grown so much as a player under Coach Rhynia. Her attention to fundamentals is exactly what young athletes need.',
+    quote: 'My son has grown so much as a player under Coach Rhynia. His attention to fundamentals is exactly what young athletes need.',
     name: 'Basketball Parent',
     role: 'Singleton CC Program',
   },
