@@ -2,16 +2,16 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { ClatcheyHero } from './ClatcheyHero';
-import { ClatcheyStatsBar } from './ClatcheyStatsBar';
-import { ClatcheyBioSection } from './ClatcheyBioSection';
-import { ClatcheyPlayerShowcase } from './ClatcheyPlayerShowcase';
-import { ClatcheyProgramTracks } from './ClatcheyProgramTracks';
-import { ClatcheyCTA } from './ClatcheyCTA';
-import { ClatcheyStickyCTA } from './ClatcheyStickyCTA';
-import { ClatcheyFooter } from './ClatcheyFooter';
+import { NextLevelHero } from './NextLevelHero';
+import { NextLevelStatsBar } from './NextLevelStatsBar';
+import { NextLevelBioSection } from './NextLevelBioSection';
+import { NextLevelTestimonials } from './NextLevelTestimonials';
+import { NextLevelPrograms } from './NextLevelPrograms';
+import { NextLevelCTA } from './NextLevelCTA';
+import { NextLevelStickyCTA } from './NextLevelStickyCTA';
+import { NextLevelFooter } from './NextLevelFooter';
 
-export function ClatcheyLandingPage() {
+export function NextLevelLandingPage() {
   return (
     <div className="min-h-screen bg-white">
       {/* Navigation Overlay */}
@@ -33,14 +33,14 @@ export function ClatcheyLandingPage() {
         </Link>
       </nav>
 
-      <ClatcheyHero />
-      <ClatcheyStatsBar />
-      <ClatcheyBioSection />
-      <ClatcheyPlayerShowcase />
-      <ClatcheyProgramTracks />
-      <ClatcheyCTA />
-      <ClatcheyFooter />
-      <ClatcheyStickyCTA />
+      <NextLevelHero />
+      <NextLevelStatsBar />
+      <NextLevelBioSection />
+      <NextLevelPrograms />
+      <NextLevelTestimonials />
+      <NextLevelCTA />
+      <NextLevelFooter />
+      <NextLevelStickyCTA />
     </div>
   );
 }

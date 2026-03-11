@@ -1,11 +1,6 @@
 import Image from 'next/image';
-import type { ProgramOwner } from '@gymtext/shared/server';
 
-interface ClatcheyBioSectionProps {
-  owner: ProgramOwner;
-}
-
-export function ClatcheyBioSection({ owner }: ClatcheyBioSectionProps) {
+export function ClatcheyBioSection() {
   return (
     <section className="py-16 md:py-24 bg-white overflow-hidden">
       <div className="container mx-auto px-4">
@@ -14,11 +9,8 @@ export function ClatcheyBioSection({ owner }: ClatcheyBioSectionProps) {
             <div className="absolute -top-10 -left-10 w-40 h-40 bg-msj-purple/10 rounded-full blur-3xl"></div>
             <div className="relative rounded-2xl overflow-hidden shadow-2xl hover:scale-[1.02] transition-transform duration-500 aspect-[4/5]">
               <Image
-                src={
-                  owner.avatarUrl ||
-                  'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&h=700&fit=crop'
-                }
-                alt={owner.displayName}
+                src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&h=700&fit=crop"
+                alt="Coach Pat Clatchey"
                 fill
                 className="object-cover"
                 unoptimized

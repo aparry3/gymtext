@@ -2,16 +2,16 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { ClatcheyHero } from './ClatcheyHero';
-import { ClatcheyStatsBar } from './ClatcheyStatsBar';
-import { ClatcheyBioSection } from './ClatcheyBioSection';
-import { ClatcheyPlayerShowcase } from './ClatcheyPlayerShowcase';
-import { ClatcheyProgramTracks } from './ClatcheyProgramTracks';
-import { ClatcheyCTA } from './ClatcheyCTA';
-import { ClatcheyStickyCTA } from './ClatcheyStickyCTA';
-import { ClatcheyFooter } from './ClatcheyFooter';
+import { MikeyHero } from './MikeyHero';
+import { MikeyStatsBar } from './MikeyStatsBar';
+import { MikeyBioSection } from './MikeyBioSection';
+import { MikeyPhotoShowcase } from './MikeyPhotoShowcase';
+import { MikeyProgramTracks } from './MikeyProgramTracks';
+import { MikeyCTA } from './MikeyCTA';
+import { MikeyStickyCTA } from './MikeyStickyCTA';
+import { MikeyFooter } from './MikeyFooter';
 
-export function ClatcheyLandingPage() {
+export function MikeyLandingPage() {
   return (
     <div className="min-h-screen bg-white">
       {/* Navigation Overlay */}
@@ -33,14 +33,14 @@ export function ClatcheyLandingPage() {
         </Link>
       </nav>
 
-      <ClatcheyHero />
-      <ClatcheyStatsBar />
-      <ClatcheyBioSection />
-      <ClatcheyPlayerShowcase />
-      <ClatcheyProgramTracks />
-      <ClatcheyCTA />
-      <ClatcheyFooter />
-      <ClatcheyStickyCTA />
+      <MikeyHero />
+      <MikeyStatsBar />
+      <MikeyBioSection />
+      <MikeyPhotoShowcase />
+      <MikeyProgramTracks />
+      <MikeyCTA />
+      <MikeyFooter />
+      <MikeyStickyCTA />
     </div>
   );
 }

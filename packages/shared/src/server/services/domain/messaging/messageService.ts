@@ -10,7 +10,7 @@ import { HELP_MESSAGE } from '../../orchestration/messagingConstants';
 
 // Keywords for subscription management (case-insensitive)
 const STOP_KEYWORDS = ['STOP', 'STOPALL', 'UNSUBSCRIBE', 'CANCEL', 'END', 'QUIT'];
-const START_KEYWORDS = ['START', 'UNSTOP', 'RESUME'];
+const START_KEYWORDS = ['START', 'UNSTOP', 'RESUME', 'SUBSCRIBE'];
 const HELP_KEYWORDS = ['HELP', 'INFO', 'SUPPORT'];
 
 function isStopCommand(message: string): boolean {
