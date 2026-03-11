@@ -5,6 +5,9 @@ const nextConfig: NextConfig = {
   // Enable transpiling of shared package
   transpilePackages: ["@gymtext/shared"],
 
+  // PostHog analytics proxied via external reverse proxy at t.gymtext.co
+  // (no Next.js rewrites needed — Caddy/nginx handles it)
+
   // Exclude packages with WASM from bundling - load at runtime from node_modules
   serverExternalPackages: ["@dqbd/tiktoken"],
 

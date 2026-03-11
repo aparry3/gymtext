@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { trackCTAClicked } from '@/lib/analytics';
 
 export function CTASection() {
   return (
@@ -21,6 +22,7 @@ export function CTASection() {
         </p>
         <Link
           href="/start"
+          onClick={() => trackCTAClicked('cta', 'Get Started Today')}
           className="inline-block bg-[#1B81FF] hover:bg-[#1468CC] text-white px-10 py-5 rounded-full font-bold text-xl transition-all transform hover:scale-105 shadow-xl shadow-[#1B81FF]/30"
         >
           Get Started Today
