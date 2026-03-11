@@ -1,6 +1,5 @@
 'use client';
 
-import type { ProgramOwner } from '@gymtext/shared/server';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ClatcheyHero } from './ClatcheyHero';
@@ -12,11 +11,7 @@ import { ClatcheyCTA } from './ClatcheyCTA';
 import { ClatcheyStickyCTA } from './ClatcheyStickyCTA';
 import { ClatcheyFooter } from './ClatcheyFooter';
 
-interface ClatcheyLandingPageProps {
-  owner: ProgramOwner;
-}
-
-export function ClatcheyLandingPage({ owner }: ClatcheyLandingPageProps) {
+export function ClatcheyLandingPage() {
   return (
     <div className="min-h-screen bg-white">
       {/* Navigation Overlay */}
@@ -40,7 +35,7 @@ export function ClatcheyLandingPage({ owner }: ClatcheyLandingPageProps) {
 
       <ClatcheyHero />
       <ClatcheyStatsBar />
-      <ClatcheyBioSection owner={owner} />
+      <ClatcheyBioSection />
       <ClatcheyPlayerShowcase />
       <ClatcheyProgramTracks />
       <ClatcheyCTA />

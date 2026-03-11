@@ -1,6 +1,5 @@
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
-import { getServices } from '@/lib/context';
 import { ClatcheyLandingPage } from '@/components/pages/owner-landing/ClatcheyLandingPage';
 import './clatchey.css';
 
@@ -8,18 +7,24 @@ interface OwnerLandingPageProps {
   params: Promise<{ slug: string }>;
 }
 
+const OWNER_PAGES: Record<string, { displayName: string; avatarUrl: string }> = {
+  coachclatchey: {
+    displayName: 'Coach Pat Clatchey',
+    avatarUrl:
+      'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&h=700&fit=crop',
+  },
+};
+
 export async function generateMetadata({ params }: OwnerLandingPageProps): Promise<Metadata> {
   const { slug } = await params;
-  const services = getServices();
-  const owner = await services.programOwner.getBySlug(slug);
+  const owner = OWNER_PAGES[slug];
 
-  if (!owner || !owner.isActive) {
+  if (!owner) {
     return {
       title: 'Not Found | GymText',
     };
   }
 
-  // For now, hardcode Pat Clatchey metadata
   if (slug === 'coachclatchey') {
     return {
       title: 'Train with Coach Pat Clatchey | GymText Legend Series',
@@ -36,25 +41,20 @@ export async function generateMetadata({ params }: OwnerLandingPageProps): Promi
 
   return {
     title: `Train with ${owner.displayName} | GymText`,
-    description: owner.bio || `Get personalized training from ${owner.displayName} delivered via SMS.`,
+    description: `Get personalized training from ${owner.displayName} delivered via SMS.`,
   };
 }
 
 export default async function OwnerLandingPage({ params }: OwnerLandingPageProps) {
   const { slug } = await params;
-  const services = getServices();
 
-  const owner = await services.programOwner.getBySlug(slug);
-
-  if (!owner || !owner.isActive) {
+  if (!OWNER_PAGES[slug]) {
     notFound();
   }
 
-  // For now, only render the Clatchey landing page
   if (slug === 'coachclatchey') {
-    return <ClatcheyLandingPage owner={owner} />;
+    return <ClatcheyLandingPage />;
   }
 
-  // Future: Support different owner templates based on ownerType
   notFound();
 }

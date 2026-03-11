@@ -14,7 +14,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServices } from '@/lib/context';
 
 const STOP_KEYWORDS = ['STOP', 'STOPALL', 'UNSUBSCRIBE', 'CANCEL', 'END', 'QUIT'];
-const START_KEYWORDS = ['START', 'UNSTOP', 'RESUME'];
+const START_KEYWORDS = ['START', 'UNSTOP', 'RESUME', 'SUBSCRIBE'];
 
 function isStopCommand(message: string): boolean {
   return STOP_KEYWORDS.includes(message.trim().toUpperCase());
