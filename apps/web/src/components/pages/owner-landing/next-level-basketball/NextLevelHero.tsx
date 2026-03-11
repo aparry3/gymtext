@@ -15,7 +15,7 @@ export function NextLevelHero() {
           unoptimized
           priority
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-nlb-orange/80 via-black/70 to-black/80"></div>
+        <div className="absolute inset-0 bg-gradient-to-t from-[#ea580c]/80 via-black/70 to-black/80"></div>
       </div>
 
       <div className="relative z-10 container mx-auto px-4 text-center pt-16 lg:pt-0">
@@ -27,7 +27,7 @@ export function NextLevelHero() {
 
         <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-8xl font-display font-bold text-white mb-4 md:mb-6 tracking-tight leading-tight">
           TAKE YOUR GAME <br />
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-nlb-orange to-yellow-300">
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#ea580c] to-yellow-300">
             TO THE NEXT LEVEL
           </span>
         </h1>

@@ -1,6 +1,5 @@
 'use client';
 
-import type { ProgramOwner } from '@gymtext/shared/server';
 import Image from 'next/image';
 import Link from 'next/link';
 import { NextLevelHero } from './NextLevelHero';
@@ -12,11 +11,7 @@ import { NextLevelCTA } from './NextLevelCTA';
 import { NextLevelStickyCTA } from './NextLevelStickyCTA';
 import { NextLevelFooter } from './NextLevelFooter';
 
-interface NextLevelLandingPageProps {
-  owner: ProgramOwner;
-}
-
-export function NextLevelLandingPage({ owner }: NextLevelLandingPageProps) {
+export function NextLevelLandingPage() {
   return (
     <div className="min-h-screen bg-white">
       {/* Navigation Overlay */}
@@ -40,7 +35,7 @@ export function NextLevelLandingPage({ owner }: NextLevelLandingPageProps) {
 
       <NextLevelHero />
       <NextLevelStatsBar />
-      <NextLevelBioSection owner={owner} />
+      <NextLevelBioSection />
       <NextLevelPrograms />
       <NextLevelTestimonials />
       <NextLevelCTA />

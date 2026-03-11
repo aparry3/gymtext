@@ -1,11 +1,6 @@
 import Image from 'next/image';
-import type { ProgramOwner } from '@gymtext/shared/server';
 
-interface NextLevelBioSectionProps {
-  owner: ProgramOwner;
-}
-
-export function NextLevelBioSection({ owner }: NextLevelBioSectionProps) {
+export function NextLevelBioSection() {
   return (
     <section className="py-16 md:py-24 bg-white overflow-hidden">
       <div className="container mx-auto px-4">
@@ -14,14 +9,10 @@ export function NextLevelBioSection({ owner }: NextLevelBioSectionProps) {
             <div className="absolute -top-10 -left-10 w-40 h-40 bg-nlb-orange/10 rounded-full blur-3xl"></div>
             <div className="relative rounded-2xl overflow-hidden shadow-2xl hover:scale-[1.02] transition-transform duration-500 aspect-[4/5]">
               <Image
-                src={
-                  owner.avatarUrl ||
-                  'https://images.unsplash.com/photo-1594381898411-846e7d193883?w=600&h=700&fit=crop'
-                }
-                alt={owner.displayName}
+                src="/coaches/next-level/rhynia-henry.jpg"
+                alt="Coach Rhynia Henry"
                 fill
                 className="object-cover"
-                unoptimized
               />
               <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 to-transparent p-4 md:p-8">
                 <p className="text-white font-display text-lg md:text-2xl">

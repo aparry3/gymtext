@@ -102,7 +102,7 @@ export default async function OwnerLandingPage({ params }: OwnerLandingPageProps
   }
 
   if (slug === 'nextlevelbasketball') {
-    return <NextLevelLandingPage owner={owner as any} />;
+    return <NextLevelLandingPage />;
   }
 
   notFound();
