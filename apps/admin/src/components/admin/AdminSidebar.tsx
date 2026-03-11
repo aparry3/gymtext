@@ -24,6 +24,7 @@ import {
   Dumbbell,
   ScrollText,
   Bot,
+  Globe,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useEnvironment } from '@/context/EnvironmentContext'
@@ -67,6 +68,7 @@ const navEntries: NavEntry[] = [
       { href: '/exercises', label: 'Exercises', icon: Dumbbell },
     ],
   },
+  { href: '/landing-pages', label: 'Landing Pages', icon: Globe },
   'divider',
   { href: '/agents', label: 'Agents', icon: Bot },
   { href: '/agent-logs', label: 'Agent Logs', icon: ScrollText },
