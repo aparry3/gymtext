@@ -18,7 +18,7 @@ export const baseQuestions: QuestionnaireQuestion[] = [
     questionText: "What's your name?",
     type: 'text',
     required: true,
-    placeholder: 'Enter your first name',
+    placeholder: 'Clark Kent',
     source: 'base',
   },
   {
@@ -192,7 +192,7 @@ export const programBaseQuestions: QuestionnaireQuestion[] = [
     questionText: "What's your name?",
     type: 'text',
     required: true,
-    placeholder: 'Enter your first name',
+    placeholder: 'Clark Kent',
     source: 'base',
   },
   {
