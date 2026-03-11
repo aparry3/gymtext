@@ -25,7 +25,7 @@ export default function OptInPage() {
             SMS Opt-In & Messaging Policy
           </h1>
           <p className="mb-8 text-sm text-muted-foreground">
-            Last updated: March 7, 2026
+            Last updated: March 10, 2026
           </p>
 
           <div className="prose prose-gray max-w-none">
@@ -227,20 +227,29 @@ export default function OptInPage() {
                 7. How to Opt Out
               </h2>
               <p className="mb-4 text-muted-foreground leading-relaxed">
-                You can opt out of GymText SMS messages at any time by texting{' '}
-                <strong>STOP</strong> to any message you receive from us. You
-                will receive a final confirmation message acknowledging your
-                opt-out request, and no further messages will be sent.
-              </p>
-              <p className="mb-4 text-muted-foreground leading-relaxed">
-                You may also opt out by:
+                You can opt out of GymText SMS messages at any time using any of
+                the following methods:
               </p>
               <ul className="mb-4 list-disc pl-6 text-muted-foreground space-y-2">
                 <li>
-                  Canceling your subscription through your account settings
+                  Text <strong>STOP</strong> to any message you receive from us
                 </li>
                 <li>
-                  Contacting us at{' '}
+                  Toggle consent off on your{' '}
+                  <Link
+                    href="/me/account"
+                    className="text-primary hover:underline"
+                  >
+                    Account Settings
+                  </Link>{' '}
+                  page
+                </li>
+                <li>
+                  Click &quot;Unsubscribe&quot; on your Account Settings page to
+                  cancel your subscription
+                </li>
+                <li>
+                  Contact us at{' '}
                   <a
                     href="mailto:support@gymtext.co"
                     className="text-primary hover:underline"
@@ -250,12 +259,156 @@ export default function OptInPage() {
                 </li>
               </ul>
               <p className="mb-4 text-muted-foreground leading-relaxed">
-                If you change your mind, you can re-subscribe at any time by
-                texting <strong>START</strong> to our number. You will receive a
-                confirmation message and your service will resume.
+                You will receive a confirmation message acknowledging your
+                opt-out request, and no further workout messages will be sent.
               </p>
 
-              <div className="my-6 flex justify-center">
+              {/* 7A. Consent Toggle */}
+              <h3 className="mb-3 mt-8 text-xl font-semibold text-foreground">
+                7a. Consent Toggle (Account Settings)
+              </h3>
+              <p className="mb-4 text-muted-foreground leading-relaxed">
+                Your{' '}
+                <Link
+                  href="/me/account"
+                  className="text-primary hover:underline"
+                >
+                  Account Settings
+                </Link>{' '}
+                page includes a Consent checkbox that controls whether you
+                receive text messages from GymText. Unchecking this box stops
+                all workout messages. You can check it again at any time to
+                resume receiving messages.
+              </p>
+
+              <div className="my-6 grid gap-6 md:grid-cols-2">
+                <figure className="overflow-hidden rounded-lg border border-gray-200">
+                  <Image
+                    src="/compliance/account-consent-checked.png"
+                    alt="Account Settings page showing the consent checkbox checked, opting in to receive SMS messages"
+                    width={400}
+                    height={800}
+                    className="mx-auto w-full max-w-xs"
+                  />
+                  <figcaption className="bg-gray-50 px-4 py-2 text-center text-xs text-muted-foreground">
+                    Consent enabled (opted in)
+                  </figcaption>
+                </figure>
+
+                <figure className="overflow-hidden rounded-lg border border-gray-200">
+                  <Image
+                    src="/compliance/account-consent-unchecked.png"
+                    alt="Account Settings page showing the consent checkbox unchecked, opting out of SMS messages"
+                    width={400}
+                    height={800}
+                    className="mx-auto w-full max-w-xs"
+                  />
+                  <figcaption className="bg-gray-50 px-4 py-2 text-center text-xs text-muted-foreground">
+                    Consent disabled (opted out)
+                  </figcaption>
+                </figure>
+              </div>
+
+              {/* 7B. Cancel Subscription */}
+              <h3 className="mb-3 mt-8 text-xl font-semibold text-foreground">
+                7b. Cancel Subscription (Account Settings)
+              </h3>
+              <p className="mb-4 text-muted-foreground leading-relaxed">
+                You can also cancel your subscription entirely through the
+                Account Settings page by clicking &quot;Unsubscribe&quot; in the
+                Cancel Subscription section. When you cancel:
+              </p>
+              <ul className="mb-4 list-disc pl-6 text-muted-foreground space-y-2">
+                <li>
+                  You will receive an SMS confirmation that your subscription
+                  has been cancelled
+                </li>
+                <li>
+                  Your subscription remains active until the end of your current
+                  billing period
+                </li>
+                <li>
+                  The page will show a &quot;Cancellation Pending&quot; state
+                  with an option to resubscribe before the period ends
+                </li>
+              </ul>
+
+              <div className="my-6 grid gap-6 md:grid-cols-3">
+                <figure className="overflow-hidden rounded-lg border border-gray-200">
+                  <Image
+                    src="/compliance/account-cancel-subscription.png"
+                    alt="Account Settings page showing the Cancel Subscription section with Unsubscribe button"
+                    width={400}
+                    height={800}
+                    className="mx-auto w-full max-w-xs"
+                  />
+                  <figcaption className="bg-gray-50 px-4 py-2 text-center text-xs text-muted-foreground">
+                    Cancel Subscription section
+                  </figcaption>
+                </figure>
+
+                <figure className="overflow-hidden rounded-lg border border-gray-200">
+                  <Image
+                    src="/compliance/account-unsubscribe-confirmation.png"
+                    alt="Account Settings page after clicking Unsubscribe, showing cancellation confirmation with SMS notification"
+                    width={400}
+                    height={800}
+                    className="mx-auto w-full max-w-xs"
+                  />
+                  <figcaption className="bg-gray-50 px-4 py-2 text-center text-xs text-muted-foreground">
+                    Cancellation confirmed with SMS notification
+                  </figcaption>
+                </figure>
+
+                <figure className="overflow-hidden rounded-lg border border-gray-200">
+                  <Image
+                    src="/compliance/account-cancellation-pending.png"
+                    alt="Account Settings page showing Cancellation Pending status with Resubscribe button"
+                    width={400}
+                    height={800}
+                    className="mx-auto w-full max-w-xs"
+                  />
+                  <figcaption className="bg-gray-50 px-4 py-2 text-center text-xs text-muted-foreground">
+                    Cancellation Pending with Resubscribe option
+                  </figcaption>
+                </figure>
+              </div>
+
+              {/* How to Re-subscribe */}
+              <h3 className="mb-3 mt-8 text-xl font-semibold text-foreground">
+                7c. How to Re-subscribe
+              </h3>
+              <p className="mb-4 text-muted-foreground leading-relaxed">
+                If you change your mind, you can re-subscribe at any time using
+                any of the following methods:
+              </p>
+              <ul className="mb-4 list-disc pl-6 text-muted-foreground space-y-2">
+                <li>
+                  Text <strong>START</strong> to the GymText number
+                </li>
+                <li>
+                  Re-enable the Consent checkbox on your Account Settings page
+                </li>
+                <li>
+                  Click &quot;Resubscribe&quot; on your Account Settings page
+                  (if cancellation is pending)
+                </li>
+                <li>
+                  Sign up again at{' '}
+                  <a
+                    href="https://gymtext.co"
+                    className="text-primary hover:underline"
+                  >
+                    gymtext.co
+                  </a>
+                </li>
+              </ul>
+              <p className="mb-4 text-muted-foreground leading-relaxed">
+                You will receive a confirmation message and your service will
+                resume.
+              </p>
+
+              <div className="my-6 grid gap-6 md:grid-cols-2">
                 <figure className="overflow-hidden rounded-lg border border-gray-200">
                   <Image
                     src="/compliance/start-resubscribe.png"
@@ -266,6 +419,19 @@ export default function OptInPage() {
                   />
                   <figcaption className="bg-gray-50 px-4 py-2 text-center text-xs text-muted-foreground">
                     Re-subscribing by texting START
+                  </figcaption>
+                </figure>
+
+                <figure className="overflow-hidden rounded-lg border border-gray-200">
+                  <Image
+                    src="/compliance/account-resubscribe-confirmation.png"
+                    alt="Account Settings page showing resubscription confirmation with SMS notification"
+                    width={400}
+                    height={800}
+                    className="mx-auto w-full max-w-xs"
+                  />
+                  <figcaption className="bg-gray-50 px-4 py-2 text-center text-xs text-muted-foreground">
+                    Re-subscribing from Account Settings
                   </figcaption>
                 </figure>
               </div>

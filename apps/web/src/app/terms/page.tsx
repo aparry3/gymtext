@@ -23,7 +23,7 @@ export default function TermsPage() {
             Terms & Conditions
           </h1>
           <p className="mb-8 text-sm text-muted-foreground">
-            Last updated: December 10, 2025
+            Last updated: March 10, 2026
           </p>
 
           <div className="prose prose-gray max-w-none">
@@ -119,8 +119,20 @@ export default function TermsPage() {
               </ul>
               <p className="mb-4 text-muted-foreground leading-relaxed">
                 Message frequency varies based on your plan and interactions. Message
-                and data rates may apply. You can opt out at any time by texting STOP
-                to any message or by canceling your subscription.
+                and data rates may apply. You can opt out at any time by:
+              </p>
+              <ul className="mb-4 list-disc pl-6 text-muted-foreground space-y-2">
+                <li>Texting STOP to any message you receive from us</li>
+                <li>Toggling the consent checkbox off on your Account Settings page</li>
+                <li>Clicking &quot;Unsubscribe&quot; on your Account Settings page to cancel your subscription</li>
+                <li>Contacting us at support@gymtext.com</li>
+              </ul>
+              <p className="mb-4 text-muted-foreground leading-relaxed">
+                For full details on opt-out and resubscription methods, see our{' '}
+                <Link href="/opt-in" className="text-primary hover:underline">
+                  SMS Opt-In &amp; Messaging Policy
+                </Link>
+                .
               </p>
             </section>
 

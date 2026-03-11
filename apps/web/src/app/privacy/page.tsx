@@ -23,7 +23,7 @@ export default function PrivacyPage() {
             Privacy Policy
           </h1>
           <p className="mb-8 text-sm text-muted-foreground">
-            Last updated: February 19, 2026
+            Last updated: March 10, 2026
           </p>
 
           <div className="prose prose-gray max-w-none">
@@ -286,7 +286,9 @@ export default function PrivacyPage() {
                   We use Twilio as our messaging service provider to deliver SMS messages
                 </li>
                 <li>
-                  You can opt out of messages at any time by texting STOP to any message from GymText
+                  You can opt out of messages at any time by texting STOP to any message
+                  from GymText, toggling consent off on your Account Settings page, or
+                  clicking &quot;Unsubscribe&quot; on your Account Settings page
                 </li>
                 <li>
                   Standard message and data rates from your carrier may apply
