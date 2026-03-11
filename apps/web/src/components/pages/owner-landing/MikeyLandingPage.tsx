@@ -1,6 +1,5 @@
 'use client';
 
-import type { ProgramOwner } from '@gymtext/shared/server';
 import Image from 'next/image';
 import Link from 'next/link';
 import { MikeyHero } from './MikeyHero';
@@ -12,11 +11,7 @@ import { MikeyCTA } from './MikeyCTA';
 import { MikeyStickyCTA } from './MikeyStickyCTA';
 import { MikeyFooter } from './MikeyFooter';
 
-interface MikeyLandingPageProps {
-  owner: ProgramOwner;
-}
-
-export function MikeyLandingPage({ owner }: MikeyLandingPageProps) {
+export function MikeyLandingPage() {
   return (
     <div className="min-h-screen bg-white">
       {/* Navigation Overlay */}
@@ -40,7 +35,7 @@ export function MikeyLandingPage({ owner }: MikeyLandingPageProps) {
 
       <MikeyHero />
       <MikeyStatsBar />
-      <MikeyBioSection owner={owner} />
+      <MikeyBioSection />
       <MikeyPhotoShowcase />
       <MikeyProgramTracks />
       <MikeyCTA />

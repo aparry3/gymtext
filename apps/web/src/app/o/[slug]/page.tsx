@@ -15,6 +15,10 @@ const OWNER_PAGES: Record<string, { displayName: string; avatarUrl: string }> = 
     avatarUrl:
       'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&h=700&fit=crop',
   },
+  mikeyswiercz: {
+    displayName: 'Mikey Swiercz',
+    avatarUrl: '/coaches/mikey-swiercz/Hopkins-Cp.JPG',
+  },
 };
 
 export async function generateMetadata({ params }: OwnerLandingPageProps): Promise<Metadata> {

@@ -1,11 +1,6 @@
 import Image from 'next/image';
-import type { ProgramOwner } from '@gymtext/shared/server';
 
-interface MikeyBioSectionProps {
-  owner: ProgramOwner;
-}
-
-export function MikeyBioSection({ owner }: MikeyBioSectionProps) {
+export function MikeyBioSection() {
   return (
     <section className="py-16 md:py-24 bg-white overflow-hidden">
       <div className="container mx-auto px-4">
@@ -15,7 +10,7 @@ export function MikeyBioSection({ owner }: MikeyBioSectionProps) {
             <div className="relative rounded-2xl overflow-hidden shadow-2xl hover:scale-[1.02] transition-transform duration-500 aspect-[4/5]">
               <Image
                 src="/coaches/mikey-swiercz/Hopkins-Cp.JPG"
-                alt={owner.displayName}
+                alt="Mikey Swiercz"
                 fill
                 className="object-cover"
               />
