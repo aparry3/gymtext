@@ -15,7 +15,7 @@
  *
  * Env vars required:
  * - NEXT_PUBLIC_POSTHOG_KEY: PostHog project API key
- * - NEXT_PUBLIC_POSTHOG_HOST: PostHog host (defaults to /ingest for reverse proxy)
+ * - NEXT_PUBLIC_POSTHOG_HOST: PostHog host (defaults to https://t.gymtext.co reverse proxy)
  */
 
 import posthog from 'posthog-js';
@@ -24,7 +24,7 @@ import { useEffect, Suspense } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
 
 const POSTHOG_KEY = process.env.NEXT_PUBLIC_POSTHOG_KEY;
-const POSTHOG_HOST = process.env.NEXT_PUBLIC_POSTHOG_HOST || '/ingest';
+const POSTHOG_HOST = process.env.NEXT_PUBLIC_POSTHOG_HOST || 'https://t.gymtext.co';
 
 /**
  * Tracks page views on route changes in Next.js App Router.
