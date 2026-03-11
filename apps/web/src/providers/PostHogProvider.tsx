@@ -22,9 +22,9 @@ import posthog from 'posthog-js';
 import { PostHogProvider as PHProvider, usePostHog } from 'posthog-js/react';
 import { useEffect, Suspense } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
+import { getPostHogConfig } from '@/shared/config/public';
 
-const POSTHOG_KEY = process.env.NEXT_PUBLIC_POSTHOG_KEY;
-const POSTHOG_HOST = process.env.NEXT_PUBLIC_POSTHOG_HOST || 'https://t.gymtext.co';
+const { key: POSTHOG_KEY, host: POSTHOG_HOST } = getPostHogConfig();
 
 /**
  * Tracks page views on route changes in Next.js App Router.
