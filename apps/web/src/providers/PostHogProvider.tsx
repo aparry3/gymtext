@@ -60,7 +60,7 @@ export function PostHogProvider({ children }: { children: React.ReactNode }) {
 
     posthog.init(POSTHOG_KEY, {
       api_host: POSTHOG_HOST,
-      ui_host: 'https://eu.posthog.com', // For toolbar/debug UI
+      ui_host: 'https://us.posthog.com', // For toolbar/debug UI
       person_profiles: 'identified_only',
       capture_pageview: false, // We handle this manually via PostHogPageView
       capture_pageleave: true, // Auto time-on-page tracking
