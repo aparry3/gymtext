@@ -11,10 +11,14 @@
 import { inngest } from '@/server/connections/inngest/client';
 import { createServicesFromDb } from '@/server/services';
 import { postgresDb } from '@/server/connections/postgres/postgres';
+import { getRunner } from '@/server/agent-runner/runner';
+import { createNewRegenerationService } from '@/server/agent-runner/services/newRegenerationService';
 import type { RegenerationStep } from '@/server/services/agents/regeneration';
 
 // Create services container at module level (Inngest always uses production)
 const services = createServicesFromDb(postgresDb);
+
+const useAgentRunner = () => process.env.USE_AGENT_RUNNER === 'true';
 
 export const regenerateUserFunction = inngest.createFunction(
   {
@@ -26,9 +30,19 @@ export const regenerateUserFunction = inngest.createFunction(
   async ({ event, step }) => {
     const { userId, steps } = event.data as { userId: string; steps?: RegenerationStep[] };
 
-    const result = await step.run('regenerate', () =>
-      services.regeneration.regenerateUser(userId, steps)
-    );
+    let result;
+
+    // V2: Use agent-runner if enabled
+    if (useAgentRunner()) {
+      console.log(`[Inngest] Using agent-runner V2 for regeneration of user ${userId}`);
+      const newRegen = createNewRegenerationService({ runner: getRunner() });
+      result = await step.run('v2-regenerate', () => newRegen.regenerateUser(userId));
+    } else {
+      // V1: Legacy path
+      result = await step.run('regenerate', () =>
+        services.regeneration.regenerateUser(userId, steps)
+      );
+    }
 
     console.log(`[Inngest] Regeneration complete for user ${userId}`);
 
