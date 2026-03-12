@@ -12,10 +12,11 @@
 import type { Runner } from '@agent-runner/core';
 import type { UserWithProfile } from '@/server/models/user';
 import type { MessageServiceInstance } from '@/server/services/domain/messaging/messageService';
-import { fitnessContextId, chatSessionId, appendMessageToSession } from '../helpers.js';
-import { getChatConfig } from '@/shared/config';
+import { fitnessContextId, chatSessionId } from '../helpers.js';
 
-const { smsMaxLength: SMS_MAX_LENGTH, contextMinutes: CHAT_CONTEXT_MINUTES } = getChatConfig();
+/** SMS max length and context window defaults (from ChatConfigSchema) */
+const SMS_MAX_LENGTH = 1600;
+const CHAT_CONTEXT_MINUTES = 10;
 
 export interface NewChatServiceInstance {
   handleIncomingMessage(user: UserWithProfile): Promise<string[]>;

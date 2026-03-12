@@ -3,6 +3,11 @@
  *
  * Tools available to agents during execution.
  * These are registered with the Runner on startup.
+ *
+ * NOTE: Tool definitions use `as any` on Zod schemas to avoid
+ * "Type instantiation is excessively deep" errors caused by
+ * Zod version mismatch (gymtext 3.25.67, agent-runner 3.25.76).
+ * This is type-level only — runtime works fine.
  */
 import { defineTool, type Runner } from '@agent-runner/core';
 import { z } from 'zod';
@@ -13,7 +18,7 @@ import { z } from 'zod';
  * Called by the chat agent when the user wants to change their
  * profile, goals, equipment, schedule, or training plan.
  */
-const updateFitnessContextTool = defineTool({
+const updateFitnessContextTool = (defineTool as any)({
   name: 'update_fitness_context',
   description: 'Update the user\'s fitness profile, goals, equipment, schedule, or training plan based on their request.',
   input: z.object({
@@ -38,7 +43,7 @@ const updateFitnessContextTool = defineTool({
  *
  * Called by the chat agent when the user asks about today's workout.
  */
-const getTodaysWorkoutTool = defineTool({
+const getTodaysWorkoutTool = (defineTool as any)({
   name: 'get_todays_workout',
   description: 'Get today\'s workout for the user. Use when they ask about their workout or schedule.',
   input: z.object({
@@ -65,7 +70,7 @@ const getTodaysWorkoutTool = defineTool({
  *
  * Called by the chat agent when the user wants specific plan modifications.
  */
-const modifyPlanTool = defineTool({
+const modifyPlanTool = (defineTool as any)({
   name: 'modify_plan',
   description: 'Modify the user\'s training plan. Use when they want to swap exercises, adjust volume, change workout days, etc.',
   input: z.object({
