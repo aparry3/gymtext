@@ -13,6 +13,7 @@
 import type { IMessagingClient, MessageResult, MessagingProvider } from './types';
 import type { UserWithProfile } from '@/server/models/user';
 import axios, { AxiosError } from 'axios';
+import { TEMPLATE_BY_NAME, TEMPLATE_VARIABLES } from '@/server/whatsapp/templates';
 
 interface WhatsAppCloudConfig {
   phoneNumberId: string;
@@ -107,6 +108,9 @@ export class WhatsAppCloudClient implements IMessagingClient {
    *
    * Template messages are required for business-initiated conversations.
    * Templates must be pre-approved by Meta.
+   *
+   * Supports the new template definitions with proper component assembly
+   * (headers, body params, URL button params).
    */
   private async sendTemplateMessage(
     to: string,
@@ -115,13 +119,11 @@ export class WhatsAppCloudClient implements IMessagingClient {
   ): Promise<WhatsAppAPIResponse> {
     const url = `https://graph.facebook.com/${this.config.apiVersion}/${this.config.phoneNumberId}/messages`;
 
-    // Convert variables object to WhatsApp template parameters format
-    const parameters = variables
-      ? Object.values(variables).map((value) => ({
-          type: 'text',
-          text: value,
-        }))
-      : [];
+    // Build components using template definitions if available
+    const components = this.buildTemplateComponents(templateName, variables);
+
+    const template = TEMPLATE_BY_NAME[templateName];
+    const languageCode = template?.language || 'en_US';
 
     const payload = {
       messaging_product: 'whatsapp',
@@ -129,23 +131,15 @@ export class WhatsAppCloudClient implements IMessagingClient {
       type: 'template',
       template: {
         name: templateName,
-        language: { code: 'en_US' },
-        components:
-          parameters.length > 0
-            ? [
-                {
-                  type: 'body',
-                  parameters,
-                },
-              ]
-            : [],
+        language: { code: languageCode },
+        components,
       },
     };
 
     console.log('[WhatsAppCloudClient] Sending template message:', {
       to,
       templateName,
-      variableCount: parameters.length,
+      componentCount: components.length,
     });
 
     const response = await axios.post<WhatsAppAPIResponse>(url, payload, {
@@ -156,6 +150,68 @@ export class WhatsAppCloudClient implements IMessagingClient {
     });
 
     return response.data;
+  }
+
+  /**
+   * Build the components array for a template send request.
+   *
+   * Uses the template definition registry to properly order variables
+   * and include button URL parameters.
+   */
+  private buildTemplateComponents(
+    templateName: string,
+    variables?: Record<string, string>
+  ): Array<Record<string, unknown>> {
+    const variableOrder = TEMPLATE_VARIABLES[templateName];
+
+    // If we have a registered template definition, use ordered variables
+    if (variableOrder && variables) {
+      const bodyParams = variableOrder
+        .filter((key) => variables[key] !== undefined)
+        .map((key) => ({ type: 'text', text: variables[key] }));
+
+      const components: Array<Record<string, unknown>> = [];
+
+      if (bodyParams.length > 0) {
+        components.push({ type: 'body', parameters: bodyParams });
+      }
+
+      // Add button URL parameters if template has URL buttons
+      const template = TEMPLATE_BY_NAME[templateName];
+      if (template) {
+        const buttonsComponent = template.components.find((c) => c.type === 'BUTTONS');
+        if (buttonsComponent?.buttons) {
+          buttonsComponent.buttons.forEach((btn, idx) => {
+            if (btn.type === 'URL' && btn.url?.includes('{{')) {
+              // Use 'date' or first available date-like variable
+              const dateValue =
+                variables['date'] || variables['currentDate'] || variables['nextWorkoutDate'] || '';
+              if (dateValue) {
+                components.push({
+                  type: 'button',
+                  sub_type: 'url',
+                  index: idx.toString(),
+                  parameters: [{ type: 'text', text: dateValue }],
+                });
+              }
+            }
+          });
+        }
+      }
+
+      return components;
+    }
+
+    // Fallback: simple flat variable list (legacy behavior)
+    if (variables) {
+      const parameters = Object.values(variables).map((value) => ({
+        type: 'text',
+        text: value,
+      }));
+      return parameters.length > 0 ? [{ type: 'body', parameters }] : [];
+    }
+
+    return [];
   }
 
   /**

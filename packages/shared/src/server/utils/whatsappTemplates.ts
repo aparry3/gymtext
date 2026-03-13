@@ -1,21 +1,34 @@
 /**
- * WhatsApp Templates Utility
+ * WhatsApp Templates Utility (Legacy Compatibility Layer)
  *
- * Manages WhatsApp message templates and provides helper functions
- * for building template variables.
+ * This module provides backward-compatible access to template configuration.
+ * New code should import from '@/server/whatsapp' directly.
  *
- * Templates must be created and approved in Twilio Console before use.
- * Template SIDs are stored in environment variables.
+ * @deprecated Use '@/server/whatsapp' module instead.
  */
 
+import {
+  DAILY_WORKOUT_READY,
+  DAILY_WORKOUT_EVENING,
+  REST_DAY,
+  FIRST_WORKOUT_WELCOME,
+  STREAK_MILESTONE,
+  REENGAGEMENT,
+} from '@/server/whatsapp/templates';
+
 /**
- * Get WhatsApp template configuration from environment
+ * Get WhatsApp template names (registered with Meta).
+ * These are the template names to use when sending via the Cloud API.
  */
 export function getWhatsAppTemplates() {
   return {
-    dailyWorkout: process.env.WHATSAPP_TEMPLATE_DAILY_WORKOUT || '',
+    dailyWorkout: process.env.WHATSAPP_TEMPLATE_DAILY_WORKOUT || DAILY_WORKOUT_READY.name,
+    dailyWorkoutEvening: process.env.WHATSAPP_TEMPLATE_DAILY_WORKOUT_EVENING || DAILY_WORKOUT_EVENING.name,
+    restDay: process.env.WHATSAPP_TEMPLATE_REST_DAY || REST_DAY.name,
+    welcome: process.env.WHATSAPP_TEMPLATE_WELCOME || FIRST_WORKOUT_WELCOME.name,
+    streakMilestone: process.env.WHATSAPP_TEMPLATE_STREAK_MILESTONE || STREAK_MILESTONE.name,
+    reengagement: process.env.WHATSAPP_TEMPLATE_REENGAGEMENT || REENGAGEMENT.name,
     weeklyCheckin: process.env.WHATSAPP_TEMPLATE_WEEKLY_CHECKIN || '',
-    welcome: process.env.WHATSAPP_TEMPLATE_WELCOME || '',
     subscriptionReminder: process.env.WHATSAPP_TEMPLATE_SUBSCRIPTION_REMINDER || '',
   };
 }
@@ -35,46 +48,56 @@ export function getWhatsAppPhoneNumber(): string {
 }
 
 /**
- * Template variable builders
+ * Template variable builders for each template type.
+ *
+ * Returns objects keyed by the variable names in TEMPLATE_VARIABLES,
+ * ready to pass to sendTemplate() or WhatsAppCloudClient.sendMessage().
  */
 export const templateBuilders = {
-  /**
-   * Build variables for daily workout template
-   * Template: "Hi {{1}}! Your workout for {{2}} is ready. Reply when you're ready to start! 💪"
-   */
-  dailyWorkout: (userName: string, date: string) => ({
-    '1': userName,
-    '2': date,
+  dailyWorkout: (userName: string, workoutType: string, focus: string, date: string) => ({
+    userName,
+    workoutType,
+    focus,
+    date,
   }),
 
-  /**
-   * Build variables for weekly check-in template
-   * Template: "Hey {{1}}! How's your week going? Reply with any questions or feedback."
-   */
-  weeklyCheckin: (userName: string) => ({
-    '1': userName,
+  dailyWorkoutEvening: (userName: string, workoutType: string, focus: string, date: string) => ({
+    userName,
+    workoutType,
+    focus,
+    date,
   }),
 
-  /**
-   * Build variables for welcome template
-   * Template: "Welcome to GymText, {{1}}! 🎉 Your personalized training starts now. Reply START when you're ready for your first workout."
-   */
-  welcome: (userName: string) => ({
-    '1': userName,
+  restDay: (userName: string, currentDate: string, nextWorkoutDate: string) => ({
+    userName,
+    currentDate,
+    nextWorkoutDate,
   }),
 
-  /**
-   * Build variables for subscription reminder template
-   * Template: "Hi {{1}}, your GymText subscription will renew on {{2}}. Reply STOP to cancel or CONTINUE to keep crushing your goals!"
-   */
-  subscriptionReminder: (userName: string, renewalDate: string) => ({
-    '1': userName,
-    '2': renewalDate,
+  welcome: (userName: string, workoutType: string, focus: string, date: string) => ({
+    userName,
+    workoutType,
+    focus,
+    date,
+  }),
+
+  streakMilestone: (userName: string, streakCount: string, workoutType: string, date: string) => ({
+    userName,
+    streakCount,
+    workoutType,
+    date,
+  }),
+
+  reengagement: (userName: string, daysInactive: string, workoutType: string, date: string) => ({
+    userName,
+    daysInactive,
+    workoutType,
+    date,
   }),
 };
 
 /**
- * Helper to check if a template SID is configured
+ * Helper to check if a template name is configured
  */
 export function isTemplateConfigured(templateName: keyof ReturnType<typeof getWhatsAppTemplates>): boolean {
   const templates = getWhatsAppTemplates();
@@ -82,15 +105,15 @@ export function isTemplateConfigured(templateName: keyof ReturnType<typeof getWh
 }
 
 /**
- * Get template SID by name, throws if not configured
+ * Get template name by key, throws if not configured
  */
-export function getTemplateSid(templateName: keyof ReturnType<typeof getWhatsAppTemplates>): string {
+export function getTemplateName(templateName: keyof ReturnType<typeof getWhatsAppTemplates>): string {
   const templates = getWhatsAppTemplates();
-  const sid = templates[templateName];
-  
-  if (!sid) {
-    throw new Error(`WhatsApp template "${templateName}" is not configured. Set WHATSAPP_TEMPLATE_${templateName.toUpperCase()} in environment.`);
+  const name = templates[templateName];
+
+  if (!name) {
+    throw new Error(`WhatsApp template "${templateName}" is not configured.`);
   }
-  
-  return sid;
+
+  return name;
 }

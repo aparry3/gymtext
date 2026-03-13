@@ -17,6 +17,10 @@
     "./shared": {
       "types": "./src/shared/index.ts",
       "import": "./src/shared/index.ts"
+    },
+    "./server/whatsapp": {
+      "types": "./src/server/whatsapp/index.ts",
+      "import": "./src/server/whatsapp/index.ts"
     }
   },
   "scripts": {
