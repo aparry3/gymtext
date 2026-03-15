@@ -5,7 +5,7 @@
  * Updates fitness context, gets upcoming week workout, formats for SMS.
  */
 import type { Runner } from '@agent-runner/core';
-import { fitnessContextId, chatSessionId, appendMessageToSession } from '../helpers.js';
+import { fitnessContextId, chatSessionId, appendMessageToSession } from '../helpers';
 
 export interface WeeklyMessageResult {
   success: boolean;

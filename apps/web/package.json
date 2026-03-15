@@ -35,7 +35,9 @@
     "react-markdown": "^10.1.0",
     "remark-gfm": "^4.0.1",
     "tailwind-merge": "^2.2.1",
-    "tailwindcss-animate": "^1.0.7"
+    "tailwindcss-animate": "^1.0.7",
+    "@agent-runner/core": "link:/Users/openclaw/Projects/agent-runner/packages/core",
+    "@agent-runner/store-postgres": "link:/Users/openclaw/Projects/agent-runner/packages/store-postgres"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

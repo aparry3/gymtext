@@ -9,14 +9,15 @@ const nextConfig: NextConfig = {
   // (no Next.js rewrites needed — Caddy/nginx handles it)
 
   // Exclude packages with WASM from bundling - load at runtime from node_modules
-  serverExternalPackages: ["@dqbd/tiktoken"],
+  serverExternalPackages: ["@dqbd/tiktoken", "@agent-runner/core", "@agent-runner/store-postgres"],
 
   // Turbopack configuration for path aliases (Next.js 16+)
   turbopack: {
-    root: path.resolve(__dirname, "../.."),
+    root: path.resolve(__dirname, "../../.."),
     resolveAlias: {
       "@/server": path.resolve(__dirname, "../../packages/shared/src/server"),
       "@/shared": path.resolve(__dirname, "../../packages/shared/src/shared"),
+
     },
   },
 

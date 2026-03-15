@@ -5,7 +5,7 @@
  * Used when admin wants to regenerate a user's profile/plan/schedule.
  */
 import type { Runner } from '@agent-runner/core';
-import { fitnessContextId } from '../helpers.js';
+import { fitnessContextId } from '../helpers';
 
 export interface RegenerationResult {
   success: boolean;

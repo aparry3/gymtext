@@ -10,8 +10,8 @@
 import { createRunner, type Runner } from '@agent-runner/core';
 import { PostgresStore } from '@agent-runner/store-postgres';
 import { getDatabaseSecrets } from '@/server/config';
-import { chatAgent, updateFitnessAgent, getWorkoutAgent, formatWorkoutAgent } from './agents/index.js';
-import { registerGymtextTools } from './tools/index.js';
+import { chatAgent, updateFitnessAgent, getWorkoutAgent, formatWorkoutAgent } from './agents/index';
+import { registerGymtextTools } from './tools/index';
 
 let _runner: Runner | null = null;
 

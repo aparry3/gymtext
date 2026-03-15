@@ -6,7 +6,7 @@
  */
 import type { Runner } from '@agent-runner/core';
 import type { MarkdownServiceInstance } from '@/server/services/domain/markdown/markdownService';
-import { fitnessContextId, chatSessionId, appendMessageToSession } from '../helpers.js';
+import { fitnessContextId, chatSessionId, appendMessageToSession } from '../helpers';
 
 export interface MigrationResult {
   userId: string;

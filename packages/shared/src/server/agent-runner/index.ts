@@ -1,4 +1,4 @@
-export { createGymtextRunner, getRunner } from './runner.js';
-export { fitnessContextId, chatSessionId, appendMessageToSession } from './helpers.js';
-export { chatAgent, updateFitnessAgent, getWorkoutAgent, formatWorkoutAgent } from './agents/index.js';
-export { registerGymtextTools } from './tools/index.js';
+export { createGymtextRunner, getRunner } from './runner';
+export { fitnessContextId, chatSessionId, appendMessageToSession } from './helpers';
+export { chatAgent, updateFitnessAgent, getWorkoutAgent, formatWorkoutAgent } from './agents/index';
+export { registerGymtextTools } from './tools/index';

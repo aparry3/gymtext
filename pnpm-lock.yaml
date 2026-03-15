@@ -11,6 +11,12 @@ importers:
 
   .:
     dependencies:
+      '@agent-runner/core':
+        specifier: link:../agent-runner/packages/core
+        version: link:../agent-runner/packages/core
+      '@agent-runner/store-postgres':
+        specifier: link:../agent-runner/packages/store-postgres
+        version: link:../agent-runner/packages/store-postgres
       '@codemirror/commands':
         specifier: ^6.10.1
         version: 6.10.1
@@ -467,6 +473,12 @@ importers:
 
   apps/web:
     dependencies:
+      '@agent-runner/core':
+        specifier: link:/Users/openclaw/Projects/agent-runner/packages/core
+        version: link:../../../agent-runner/packages/core
+      '@agent-runner/store-postgres':
+        specifier: link:/Users/openclaw/Projects/agent-runner/packages/store-postgres
+        version: link:../../../agent-runner/packages/store-postgres
       '@codemirror/commands':
         specifier: ^6.10.1
         version: 6.10.1

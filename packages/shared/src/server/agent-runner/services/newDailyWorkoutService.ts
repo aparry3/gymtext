@@ -10,7 +10,7 @@
  * 3. Inject into chat session for continuity
  */
 import type { Runner } from '@agent-runner/core';
-import { fitnessContextId, chatSessionId, appendMessageToSession } from '../helpers.js';
+import { fitnessContextId, chatSessionId, appendMessageToSession } from '../helpers';
 
 export interface DailyWorkoutResult {
   success: boolean;

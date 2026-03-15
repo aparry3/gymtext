@@ -12,7 +12,7 @@
 import type { Runner } from '@agent-runner/core';
 import type { UserWithProfile } from '@/server/models/user';
 import type { MessageServiceInstance } from '@/server/services/domain/messaging/messageService';
-import { fitnessContextId, chatSessionId } from '../helpers.js';
+import { fitnessContextId, chatSessionId } from '../helpers';
 
 /** SMS max length and context window defaults (from ChatConfigSchema) */
 const SMS_MAX_LENGTH = 1600;

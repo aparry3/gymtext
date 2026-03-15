@@ -9,7 +9,7 @@
  */
 import type { Runner } from '@agent-runner/core';
 import type { UserWithProfile } from '@/server/models/user';
-import { fitnessContextId, chatSessionId, appendMessageToSession } from '../helpers.js';
+import { fitnessContextId, chatSessionId, appendMessageToSession } from '../helpers';
 
 export interface OnboardingResult {
   success: boolean;
@@ -99,7 +99,7 @@ export function createNewOnboardingService(deps: NewOnboardingServiceDeps): NewO
 function formatSignupData(signupData: Record<string, unknown>, user: UserWithProfile): string {
   const parts: string[] = ['New user onboarding. Create a complete fitness context from this signup data:'];
 
-  if (user.firstName) parts.push(`Name: ${user.firstName} ${user.lastName || ''}`);
+  if (user.name) parts.push(`Name: ${user.name}`);
   if (user.timezone) parts.push(`Timezone: ${user.timezone}`);
 
   // Include all signup data fields

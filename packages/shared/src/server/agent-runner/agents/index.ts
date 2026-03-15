@@ -1,4 +1,4 @@
-export { chatAgent } from './chat.js';
-export { updateFitnessAgent } from './update-fitness.js';
-export { getWorkoutAgent } from './get-workout.js';
-export { formatWorkoutAgent } from './format-workout.js';
+export { chatAgent } from './chat';
+export { updateFitnessAgent } from './update-fitness';
+export { getWorkoutAgent } from './get-workout';
+export { formatWorkoutAgent } from './format-workout';
