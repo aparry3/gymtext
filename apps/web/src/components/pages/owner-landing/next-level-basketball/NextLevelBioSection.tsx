@@ -35,39 +35,39 @@ export function NextLevelBioSection() {
 
             <div className="prose prose-base md:prose-lg text-gray-600 space-y-4 md:space-y-6">
               <p>
-                Since 2011, Rhynia Henry has been transforming young athletes into skilled basketball
-                players through his signature training methodology. A{' '}
-                <strong>Bolton High School and Rhodes College basketball standout</strong>, he
-                brings elite playing experience and deep coaching knowledge to every session.
+                Played for Tennessee legendary high school basketball coach, the late Joe C. Branch
+                at <strong>Bolton High School</strong>. Was selected all district, and all region
+                senior year. Played collegiate basketball at{' '}
+                <strong>Rhodes College</strong> in Memphis.
               </p>
               <p>
-                As an <strong>AFAA-certified personal trainer</strong> and CPR-certified coach,
-                Rhynia founded Next Level Basketball Training and Development with a clear mission:
-                deliver fundamental skills training that creates real, measurable improvement. His
-                programs run at both the{' '}
-                <strong>Singleton Community Center and the Memphis Jewish Community Center</strong>,
-                serving athletes across the Memphis area.
+                Rhodes College MVP as a senior (1991) along with MVP of the Maryville Classic (St
+                Louis), Maryville Classic (TN), and Rhodes College Classic that same year.
               </p>
               <p>
-                Rhynia is also the creator of{' '}
-                <strong>The FIRE Workout</strong> — a high-intensity training program that combines
-                basketball-specific conditioning with strength and speed development. His classes are
-                in such high demand that sessions regularly fill to capacity.
+                Began coaching in 2010 at the{' '}
+                <strong>Memphis Jewish Community Center</strong>. Coached in two Maccabi games (one
+                in Israel) in 2012 and 2013 earning a bronze in 2013.
+              </p>
+              <p>
+                Excels at player development — pinpoint player attributes and developing the best
+                plan for player improvement. <strong>Founder of Next Level Basketball Development</strong>{' '}
+                in the Memphis, TN area.
               </p>
             </div>
 
             <div className="mt-6 md:mt-10 flex flex-wrap gap-3 md:gap-4">
               <div className="px-4 md:px-6 py-2 md:py-3 bg-gray-100 rounded-lg border-l-4 border-nlb-orange">
-                <p className="text-xs md:text-sm font-bold text-gray-800">Since 2011</p>
+                <p className="text-xs md:text-sm font-bold text-gray-800">Since 2010</p>
                 <p className="text-[10px] md:text-xs text-gray-500">Coaching &amp; Training</p>
               </div>
               <div className="px-4 md:px-6 py-2 md:py-3 bg-gray-100 rounded-lg border-l-4 border-nlb-orange">
-                <p className="text-xs md:text-sm font-bold text-gray-800">AFAA Certified</p>
-                <p className="text-[10px] md:text-xs text-gray-500">Personal Trainer</p>
+                <p className="text-xs md:text-sm font-bold text-gray-800">Rhodes College MVP</p>
+                <p className="text-[10px] md:text-xs text-gray-500">Senior Year (1991)</p>
               </div>
               <div className="px-4 md:px-6 py-2 md:py-3 bg-gray-100 rounded-lg border-l-4 border-nlb-dark">
-                <p className="text-xs md:text-sm font-bold text-gray-800">Rhodes College</p>
-                <p className="text-[10px] md:text-xs text-gray-500">Basketball Standout</p>
+                <p className="text-xs md:text-sm font-bold text-gray-800">Maccabi Games</p>
+                <p className="text-[10px] md:text-xs text-gray-500">Bronze Medalist (2013)</p>
               </div>
             </div>
           </div>
