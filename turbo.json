@@ -53,6 +53,10 @@
         "NEXT_PUBLIC_POSTHOG_HOST"
       ]
     },
+    "test": {
+      "dependsOn": ["^build"],
+      "cache": false
+    },
     "lint": {
       "dependsOn": ["^build"]
     },
