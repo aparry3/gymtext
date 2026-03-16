@@ -13,6 +13,7 @@ import type { Runner } from '@agent-runner/core';
 import type { UserWithProfile } from '@/server/models/user';
 import type { MessageServiceInstance } from '@/server/services/domain/messaging/messageService';
 import { fitnessContextId, chatSessionId } from '../helpers';
+import { agentLogger } from '../logger';
 
 /** SMS max length and context window defaults (from ChatConfigSchema) */
 const SMS_MAX_LENGTH = 1600;
@@ -32,20 +33,21 @@ export function createNewChatService(deps: NewChatServiceDeps): NewChatServiceIn
 
   return {
     async handleIncomingMessage(user: UserWithProfile): Promise<string[]> {
+      const SVC = 'NewChatService';
       try {
         // Fetch recent messages and split into pending/context
         const allMessages = await messageService.getRecentMessages(user.id, 20);
         const { pending } = messageService.splitMessages(allMessages, CHAT_CONTEXT_MINUTES);
 
         if (pending.length === 0) {
-          console.log('[NewChatService] No pending messages, skipping');
+          agentLogger.info({ service: SVC, event: 'no_pending_messages', userId: user.id });
           return [];
         }
 
         const userMessage = pending.map(m => m.content).join('\n\n');
         const timezone = user.timezone || 'America/New_York';
 
-        console.log('[NewChatService] Invoking chat agent for user:', user.id);
+        agentLogger.info({ service: SVC, event: 'invoking', userId: user.id, agentId: 'chat', meta: { messageCount: pending.length } });
 
         // Invoke chat agent with fitness context and session history
         const result = await runner.invoke('chat', userMessage, {
@@ -59,6 +61,8 @@ export function createNewChatService(deps: NewChatServiceDeps): NewChatServiceIn
           },
         });
 
+        agentLogger.invocation(SVC, user.id, result, 'chat');
+
         if (!result.output || !result.output.trim()) {
           throw new Error('Chat agent returned empty response');
         }
@@ -66,12 +70,13 @@ export function createNewChatService(deps: NewChatServiceDeps): NewChatServiceIn
         // Enforce SMS length constraints
         const response = result.output.trim();
         if (response.length > SMS_MAX_LENGTH) {
+          agentLogger.warn({ service: SVC, event: 'response_truncated', userId: user.id, meta: { originalLength: response.length } });
           return [response.substring(0, SMS_MAX_LENGTH - 3) + '...'];
         }
 
         return [response];
       } catch (error) {
-        console.error('[NewChatService] Error:', error);
+        agentLogger.error({ service: SVC, event: 'error', userId: user.id, error: error instanceof Error ? error.message : String(error) });
         return ["Sorry, I'm having trouble processing that. Try asking about your workout or fitness goals!"];
       }
     },

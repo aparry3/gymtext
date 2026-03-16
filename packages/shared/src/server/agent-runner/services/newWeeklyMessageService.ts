@@ -6,6 +6,7 @@
  */
 import type { Runner } from '@agent-runner/core';
 import { fitnessContextId, chatSessionId, appendMessageToSession } from '../helpers';
+import { agentLogger } from '../logger';
 
 export interface WeeklyMessageResult {
   success: boolean;
@@ -28,13 +29,15 @@ export function createNewWeeklyMessageService(deps: NewWeeklyMessageServiceDeps)
     async generateWeeklyMessage(userId: string, timezone = 'America/New_York'): Promise<WeeklyMessageResult> {
       const contextId = fitnessContextId(userId);
 
+      const SVC = 'NewWeeklyMessageService';
       try {
-        console.log('[NewWeeklyMessageService] Generating weekly message for user:', userId);
+        agentLogger.info({ service: SVC, event: 'generating', userId });
 
         // Step 1: Refresh fitness context (update current week schedule)
-        await runner.invoke('update-fitness', 'Generate the upcoming week\'s training schedule based on the current plan and progression.', {
+        const ctxResult = await runner.invoke('update-fitness', 'Generate the upcoming week\'s training schedule based on the current plan and progression.', {
           contextIds: [contextId],
         });
+        agentLogger.invocation(SVC, userId, ctxResult, 'update-fitness');
 
         // Step 2: Get a preview workout for the week
         const workoutResult = await runner.invoke('get-workout', JSON.stringify({
@@ -44,12 +47,14 @@ export function createNewWeeklyMessageService(deps: NewWeeklyMessageServiceDeps)
         }), {
           contextIds: [contextId],
         });
+        agentLogger.invocation(SVC, userId, workoutResult, 'get-workout');
 
         // Step 3: Format as weekly summary message
         const formatResult = await runner.invoke('format-workout', JSON.stringify({
           type: 'weekly-preview',
           workout: workoutResult.output,
         }));
+        agentLogger.invocation(SVC, userId, formatResult, 'format-workout');
 
         let message: string;
         try {
@@ -65,9 +70,10 @@ export function createNewWeeklyMessageService(deps: NewWeeklyMessageServiceDeps)
           content: message,
         });
 
+        agentLogger.info({ service: SVC, event: 'complete', userId });
         return { success: true, message };
       } catch (error) {
-        console.error('[NewWeeklyMessageService] Error:', error);
+        agentLogger.error({ service: SVC, event: 'error', userId, error: error instanceof Error ? error.message : String(error) });
         return {
           success: false,
           error: error instanceof Error ? error.message : String(error),

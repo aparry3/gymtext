@@ -6,6 +6,7 @@
  */
 import type { Runner } from '@agent-runner/core';
 import { fitnessContextId } from '../helpers';
+import { agentLogger } from '../logger';
 
 export interface RegenerationResult {
   success: boolean;
@@ -27,21 +28,24 @@ export function createNewRegenerationService(deps: NewRegenerationServiceDeps): 
     async regenerateUser(userId: string): Promise<RegenerationResult> {
       const contextId = fitnessContextId(userId);
 
+      const SVC = 'NewRegenerationService';
       try {
-        console.log('[NewRegenerationService] Regenerating context for user:', userId);
+        agentLogger.info({ service: SVC, event: 'starting', userId });
 
         // Clear existing context and rebuild
         await runner.context.clear(contextId);
+        agentLogger.info({ service: SVC, event: 'context_cleared', userId });
 
         // Regenerate from scratch using update-fitness
-        await runner.invoke('update-fitness', 'Regenerate the complete fitness context for this user. Create a fresh training plan, weekly schedule, and review all profile data.', {
+        const result = await runner.invoke('update-fitness', 'Regenerate the complete fitness context for this user. Create a fresh training plan, weekly schedule, and review all profile data.', {
           contextIds: [contextId],
         });
+        agentLogger.invocation(SVC, userId, result, 'update-fitness');
 
-        console.log('[NewRegenerationService] Regeneration complete for user:', userId);
+        agentLogger.info({ service: SVC, event: 'complete', userId });
         return { success: true };
       } catch (error) {
-        console.error('[NewRegenerationService] Error:', error);
+        agentLogger.error({ service: SVC, event: 'error', userId, error: error instanceof Error ? error.message : String(error) });
         return {
           success: false,
           error: error instanceof Error ? error.message : String(error),

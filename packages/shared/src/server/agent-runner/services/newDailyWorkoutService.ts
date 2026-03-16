@@ -11,6 +11,7 @@
  */
 import type { Runner } from '@agent-runner/core';
 import { fitnessContextId, chatSessionId, appendMessageToSession } from '../helpers';
+import { agentLogger } from '../logger';
 
 export interface DailyWorkoutResult {
   success: boolean;
@@ -35,8 +36,9 @@ export function createNewDailyWorkoutService(deps: NewDailyWorkoutServiceDeps): 
     async generateDailyWorkout(userId: string, timezone = 'America/New_York'): Promise<DailyWorkoutResult> {
       const contextId = fitnessContextId(userId);
 
+      const SVC = 'NewDailyWorkoutService';
       try {
-        console.log('[NewDailyWorkoutService] Generating workout for user:', userId);
+        agentLogger.info({ service: SVC, event: 'generating', userId });
 
         // Step 1: Get workout from context
         const workoutResult = await runner.invoke('get-workout', JSON.stringify({
@@ -45,9 +47,11 @@ export function createNewDailyWorkoutService(deps: NewDailyWorkoutServiceDeps): 
         }), {
           contextIds: [contextId],
         });
+        agentLogger.invocation(SVC, userId, workoutResult, 'get-workout');
 
         // Step 2: Format for SMS
         const formatResult = await runner.invoke('format-workout', workoutResult.output);
+        agentLogger.invocation(SVC, userId, formatResult, 'format-workout');
 
         // Parse formatted output
         let message: string;
@@ -77,7 +81,7 @@ export function createNewDailyWorkoutService(deps: NewDailyWorkoutServiceDeps): 
           content: message,
         });
 
-        console.log('[NewDailyWorkoutService] Workout generated:', { userId, isRestDay });
+        agentLogger.info({ service: SVC, event: 'complete', userId, meta: { isRestDay } });
 
         return {
           success: true,
@@ -86,7 +90,7 @@ export function createNewDailyWorkoutService(deps: NewDailyWorkoutServiceDeps): 
           isRestDay,
         };
       } catch (error) {
-        console.error('[NewDailyWorkoutService] Error:', error);
+        agentLogger.error({ service: SVC, event: 'error', userId, error: error instanceof Error ? error.message : String(error) });
         return {
           success: false,
           error: error instanceof Error ? error.message : String(error),

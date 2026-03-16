@@ -10,6 +10,7 @@
 import type { Runner } from '@agent-runner/core';
 import type { UserWithProfile } from '@/server/models/user';
 import { fitnessContextId, chatSessionId, appendMessageToSession } from '../helpers';
+import { agentLogger } from '../logger';
 
 export interface OnboardingResult {
   success: boolean;
@@ -35,28 +36,31 @@ export function createNewOnboardingService(deps: NewOnboardingServiceDeps): NewO
       const timezone = user.timezone || 'America/New_York';
       const contextId = fitnessContextId(userId);
 
+      const SVC = 'NewOnboardingService';
       try {
-        console.log('[NewOnboardingService] Starting onboarding for user:', userId);
+        agentLogger.info({ service: SVC, event: 'starting', userId });
 
         // Step 1: Create comprehensive fitness context from signup data
         const signupDescription = formatSignupData(signupData, user);
-        console.log('[NewOnboardingService] Creating fitness context...');
-        await runner.invoke('update-fitness', signupDescription, {
+        agentLogger.info({ service: SVC, event: 'creating_context', userId, agentId: 'update-fitness' });
+        const ctxResult = await runner.invoke('update-fitness', signupDescription, {
           contextIds: [contextId],
         });
+        agentLogger.invocation(SVC, userId, ctxResult, 'update-fitness');
 
         // Step 2: Generate first workout
-        console.log('[NewOnboardingService] Generating first workout...');
+        agentLogger.info({ service: SVC, event: 'generating_workout', userId, agentId: 'get-workout' });
         const workoutResult = await runner.invoke('get-workout', JSON.stringify({
           date: new Date().toISOString().split('T')[0],
           timezone,
         }), {
           contextIds: [contextId],
         });
+        agentLogger.invocation(SVC, userId, workoutResult, 'get-workout');
 
         // Step 3: Format workout for SMS
-        console.log('[NewOnboardingService] Formatting workout message...');
         const formatResult = await runner.invoke('format-workout', workoutResult.output);
+        agentLogger.invocation(SVC, userId, formatResult, 'format-workout');
 
         // Parse formatted output
         let message: string;
@@ -75,7 +79,7 @@ export function createNewOnboardingService(deps: NewOnboardingServiceDeps): NewO
           content: message,
         });
 
-        console.log('[NewOnboardingService] Onboarding complete for user:', userId);
+        agentLogger.info({ service: SVC, event: 'complete', userId });
 
         return {
           success: true,
@@ -83,7 +87,7 @@ export function createNewOnboardingService(deps: NewOnboardingServiceDeps): NewO
           workoutDetails: details,
         };
       } catch (error) {
-        console.error('[NewOnboardingService] Error:', error);
+        agentLogger.error({ service: SVC, event: 'error', userId, error: error instanceof Error ? error.message : String(error) });
         return {
           success: false,
           error: error instanceof Error ? error.message : String(error),
