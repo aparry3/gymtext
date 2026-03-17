@@ -24,7 +24,8 @@
     "dev": "tsc --watch",
     "db:codegen": "kysely-codegen --dialect postgres --camel-case --out-file ./src/server/models/_types/index.ts --exclude-pattern '^kysely_' --log-level info --type-only-imports",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "eval:compare": "tsx src/server/agent-runner/evals/run-comparison.ts"
   },
   "dependencies": {
     "@agent-runner/core": "link:/Users/openclaw/Projects/agent-runner/packages/core",
