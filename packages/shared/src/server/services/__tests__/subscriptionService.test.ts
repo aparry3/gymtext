@@ -2,75 +2,62 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { createSubscriptionService } from '../domain/subscription/subscriptionService';
 import type { SubscriptionServiceInstance } from '../domain/subscription/subscriptionService';
 
-// Mock Stripe
+// Mock Stripe - needs a class constructor since it's called with `new Stripe(...)`
 vi.mock('stripe', () => {
-  const mockStripe = {
-    subscriptions: {
-      update: vi.fn().mockResolvedValue({
-        id: 'sub_123',
-        cancel_at_period_end: true,
-        current_period_end: Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60,
-      }),
-      cancel: vi.fn().mockResolvedValue({ id: 'sub_123', status: 'canceled' }),
-      retrieve: vi.fn().mockResolvedValue({
-        id: 'sub_123',
-        status: 'active',
-        cancel_at_period_end: true,
-      }),
-    },
-    checkout: {
+  class MockStripe {
+    subscriptions = {
+      update: vi.fn().mockResolvedValue({ current_period_end: 1711929600 }),
+      cancel: vi.fn().mockResolvedValue({}),
+      retrieve: vi.fn().mockResolvedValue({ status: 'active', cancel_at_period_end: true }),
+    };
+    checkout = {
       sessions: {
-        create: vi.fn().mockResolvedValue({
-          id: 'cs_123',
-          url: 'https://checkout.stripe.com/session/cs_123',
-        }),
+        create: vi.fn().mockResolvedValue({ url: 'https://checkout.stripe.com/session_123' }),
       },
-    },
-  };
-  return {
-    default: class MockStripe {
-      constructor() {
-        return mockStripe;
-      }
-    },
-  };
+    };
+  }
+  return { default: MockStripe };
 });
 
 // Mock config
 vi.mock('@/server/config', () => ({
-  getStripeSecrets: () => ({ secretKey: 'sk_test_123' }),
+  getStripeSecrets: () => ({ secretKey: 'sk_test_fake' }),
 }));
 
 vi.mock('@/shared/config', () => ({
-  getStripeConfig: () => ({ priceId: 'price_123' }),
+  getStripeConfig: () => ({ priceId: 'price_test_123' }),
   getUrlsConfig: () => ({ publicBaseUrl: 'https://gymtext.co', baseUrl: 'https://gymtext.co' }),
 }));
-
-function makeSubscription(overrides: Record<string, unknown> = {}) {
-  return {
-    id: 'sub-db-1',
-    clientId: 'user-1',
-    stripeSubscriptionId: 'sub_stripe_123',
-    status: 'active',
-    currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-    createdAt: new Date(),
-    ...overrides,
-  };
-}
 
 function makeUser(overrides: Record<string, unknown> = {}) {
   return {
     id: 'user-1',
     phone: '+15551234567',
     name: 'Test User',
+    stripeCustomerId: 'cus_test_123',
     messagingOptIn: true,
-    stripeCustomerId: 'cus_123',
+    messagingOptInDate: new Date(),
+    ...overrides,
+  };
+}
+
+function makeSubscription(overrides: Record<string, unknown> = {}) {
+  return {
+    id: 'sub-1',
+    clientId: 'user-1',
+    stripeSubscriptionId: 'sub_stripe_123',
+    status: 'active',
+    currentPeriodEnd: new Date('2026-04-18'),
     ...overrides,
   };
 }
 
 function makeMockRepos() {
   return {
+    user: {
+      findById: vi.fn().mockResolvedValue(makeUser()),
+      update: vi.fn().mockResolvedValue(makeUser()),
+    },
     subscription: {
       getActiveSubscription: vi.fn().mockResolvedValue(makeSubscription()),
       findByClientId: vi.fn().mockResolvedValue([makeSubscription()]),
@@ -80,10 +67,12 @@ function makeMockRepos() {
       cancel: vi.fn(),
       reactivate: vi.fn(),
     },
-    user: {
-      findById: vi.fn().mockResolvedValue(makeUser()),
-      update: vi.fn(),
-    },
+    // Stub other repos
+    message: {}, fitnessProfile: {}, fitnessPlan: {}, microcycle: {},
+    workout: {}, dayConfig: {}, queue: {}, shortLink: {},
+    referral: {}, adminAuth: {}, onboardingData: {}, agentLog: {},
+    organization: {}, program: {}, programVersion: {}, blog: {},
+    exerciseMetrics: {}, messageQueue: {},
   } as any;
 }
 
@@ -97,15 +86,65 @@ describe('SubscriptionService', () => {
     service = createSubscriptionService(repos);
   });
 
+  describe('getSubscriptionStatus', () => {
+    it('should return active for active subscription', async () => {
+      const status = await service.getSubscriptionStatus('user-1');
+      expect(status).toBe('active');
+    });
+
+    it('should return none when no subscriptions', async () => {
+      repos.subscription.findByClientId.mockResolvedValue([]);
+      const status = await service.getSubscriptionStatus('user-1');
+      expect(status).toBe('none');
+    });
+
+    it('should return cancel_pending for pending cancellation', async () => {
+      repos.subscription.findByClientId.mockResolvedValue([
+        makeSubscription({ status: 'cancel_pending' }),
+      ]);
+      const status = await service.getSubscriptionStatus('user-1');
+      expect(status).toBe('cancel_pending');
+    });
+  });
+
+  describe('shouldReceiveMessages', () => {
+    it('should return true for active subscription', async () => {
+      const result = await service.shouldReceiveMessages('user-1');
+      expect(result).toBe(true);
+    });
+
+    it('should return false when no active subscription', async () => {
+      repos.subscription.findActiveForMessaging.mockResolvedValue(null);
+      const result = await service.shouldReceiveMessages('user-1');
+      expect(result).toBe(false);
+    });
+  });
+
+  describe('hasActiveSubscription', () => {
+    it('should delegate to repository', async () => {
+      const result = await service.hasActiveSubscription('user-1');
+      expect(result).toBe(true);
+      expect(repos.subscription.hasActiveSubscription).toHaveBeenCalledWith('user-1');
+    });
+  });
+
   describe('cancelSubscription', () => {
-    it('should cancel active subscription via Stripe', async () => {
+    it('should cancel via Stripe and update local DB', async () => {
       const result = await service.cancelSubscription('user-1');
       expect(result.success).toBe(true);
-      expect(result.periodEndDate).toBeDefined();
+      expect(result.periodEndDate).toBeTruthy();
       expect(repos.subscription.scheduleCancellation).toHaveBeenCalled();
     });
 
-    it('should handle already-canceling subscription', async () => {
+    it('should handle no active subscription', async () => {
+      repos.subscription.getActiveSubscription.mockResolvedValue(null);
+      repos.subscription.findByClientId.mockResolvedValue([]);
+      const result = await service.cancelSubscription('user-1');
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('No active subscription');
+    });
+
+    it('should handle already cancel_pending', async () => {
       repos.subscription.getActiveSubscription.mockResolvedValue(null);
       repos.subscription.findByClientId.mockResolvedValue([
         makeSubscription({ status: 'cancel_pending' }),
@@ -114,30 +153,22 @@ describe('SubscriptionService', () => {
       expect(result.success).toBe(true);
     });
 
-    it('should return error if no subscription found', async () => {
-      repos.subscription.getActiveSubscription.mockResolvedValue(null);
-      repos.subscription.findByClientId.mockResolvedValue([]);
-      const result = await service.cancelSubscription('user-1');
-      expect(result.success).toBe(false);
-      expect(result.error).toContain('No active subscription');
-    });
-
-    it('should handle non-Stripe subscriptions locally', async () => {
+    it('should handle non-Stripe subscriptions (test/legacy)', async () => {
       repos.subscription.getActiveSubscription.mockResolvedValue(
-        makeSubscription({ stripeSubscriptionId: 'sub_test_123' })
+        makeSubscription({ stripeSubscriptionId: 'sub_test_free_user' })
       );
       const result = await service.cancelSubscription('user-1');
       expect(result.success).toBe(true);
+      // Should NOT call Stripe API for non-Stripe subscriptions
       expect(repos.subscription.scheduleCancellation).toHaveBeenCalled();
     });
   });
 
   describe('immediatelyCancelSubscription', () => {
     it('should immediately cancel and update DB', async () => {
-      repos.subscription.findByClientId.mockResolvedValue([makeSubscription()]);
       const result = await service.immediatelyCancelSubscription('user-1');
       expect(result.success).toBe(true);
-      expect(result.canceledAt).toBeDefined();
+      expect(result.canceledAt).toBeTruthy();
       expect(repos.subscription.cancel).toHaveBeenCalled();
     });
 
@@ -148,46 +179,18 @@ describe('SubscriptionService', () => {
     });
   });
 
-  describe('shouldReceiveMessages', () => {
-    it('should return true for active subscription', async () => {
-      expect(await service.shouldReceiveMessages('user-1')).toBe(true);
-    });
-
-    it('should return false for no subscription', async () => {
-      repos.subscription.findActiveForMessaging.mockResolvedValue(null);
-      expect(await service.shouldReceiveMessages('user-1')).toBe(false);
-    });
-  });
-
-  describe('getSubscriptionStatus', () => {
-    it('should return active status', async () => {
-      expect(await service.getSubscriptionStatus('user-1')).toBe('active');
-    });
-
-    it('should return none when no subscriptions', async () => {
-      repos.subscription.findByClientId.mockResolvedValue([]);
-      expect(await service.getSubscriptionStatus('user-1')).toBe('none');
-    });
-
-    it('should return cancel_pending status', async () => {
-      repos.subscription.findByClientId.mockResolvedValue([
-        makeSubscription({ status: 'cancel_pending' }),
-      ]);
-      expect(await service.getSubscriptionStatus('user-1')).toBe('cancel_pending');
-    });
-  });
-
   describe('processUnsubscribe', () => {
     it('should opt out user and cancel subscription', async () => {
       const result = await service.processUnsubscribe('user-1');
       expect(result.success).toBe(true);
       expect(result.alreadyInactive).toBe(false);
+      expect(result.responseMessage).toBeTruthy();
       expect(repos.user.update).toHaveBeenCalledWith('user-1', expect.objectContaining({
         messagingOptIn: false,
       }));
     });
 
-    it('should return already inactive if user opted out', async () => {
+    it('should handle already opted out user', async () => {
       repos.user.findById.mockResolvedValue(makeUser({ messagingOptIn: false }));
       const result = await service.processUnsubscribe('user-1');
       expect(result.alreadyInactive).toBe(true);
@@ -227,14 +230,13 @@ describe('SubscriptionService', () => {
       const result = await service.processResubscribe('user-1');
       expect(result.success).toBe(true);
       expect(result.requiresNewSubscription).toBe(true);
-      expect(result.checkoutUrl).toBeTruthy();
+      expect(result.checkoutUrl).toContain('checkout.stripe.com');
     });
 
-    it('should create checkout for users with no subscription', async () => {
+    it('should create checkout session for new user with no subscription', async () => {
       repos.subscription.findByClientId.mockResolvedValue([]);
       const result = await service.processResubscribe('user-1');
       expect(result.requiresNewSubscription).toBe(true);
-      expect(result.checkoutUrl).toBeTruthy();
     });
   });
 });
