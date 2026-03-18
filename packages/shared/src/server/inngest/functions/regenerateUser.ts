@@ -11,8 +11,6 @@
 import { inngest } from '@/server/connections/inngest/client';
 import { createServicesFromDb } from '@/server/services';
 import { postgresDb } from '@/server/connections/postgres/postgres';
-import { getRunner } from '@/server/agent-runner/runner';
-import { createNewRegenerationService } from '@/server/agent-runner/services/newRegenerationService';
 import type { RegenerationStep } from '@/server/services/agents/regeneration';
 
 // Create services container at module level (Inngest always uses production)
@@ -35,6 +33,8 @@ export const regenerateUserFunction = inngest.createFunction(
     // V2: Use agent-runner if enabled
     if (useAgentRunner()) {
       console.log(`[Inngest] Using agent-runner V2 for regeneration of user ${userId}`);
+      const { getRunner } = await import('@/server/agent-runner/runner');
+      const { createNewRegenerationService } = await import('@/server/agent-runner/services/newRegenerationService');
       const newRegen = createNewRegenerationService({ runner: getRunner() });
       result = await step.run('v2-regenerate', () => newRegen.regenerateUser(userId));
     } else {

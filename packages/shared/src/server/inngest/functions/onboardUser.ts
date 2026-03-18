@@ -28,8 +28,6 @@ import { inngest } from '@/server/connections/inngest/client';
 import { createServicesFromDb } from '@/server/services';
 import { createOnboardingSteps } from '@/server/services/orchestration/onboardingSteps';
 import { postgresDb } from '@/server/connections/postgres/postgres';
-import { getRunner } from '@/server/agent-runner/runner';
-import { createNewOnboardingService } from '@/server/agent-runner/services/newOnboardingService';
 import type { UserWithProfile } from '@/server/models/user';
 import type { FitnessPlan } from '@/server/models/fitnessPlan';
 import type { Microcycle } from '@/server/models/microcycle';
@@ -66,6 +64,8 @@ export const onboardUserFunction = inngest.createFunction(
           // Get signup data
           const signupData = await services.onboardingData.getSignupData(userId) ?? {};
 
+          const { getRunner } = await import('@/server/agent-runner/runner');
+          const { createNewOnboardingService } = await import('@/server/agent-runner/services/newOnboardingService');
           const newOnboarding = createNewOnboardingService({ runner: getRunner() });
           const onboardResult = await newOnboarding.onboardUser(user, signupData as Record<string, unknown>);
 

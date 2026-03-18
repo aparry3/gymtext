@@ -28,8 +28,8 @@
     "eval:compare": "tsx src/server/agent-runner/evals/run-comparison.ts"
   },
   "dependencies": {
-    "@agent-runner/core": "link:/Users/openclaw/Projects/agent-runner/packages/core",
-    "@agent-runner/store-postgres": "link:/Users/openclaw/Projects/agent-runner/packages/store-postgres",
+    "@agent-runner/core": "^0.1.2",
+    "@agent-runner/store-postgres": "^0.1.1",
     "@ai-sdk/anthropic": "^3.0.58",
     "@ai-sdk/google": "^3.0.43",
     "@ai-sdk/openai": "^3.0.41",
@@ -38,6 +38,7 @@
     "@langchain/core": "^1.1.3",
     "@langchain/google-genai": "^0.2.4",
     "@langchain/openai": "^0.6.13",
+    "@modelcontextprotocol/sdk": "^1.27.1",
     "@pinecone-database/pinecone": "^5.1.1",
     "@vercel/blob": "^2.0.0",
     "ai": "^6.0.116",

@@ -19,8 +19,6 @@
 import { inngest } from '@/server/connections/inngest/client';
 import { createServicesFromDb } from '@/server/services';
 import { postgresDb } from '@/server/connections/postgres/postgres';
-import { getRunner } from '@/server/agent-runner/runner';
-import { createNewDailyWorkoutService } from '@/server/agent-runner/services/newDailyWorkoutService';
 
 // Create services container at module level (Inngest always uses production)
 const services = createServicesFromDb(postgresDb);
@@ -50,6 +48,8 @@ export const sendDailyWorkoutFunction = inngest.createFunction(
       // V2: Use agent-runner if enabled
       if (useAgentRunner()) {
         console.log('[Inngest] Using agent-runner V2 for daily workout');
+        const { getRunner } = await import('@/server/agent-runner/runner');
+        const { createNewDailyWorkoutService } = await import('@/server/agent-runner/services/newDailyWorkoutService');
         const newDailyWorkout = createNewDailyWorkoutService({ runner: getRunner() });
         const timezone = user.timezone || 'America/New_York';
         const workoutResult = await newDailyWorkout.generateDailyWorkout(user.id, timezone);

@@ -20,8 +20,6 @@
 import { inngest } from '@/server/connections/inngest/client';
 import { createServicesFromDb } from '@/server/services';
 import { postgresDb } from '@/server/connections/postgres/postgres';
-import { getRunner } from '@/server/agent-runner/runner';
-import { createNewWeeklyMessageService } from '@/server/agent-runner/services/newWeeklyMessageService';
 
 // Create services container at module level (Inngest always uses production)
 const services = createServicesFromDb(postgresDb);
@@ -55,6 +53,8 @@ export const sendWeeklyMessageFunction = inngest.createFunction(
       // V2: Use agent-runner if enabled
       if (useAgentRunner()) {
         console.log('[Inngest] Using agent-runner V2 for weekly message');
+        const { getRunner } = await import('@/server/agent-runner/runner');
+        const { createNewWeeklyMessageService } = await import('@/server/agent-runner/services/newWeeklyMessageService');
         const newWeekly = createNewWeeklyMessageService({ runner: getRunner() });
         const timezone = user.timezone || 'America/New_York';
         const weeklyResult = await newWeekly.generateWeeklyMessage(user.id, timezone);
