@@ -2,10 +2,13 @@
  * New Onboarding Service (V2)
  *
  * Handles user onboarding using agent-runner.
- * Replaces the old 7-step pipeline with 3 agent calls:
+ * Replaces the old 7-step pipeline with 4 agent calls:
  * 1. update-fitness (create comprehensive context from signup data)
- * 2. get-workout (generate first workout)
- * 3. format-workout (format for SMS)
+ * 2. chat (generate plan summary from fitness context)
+ * 3. get-workout (generate first workout)
+ * 4. format-workout (format for SMS)
+ *
+ * Also sends the welcome message (static template, no LLM needed).
  */
 import type { Runner } from '@agent-runner/core';
 import type { UserWithProfile } from '@/server/models/user';
@@ -14,10 +17,18 @@ import { agentLogger } from '../logger';
 
 export interface OnboardingResult {
   success: boolean;
+  welcomeMessage: string;
+  planSummaryMessage?: string;
   workoutMessage?: string;
   workoutDetails?: Record<string, unknown>;
+  /** All messages in send order */
+  messages: string[];
   error?: string;
 }
+
+/** Static welcome message — no LLM needed */
+const WELCOME_MESSAGE =
+  "Welcome to GymText! Ready to transform your fitness? We'll be texting you daily workouts starting soon. Msg & data rates may apply. Reply HELP for support or STOP to opt out.";
 
 export interface NewOnboardingServiceInstance {
   onboardUser(user: UserWithProfile, signupData: Record<string, unknown>): Promise<OnboardingResult>;
@@ -35,8 +46,11 @@ export function createNewOnboardingService(deps: NewOnboardingServiceDeps): NewO
       const userId = user.id;
       const timezone = user.timezone || 'America/New_York';
       const contextId = fitnessContextId(userId);
+      const sessionId = chatSessionId(userId);
 
       const SVC = 'NewOnboardingService';
+      const allMessages: string[] = [];
+
       try {
         agentLogger.info({ service: SVC, event: 'starting', userId });
 
@@ -48,7 +62,25 @@ export function createNewOnboardingService(deps: NewOnboardingServiceDeps): NewO
         });
         agentLogger.invocation(SVC, userId, ctxResult, 'update-fitness');
 
-        // Step 2: Generate first workout
+        // Step 2: Generate plan summary from fitness context
+        // Uses chat agent with context to produce a natural plan overview
+        agentLogger.info({ service: SVC, event: 'generating_plan_summary', userId, agentId: 'chat' });
+        const planSummaryResult = await runner.invoke(
+          'chat',
+          'Generate a brief, exciting plan summary for this new user. ' +
+          'Introduce their training plan: what kind of split they\'ll follow, how many days per week, ' +
+          'what their first week looks like, and when their first workout starts. ' +
+          'Keep it under 1200 characters (SMS-friendly). Be warm and motivating. ' +
+          'Do NOT include the actual workout exercises — just the plan overview.',
+          {
+            contextIds: [contextId],
+            sessionId,
+          }
+        );
+        agentLogger.invocation(SVC, userId, planSummaryResult, 'chat');
+        const planSummaryMessage = planSummaryResult.output;
+
+        // Step 3: Generate first workout
         agentLogger.info({ service: SVC, event: 'generating_workout', userId, agentId: 'get-workout' });
         const workoutResult = await runner.invoke('get-workout', JSON.stringify({
           date: new Date().toISOString().split('T')[0],
@@ -58,38 +90,53 @@ export function createNewOnboardingService(deps: NewOnboardingServiceDeps): NewO
         });
         agentLogger.invocation(SVC, userId, workoutResult, 'get-workout');
 
-        // Step 3: Format workout for SMS
+        // Step 4: Format workout for SMS
         const formatResult = await runner.invoke('format-workout', workoutResult.output);
         agentLogger.invocation(SVC, userId, formatResult, 'format-workout');
 
         // Parse formatted output
-        let message: string;
+        let workoutMessage: string;
         let details: Record<string, unknown> = {};
         try {
           const parsed = JSON.parse(formatResult.output);
-          message = parsed.message;
+          workoutMessage = parsed.message;
           details = parsed.details || {};
         } catch {
-          message = formatResult.output;
+          workoutMessage = formatResult.output;
         }
 
-        // Inject the workout message into the chat session for continuity
-        await appendMessageToSession(runner, chatSessionId(userId), {
+        // Build message queue (in send order)
+        allMessages.push(WELCOME_MESSAGE);
+        allMessages.push(planSummaryMessage);
+        allMessages.push(workoutMessage);
+
+        // Inject messages into chat session for continuity
+        // (plan summary and workout so the chat agent has context)
+        await appendMessageToSession(runner, sessionId, {
           role: 'assistant',
-          content: message,
+          content: planSummaryMessage,
+        });
+        await appendMessageToSession(runner, sessionId, {
+          role: 'assistant',
+          content: workoutMessage,
         });
 
-        agentLogger.info({ service: SVC, event: 'complete', userId });
+        agentLogger.info({ service: SVC, event: 'complete', userId, messageCount: allMessages.length });
 
         return {
           success: true,
-          workoutMessage: message,
+          welcomeMessage: WELCOME_MESSAGE,
+          planSummaryMessage,
+          workoutMessage,
           workoutDetails: details,
+          messages: allMessages,
         };
       } catch (error) {
         agentLogger.error({ service: SVC, event: 'error', userId, error: error instanceof Error ? error.message : String(error) });
         return {
           success: false,
+          welcomeMessage: WELCOME_MESSAGE,
+          messages: allMessages.length > 0 ? allMessages : [WELCOME_MESSAGE],
           error: error instanceof Error ? error.message : String(error),
         };
       }

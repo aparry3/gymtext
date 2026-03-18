@@ -73,9 +73,16 @@ export const onboardUserFunction = inngest.createFunction(
             throw new Error(`Onboarding failed: ${onboardResult.error}`);
           }
 
-          // Send welcome + workout messages
-          if (onboardResult.workoutMessage) {
-            await services.messagingOrchestrator.sendImmediate(user, onboardResult.workoutMessage);
+          // Send all onboarding messages in order:
+          // 1. Welcome message (static)
+          // 2. Plan summary (LLM-generated)
+          // 3. Workout message (LLM-generated)
+          const messagesToSend = onboardResult.messages
+            .filter(Boolean)
+            .map(content => ({ content }));
+
+          if (messagesToSend.length > 0) {
+            await services.messagingOrchestrator.queueMessages(user, messagesToSend, 'onboarding');
           }
 
           return onboardResult;
