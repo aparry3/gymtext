@@ -28,7 +28,10 @@ export const sendWeeklyMessageFunction = inngest.createFunction(
   {
     id: 'send-weekly-message',
     name: 'Send Weekly Check-in Message',
-    retries: 3, // Retry up to 3 times on failure
+    retries: 3,
+    concurrency: {
+      limit: 25, // Bounded by AI rate limits, same as daily
+    },
   },
   { event: 'weekly/scheduled' },
   async ({ event, step }) => {

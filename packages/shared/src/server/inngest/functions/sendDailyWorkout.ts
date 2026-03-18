@@ -27,7 +27,10 @@ export const sendDailyWorkoutFunction = inngest.createFunction(
   {
     id: 'send-daily-workout',
     name: 'Send Daily Workout Message',
-    retries: 3, // Retry up to 3 times on failure
+    retries: 3,
+    concurrency: {
+      limit: 25, // Max 25 concurrent workout generations (bounded by AI rate limits)
+    },
   },
   { event: 'workout/scheduled' },
   async ({ event, step }) => {

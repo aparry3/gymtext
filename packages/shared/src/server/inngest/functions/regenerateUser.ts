@@ -21,6 +21,9 @@ export const regenerateUserFunction = inngest.createFunction(
     id: 'regenerate-user',
     name: 'Regenerate User Dossier',
     retries: 1,
+    concurrency: {
+      limit: 5, // Very heavy, admin-triggered only
+    },
   },
   { event: 'user/regeneration.requested' },
   async ({ event, step }) => {
