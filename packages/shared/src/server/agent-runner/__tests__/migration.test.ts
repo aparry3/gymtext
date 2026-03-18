@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { migrateUserContext, migrateChatHistory } from '../migration/migrate-user-context.js';
+import { migrateUserContext, migrateUserContextViaAgent, migrateChatHistory, migrateUsers } from '../migration/migrate-user-context.js';
 import type { Runner } from '@agent-runner/core';
 
 function createMockRunner(): Runner {
@@ -77,6 +77,123 @@ describe('migrateUserContext', () => {
     expect(result.success).toBe(true);
     expect(result.hasProfile).toBe(true);
     expect(result.hasPlan).toBe(false);
+  });
+});
+
+describe('migrateUserContextViaAgent', () => {
+  function createAgentMockRunner(): Runner {
+    return {
+      invoke: vi.fn().mockResolvedValue({
+        output: 'Structured fitness context',
+        invocationId: 'inv-1',
+        toolCalls: [],
+        usage: { promptTokens: 200, completionTokens: 300, totalTokens: 500 },
+        duration: 2000,
+        model: 'gpt-4o',
+      }),
+      context: {
+        get: vi.fn().mockResolvedValue([]),
+        add: vi.fn().mockResolvedValue(undefined),
+        clear: vi.fn().mockResolvedValue(undefined),
+      },
+      sessions: {
+        append: vi.fn().mockResolvedValue(undefined),
+        getMessages: vi.fn().mockResolvedValue([]),
+        deleteSession: vi.fn().mockResolvedValue(undefined),
+        listSessions: vi.fn().mockResolvedValue([]),
+      },
+    } as unknown as Runner;
+  }
+
+  it('should use update-fitness agent to normalize data', async () => {
+    const runner = createAgentMockRunner();
+    const markdown = createMockMarkdown({
+      profile: 'Name: John\nAge: 30',
+      plan: { content: '4-day split' },
+      week: { content: 'Monday: Upper' },
+    });
+
+    const result = await migrateUserContextViaAgent(runner as any, markdown as any, 'user-1');
+
+    expect(result.success).toBe(true);
+    // Should call update-fitness agent instead of context.add
+    expect(runner.invoke).toHaveBeenCalledWith(
+      'update-fitness',
+      expect.stringContaining('Migrating existing user'),
+      expect.objectContaining({
+        contextIds: ['users/user-1/fitness'],
+      })
+    );
+    // Input should include all existing data
+    const invokeInput = (runner.invoke as any).mock.calls[0][1];
+    expect(invokeInput).toContain('Existing Profile');
+    expect(invokeInput).toContain('Existing Training Plan');
+    expect(invokeInput).toContain('Current Week Schedule');
+  });
+
+  it('should fail gracefully when no data exists', async () => {
+    const runner = createAgentMockRunner();
+    const markdown = createMockMarkdown();
+
+    const result = await migrateUserContextViaAgent(runner as any, markdown as any, 'user-2');
+
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('No profile or plan data');
+    expect(runner.invoke).not.toHaveBeenCalled();
+  });
+
+  it('should handle agent errors gracefully', async () => {
+    const runner = createAgentMockRunner();
+    (runner.invoke as any).mockRejectedValue(new Error('Rate limited'));
+    const markdown = createMockMarkdown({
+      profile: 'Name: Jane',
+    });
+
+    const result = await migrateUserContextViaAgent(runner as any, markdown as any, 'user-3');
+
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('Rate limited');
+  });
+});
+
+describe('migrateUsers batch', () => {
+  it('should migrate multiple users with direct strategy', async () => {
+    const runner = createMockRunner();
+    const markdown = createMockMarkdown({
+      profile: 'Name: Test',
+      plan: { content: 'Plan content' },
+    });
+
+    const results = await migrateUsers(
+      runner as any,
+      markdown as any,
+      ['user-1', 'user-2', 'user-3'],
+      { strategy: 'direct' }
+    );
+
+    expect(results).toHaveLength(3);
+    expect(results.every(r => r.success)).toBe(true);
+    expect(runner.context.add).toHaveBeenCalledTimes(3);
+  });
+
+  it('should report progress', async () => {
+    const runner = createMockRunner();
+    const markdown = createMockMarkdown({ profile: 'Name: Test' });
+    const progress: Array<{ completed: number; total: number }> = [];
+
+    await migrateUsers(
+      runner as any,
+      markdown as any,
+      ['user-1', 'user-2'],
+      {
+        strategy: 'direct',
+        onProgress: (completed, total) => progress.push({ completed, total }),
+      }
+    );
+
+    expect(progress).toHaveLength(2);
+    expect(progress[0]).toEqual({ completed: 1, total: 2 });
+    expect(progress[1]).toEqual({ completed: 2, total: 2 });
   });
 });
 
