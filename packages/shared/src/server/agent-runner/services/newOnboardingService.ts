@@ -121,7 +121,7 @@ export function createNewOnboardingService(deps: NewOnboardingServiceDeps): NewO
           content: workoutMessage,
         });
 
-        agentLogger.info({ service: SVC, event: 'complete', userId, messageCount: allMessages.length });
+        agentLogger.info({ service: SVC, event: 'complete', userId, meta: { messageCount: allMessages.length } });
 
         return {
           success: true,

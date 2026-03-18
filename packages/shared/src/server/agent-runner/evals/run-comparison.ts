@@ -7,12 +7,7 @@
  */
 
 import { runComparisonEval, formatReportMarkdown } from './comparison-eval';
-import { TEST_SCENARIOS, EDGE_CASE_SCENARIOS, ALL_SCENARIOS } from './test-scenarios';
-import { ServiceContainer } from '../../services/service-container';
-import { createGymtextRunner } from '../runner';
-import { NewChatService } from '../services/new-chat.service';
-import { NewOnboardingService } from '../services/new-onboarding.service';
-import { NewDailyWorkoutService } from '../services/new-daily-workout.service';
+import { TEST_SCENARIOS, ALL_SCENARIOS } from './test-scenarios';
 import { writeFile } from 'fs/promises';
 import { join } from 'path';
 
@@ -29,14 +24,22 @@ async function main() {
   console.log(`📝 Output: ${outputPath}\n`);
 
   // Initialize services
+  // NOTE: Requires dynamic imports at runtime — these depend on DB connection
   console.log('🔧 Initializing services...');
-  const services = new ServiceContainer();
-  const runner = createGymtextRunner();
+  const { createServicesFromDb } = await import('../../services/index.js');
+  const { postgresDb } = await import('../../connections/postgres/postgres.js');
+  const { getRunner } = await import('../runner.js');
+  const { createNewOnboardingService } = await import('../services/newOnboardingService.js');
+  const { createNewDailyWorkoutService } = await import('../services/newDailyWorkoutService.js');
 
+  const services = createServicesFromDb(postgresDb);
+  const runner = getRunner();
+
+  // New services for comparison — chat service needs message service too
   const newServices = {
-    newChat: new NewChatService(runner),
-    newOnboarding: new NewOnboardingService(runner),
-    newDailyWorkout: new NewDailyWorkoutService(runner),
+    newChat: (services as any).newChat, // Uses the one from ServiceContainer if available
+    newOnboarding: createNewOnboardingService({ runner }),
+    newDailyWorkout: createNewDailyWorkoutService({ runner }),
   };
 
   // Run comparison
