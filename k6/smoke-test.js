@@ -39,10 +39,10 @@ export default function () {
 
   errorRate.add(healthOk ? 0 : 1);
 
-  // Verify Twilio webhook endpoint exists (should return 405 for GET)
+  // Verify Twilio webhook endpoint exists (returns 405 for GET — POST only)
   const webhookRes = http.get(`${BASE_URL}/api/twilio/sms`);
   check(webhookRes, {
-    'webhook endpoint exists': (r) => r.status !== 404,
+    'webhook endpoint exists (405 expected)': (r) => r.status === 405 || r.status === 200,
   });
 
   sleep(1);
