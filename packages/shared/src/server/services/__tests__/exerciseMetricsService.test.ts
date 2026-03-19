@@ -10,19 +10,19 @@ function makeMockRepos() {
         clientId: 'user-1',
         workoutId: 'workout-1',
         exerciseId: 'exercise-1',
-        data: { type: 'strength', sets: [{ weight: 135, reps: 8 }] },
+        data: { type: 'strength', sets: [{ reps: 8, weight: 135 }] },
       }),
       getByWorkoutId: vi.fn().mockResolvedValue([
-        { id: 'metric-1', exerciseId: 'ex-1', data: { type: 'strength', sets: [{ weight: 135, reps: 8 }] } },
-        { id: 'metric-2', exerciseId: 'ex-2', data: { type: 'strength', sets: [{ weight: 185, reps: 5 }] } },
+        { exerciseId: 'ex-1', data: { type: 'strength', sets: [{ reps: 8, weight: 135 }] } },
+        { exerciseId: 'ex-2', data: { type: 'cardio', duration: 30, distance: 3.1 } },
       ]),
       getByExerciseId: vi.fn().mockResolvedValue([
-        { id: 'metric-1', exerciseId: 'ex-1', data: { weight: 135 } },
-        { id: 'metric-2', exerciseId: 'ex-1', data: { weight: 140 } },
+        { id: 'metric-1', data: { type: 'strength', sets: [{ reps: 10, weight: 145 }] } },
+        { id: 'metric-2', data: { type: 'strength', sets: [{ reps: 8, weight: 135 }] } },
       ]),
       getByMovementId: vi.fn().mockResolvedValue([
         { id: 'metric-1', exerciseId: 'ex-1', exercise: { name: 'Bench Press' } },
-        { id: 'metric-2', exerciseId: 'ex-2', exercise: { name: 'Incline Bench' } },
+        { id: 'metric-2', exerciseId: 'ex-3', exercise: { name: 'Incline Bench' } },
       ]),
     },
   } as any;
@@ -39,8 +39,8 @@ describe('ExerciseMetricsService', () => {
   });
 
   describe('saveExerciseProgress', () => {
-    it('should upsert exercise metric data', async () => {
-      const data = { type: 'strength', sets: [{ weight: 135, reps: 8 }] };
+    it('should upsert exercise metric', async () => {
+      const data = { type: 'strength', sets: [{ reps: 8, weight: 135 }] };
       const result = await service.saveExerciseProgress('user-1', 'workout-1', 'exercise-1', data as any);
 
       expect(repos.exerciseMetrics.upsert).toHaveBeenCalledWith({
@@ -57,12 +57,13 @@ describe('ExerciseMetricsService', () => {
     it('should return metrics as exerciseId -> data map', async () => {
       const result = await service.getWorkoutMetrics('workout-1');
 
-      expect(repos.exerciseMetrics.getByWorkoutId).toHaveBeenCalledWith('workout-1');
-      expect(result['ex-1']).toEqual({ type: 'strength', sets: [{ weight: 135, reps: 8 }] });
-      expect(result['ex-2']).toEqual({ type: 'strength', sets: [{ weight: 185, reps: 5 }] });
+      expect(result).toEqual({
+        'ex-1': { type: 'strength', sets: [{ reps: 8, weight: 135 }] },
+        'ex-2': { type: 'cardio', duration: 30, distance: 3.1 },
+      });
     });
 
-    it('should return empty object for workout with no metrics', async () => {
+    it('should return empty object when no metrics', async () => {
       repos.exerciseMetrics.getByWorkoutId.mockResolvedValue([]);
       const result = await service.getWorkoutMetrics('empty-workout');
       expect(result).toEqual({});
@@ -73,13 +74,14 @@ describe('ExerciseMetricsService', () => {
     it('should return raw metric records', async () => {
       const result = await service.getWorkoutMetricRecords('workout-1');
       expect(result).toHaveLength(2);
-      expect(result[0].id).toBe('metric-1');
+      expect(repos.exerciseMetrics.getByWorkoutId).toHaveBeenCalledWith('workout-1');
     });
   });
 
   describe('getExerciseHistory', () => {
-    it('should return exercise history with default limit', async () => {
+    it('should return historical metrics for an exercise', async () => {
       const result = await service.getExerciseHistory('user-1', 'ex-1');
+
       expect(repos.exerciseMetrics.getByExerciseId).toHaveBeenCalledWith('user-1', 'ex-1', 20);
       expect(result).toHaveLength(2);
     });
@@ -93,27 +95,29 @@ describe('ExerciseMetricsService', () => {
   describe('getLastMetricForExercise', () => {
     it('should return the most recent metric', async () => {
       const result = await service.getLastMetricForExercise('user-1', 'ex-1');
+
       expect(repos.exerciseMetrics.getByExerciseId).toHaveBeenCalledWith('user-1', 'ex-1', 1);
       expect(result?.id).toBe('metric-1');
     });
 
-    it('should return undefined when no history exists', async () => {
+    it('should return undefined when no history', async () => {
       repos.exerciseMetrics.getByExerciseId.mockResolvedValue([]);
-      const result = await service.getLastMetricForExercise('user-1', 'ex-1');
+      const result = await service.getLastMetricForExercise('user-1', 'ex-new');
       expect(result).toBeUndefined();
     });
   });
 
   describe('getMovementHistory', () => {
     it('should return metrics across exercise variations', async () => {
-      const result = await service.getMovementHistory('user-1', 'bench-press');
-      expect(repos.exerciseMetrics.getByMovementId).toHaveBeenCalledWith('user-1', 'bench-press', 50);
+      const result = await service.getMovementHistory('user-1', 'bench-press-movement');
+
+      expect(repos.exerciseMetrics.getByMovementId).toHaveBeenCalledWith('user-1', 'bench-press-movement', 50);
       expect(result).toHaveLength(2);
     });
 
     it('should respect custom limit', async () => {
-      await service.getMovementHistory('user-1', 'bench-press', 10);
-      expect(repos.exerciseMetrics.getByMovementId).toHaveBeenCalledWith('user-1', 'bench-press', 10);
+      await service.getMovementHistory('user-1', 'movement-1', 10);
+      expect(repos.exerciseMetrics.getByMovementId).toHaveBeenCalledWith('user-1', 'movement-1', 10);
     });
   });
 });
