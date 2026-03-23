@@ -24,6 +24,8 @@ import { postgresDb } from '@/server/connections/postgres/postgres';
 // Create services container at module level (Inngest always uses production)
 const services = createServicesFromDb(postgresDb);
 
+const useAgentRunner = () => process.env.USE_AGENT_RUNNER === 'true';
+
 export const sendWeeklyMessageFunction = inngest.createFunction(
   {
     id: 'send-weekly-message',
@@ -48,12 +50,24 @@ export const sendWeeklyMessageFunction = inngest.createFunction(
         throw new Error(`User ${userId} not found`);
       }
 
-      // Use the WeeklyMessageService which handles:
-      // 1. Advancing to next week
-      // 2. Getting/creating next week's microcycle
-      // 3. Checking for mesocycle transitions
-      // 4. Generating messages with AI
-      // 5. Sending both messages
+      // V2: Use agent-runner if enabled
+      if (useAgentRunner()) {
+        console.log('[Inngest] Using agent-runner V2 for weekly message');
+        const { getRunner } = await import('@/server/agent-runner/runner');
+        const { createNewWeeklyMessageService } = await import('@/server/agent-runner/services/newWeeklyMessageService');
+        const newWeekly = createNewWeeklyMessageService({ runner: getRunner() });
+        const timezone = user.timezone || 'America/New_York';
+        const weeklyResult = await newWeekly.generateWeeklyMessage(user.id, timezone);
+
+        if (!weeklyResult.success || !weeklyResult.message) {
+          return { success: false, error: weeklyResult.error || 'No weekly message generated', messageIds: [] };
+        }
+
+        const sendResult = await services.messagingOrchestrator.sendImmediate(user, weeklyResult.message);
+        return { success: true, messageIds: [sendResult.messageId].filter(Boolean) };
+      }
+
+      // V1: Legacy path
       const messageResult = await services.weeklyMessage.sendWeeklyMessage(user);
 
       console.log('[Inngest] Weekly message sent:', {
@@ -66,13 +80,13 @@ export const sendWeeklyMessageFunction = inngest.createFunction(
     });
 
     if (!result.success) {
-      throw new Error(`Failed to send weekly message: ${result.error}`);
+      throw new Error(`Failed to send weekly message: ${'error' in result ? result.error : 'Unknown error'}`);
     }
 
     return {
       success: true,
       userId,
-      messageIds: result.messageIds,
+      messageIds: 'messageIds' in result ? result.messageIds : [],
     };
   }
 );

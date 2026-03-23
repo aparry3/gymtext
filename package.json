@@ -101,7 +101,9 @@
     "tailwindcss-animate": "^1.0.7",
     "twilio": "^5.5.2",
     "uuid": "^11.1.0",
-    "zod": "^3.22.4"
+    "zod": "^3.22.4",
+    "@agent-runner/core": "link:../agent-runner/packages/core",
+    "@agent-runner/store-postgres": "link:../agent-runner/packages/store-postgres"
   },
   "pnpm": {
     "overrides": {

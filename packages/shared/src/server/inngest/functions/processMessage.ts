@@ -23,6 +23,8 @@ import { postgresDb } from '@/server/connections/postgres/postgres';
 // Create services container at module level (Inngest always uses production)
 const services = createServicesFromDb(postgresDb);
 
+const useAgentRunner = () => process.env.USE_AGENT_RUNNER === 'true';
+
 export const processMessageFunction = inngest.createFunction(
   {
     id: 'process-message',
@@ -39,7 +41,6 @@ export const processMessageFunction = inngest.createFunction(
 
     // Step 1: Generate response(s) (can be slow - LLM call)
     // Load user fresh in this step to avoid serialization issues
-    // ChatService handles fetching pending messages and splitting context internally
     const messages = await step.run('generate-response', async () => {
       console.log('[Inngest] Loading user and generating response:', userId);
       const user = await services.user.getUser(userId);
@@ -48,11 +49,21 @@ export const processMessageFunction = inngest.createFunction(
         throw new Error(`User ${userId} not found`);
       }
 
-      // ChatService now handles:
-      // - Fetching recent messages (single DB call)
-      // - Splitting into pending vs context
-      // - Aggregating pending message content
-      // - Early return if no pending messages
+      // V2: Use agent-runner if enabled
+      if (useAgentRunner()) {
+        console.log('[Inngest] Using agent-runner V2 for chat');
+        const { getRunner } = await import('@/server/agent-runner/runner');
+        const { createNewChatService } = await import('@/server/agent-runner/services/newChatService');
+        const newChat = createNewChatService({
+          runner: getRunner(),
+          message: services.message,
+        });
+        const chatMessages = await newChat.handleIncomingMessage(user);
+        console.log('[Inngest] V2 response(s) generated, count:', chatMessages.length);
+        return chatMessages;
+      }
+
+      // V1: Legacy path
       const chatMessages = await services.chat.handleIncomingMessage(user);
       console.log('[Inngest] Response(s) generated, count:', chatMessages.length);
       return chatMessages;

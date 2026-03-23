@@ -23,6 +23,8 @@ import { postgresDb } from '@/server/connections/postgres/postgres';
 // Create services container at module level (Inngest always uses production)
 const services = createServicesFromDb(postgresDb);
 
+const useAgentRunner = () => process.env.USE_AGENT_RUNNER === 'true';
+
 export const sendDailyWorkoutFunction = inngest.createFunction(
   {
     id: 'send-daily-workout',
@@ -34,7 +36,6 @@ export const sendDailyWorkoutFunction = inngest.createFunction(
     const { userId, targetDate } = event.data;
 
     // Step 1: Load user and send daily message
-    // This includes workout generation (if needed) and message sending
     const result = await step.run('send-daily-workout', async () => {
       console.log('[Inngest] Sending daily workout:', { userId, targetDate });
 
@@ -44,10 +45,31 @@ export const sendDailyWorkoutFunction = inngest.createFunction(
         throw new Error(`User ${userId} not found`);
       }
 
-      // Use the existing DailyMessageService which handles:
-      // 1. Getting or generating today's workout
-      // 2. Generating the message
-      // 3. Sending via MessageService
+      // V2: Use agent-runner if enabled
+      if (useAgentRunner()) {
+        console.log('[Inngest] Using agent-runner V2 for daily workout');
+        const { getRunner } = await import('@/server/agent-runner/runner');
+        const { createNewDailyWorkoutService } = await import('@/server/agent-runner/services/newDailyWorkoutService');
+        const newDailyWorkout = createNewDailyWorkoutService({ runner: getRunner() });
+        const timezone = user.timezone || 'America/New_York';
+        const workoutResult = await newDailyWorkout.generateDailyWorkout(user.id, timezone);
+
+        if (!workoutResult.success || !workoutResult.message) {
+          return { success: false, error: workoutResult.error || 'No workout generated' };
+        }
+
+        // Send the message via messaging orchestrator
+        const sendResult = await services.messagingOrchestrator.sendImmediate(user, workoutResult.message);
+        console.log('[Inngest] V2 daily workout sent:', { userId, messageId: sendResult.messageId });
+
+        return {
+          success: true,
+          messageId: sendResult.messageId,
+          isRestDay: workoutResult.isRestDay,
+        };
+      }
+
+      // V1: Legacy path
       const messageResult = await services.dailyMessage.sendDailyMessage(user);
 
       console.log('[Inngest] Daily workout sent:', {
@@ -60,13 +82,13 @@ export const sendDailyWorkoutFunction = inngest.createFunction(
     });
 
     if (!result.success) {
-      throw new Error(`Failed to send daily workout: ${result.error}`);
+      throw new Error(`Failed to send daily workout: ${'error' in result ? result.error : 'Unknown error'}`);
     }
 
     return {
       success: true,
       userId,
-      messageId: result.messageId,
+      messageId: 'messageId' in result ? result.messageId : undefined,
       targetDate,
     };
   }

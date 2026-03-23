@@ -37,6 +37,8 @@ import type { SignupData } from '@/server/repositories/onboardingRepository';
 const services = createServicesFromDb(postgresDb);
 const onboardingSteps = createOnboardingSteps(services);
 
+const useAgentRunner = () => process.env.USE_AGENT_RUNNER === 'true';
+
 export const onboardUserFunction = inngest.createFunction(
   {
     id: 'onboard-user',
@@ -51,43 +53,74 @@ export const onboardUserFunction = inngest.createFunction(
       // Mark as started
       await step.run('mark-started', () => services.onboardingData.markStarted(userId));
 
+      // V2: Use agent-runner if enabled
+      if (useAgentRunner()) {
+        console.log(`[Inngest] Using agent-runner V2 for onboarding user ${userId}`);
+
+        const result = await step.run('v2-onboard', async () => {
+          const user = await services.user.getUser(userId);
+          if (!user) throw new Error(`User ${userId} not found`);
+
+          // Get signup data
+          const signupData = await services.onboardingData.getSignupData(userId) ?? {};
+
+          const { getRunner } = await import('@/server/agent-runner/runner');
+          const { createNewOnboardingService } = await import('@/server/agent-runner/services/newOnboardingService');
+          const newOnboarding = createNewOnboardingService({ runner: getRunner() });
+          const onboardResult = await newOnboarding.onboardUser(user, signupData as Record<string, unknown>);
+
+          if (!onboardResult.success) {
+            throw new Error(`Onboarding failed: ${onboardResult.error}`);
+          }
+
+          // Send all onboarding messages in order:
+          // 1. Welcome message (static)
+          // 2. Plan summary (LLM-generated)
+          // 3. Workout message (LLM-generated)
+          const messagesToSend = onboardResult.messages
+            .filter(Boolean)
+            .map(content => ({ content }));
+
+          if (messagesToSend.length > 0) {
+            await services.messagingOrchestrator.queueMessages(user, messagesToSend, 'onboarding');
+          }
+
+          return onboardResult;
+        });
+
+        // Mark completed
+        await step.run('v2-complete', () => services.onboardingData.markCompleted(userId));
+
+        console.log(`[Inngest] V2 onboarding complete for user ${userId}`);
+        return { success: true, userId, v2: true };
+      }
+
+      // V1: Legacy 7-step path
       // Step 1: Load user + signup data (cached by Inngest)
-      // Note: Inngest serializes data between steps, so Date objects become strings.
-      // We use type assertions to satisfy TypeScript - the underlying data works fine at runtime.
       const { user: initialUser, signupData } = await step.run('step-1-load-data', () =>
         onboardingSteps.loadData(userId)
       ) as unknown as { user: UserWithProfile; signupData: SignupData };
 
-      // Step 2: Get or create profile (returns updated user)
-      // forceCreate=true will always create new profile even if one exists
       const { user } = await step.run('step-2-profile', () =>
         onboardingSteps.getOrCreateProfile(initialUser, signupData, forceCreate)
       ) as unknown as { user: UserWithProfile; wasCreated: boolean };
 
-      // Step 3: Get or create plan (uses user with profile)
-      // forceCreate=true will always create new plan even if one exists
       const { plan } = await step.run('step-3-plan', () =>
         onboardingSteps.getOrCreatePlan(user, signupData, forceCreate)
       ) as unknown as { plan: FitnessPlan; wasCreated: boolean };
 
-      // Step 4: Get or create microcycle (needs plan)
-      // forceCreate=true will always create new microcycle even if one exists
       const { microcycle } = await step.run('step-4-microcycle', () =>
         onboardingSteps.getOrCreateMicrocycle(user, plan, forceCreate)
       ) as unknown as { microcycle: Microcycle; wasCreated: boolean };
 
-      // Step 5: Get or create workout (needs microcycle)
-      // forceCreate=true will always create new workout even if one exists
       await step.run('step-5-workout', () =>
         onboardingSteps.getOrCreateWorkout(user, microcycle, forceCreate)
       );
 
-      // Step 6: Mark completed
       await step.run('step-6-complete', () =>
         onboardingSteps.markCompleted(userId)
       );
 
-      // Step 7: Send messages
       const messagesSent = await step.run('step-7-messages', () =>
         onboardingSteps.sendMessages(userId)
       );
