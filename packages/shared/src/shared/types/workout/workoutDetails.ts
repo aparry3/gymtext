@@ -1,113 +1,119 @@
 /**
- * WorkoutDetails types
+ * Workout Details Schema — Blocks + Items (V4)
  *
+ * This is the CANONICAL workout schema for the entire codebase.
  * Matches the output_schema of the `workout:details` agent.
- * These types represent the structured workout data stored in
- * `workout_instances.details` JSON column.
+ *
+ * Design:
+ * - `blocks` defines the workout sections (warmup, main, accessory, etc.)
+ * - `items` is a flat array of exercises, each referencing a block via `blockId`
+ * - Items can nest other items (for supersets/circuits)
+ * - feedbackFields + feedbackRows enable per-exercise tracking in the UI
+ *
+ * History:
+ * - V1: workoutStructure.ts (sections → exercises) — REMOVED
+ * - V2: workoutDetails.ts (exerciseGroups → movements) — REMOVED
+ * - V3: openAISchema.ts (blocks with work[]) — REMOVED
+ * - V4: This file (blocks + items) — CURRENT
  */
 
 // ============================================================================
-// Enums
+// Detail Types
 // ============================================================================
 
-export type WorkoutBlockType = 'warmup' | 'main' | 'conditioning' | 'cooldown';
+/** Semantic type for UI styling of detail pills */
+export type WorkoutDetailType = 'instruction' | 'note' | 'context' | 'warning';
 
-export type WorkoutSectionStructure =
-  | 'straight-sets'
-  | 'circuit'
-  | 'emom'
-  | 'amrap'
-  | 'for-time'
-  | 'intervals';
-
-export type WorkoutSetType = 'warmup' | 'working' | 'backoff' | 'drop';
-
-// ============================================================================
-// Display & Tracking Types
-// ============================================================================
-
-export interface WorkoutDisplayField {
-  key: string;
-  label: string;
-  value: string;
-  emphasis: 'primary' | 'secondary';
-  meta?: string;
+/** A detail pill shown on an exercise item */
+export interface WorkoutDetail {
+  text: string;
+  type: WorkoutDetailType;
 }
 
-export interface WorkoutTrackingField {
+// ============================================================================
+// Feedback / Tracking Types
+// ============================================================================
+
+/** Field type for feedback inputs */
+export type FeedbackFieldType = 'number' | 'text' | 'select' | 'boolean';
+
+/** Defines a single trackable field (weight, reps, etc.) */
+export interface FeedbackField {
   key: string;
   label: string;
-  type: 'number' | 'text' | 'boolean';
-  unit?: string;
+  type: FeedbackFieldType;
+  options?: string[];
+  default?: number | string | boolean;
   required?: boolean;
-  defaultValue?: number | string;
-  placeholder?: string;
-  min?: number;
-  max?: number;
+  /** If false, renders as a static label (e.g., set numbers). Defaults to true. */
+  editable?: boolean;
 }
 
+/** A single feedback row: array of [key, value] tuples (all values are strings) */
+export type FeedbackRow = Array<[string, string]>;
+
 // ============================================================================
-// Core Types
+// Core Item Types
 // ============================================================================
 
 /**
- * Per-set detail for movements with varying weight/reps across sets
- * (warmup progressions, ladders, wave loading, pyramids, drop sets)
+ * A workout item — one exercise, superset, or circuit.
+ *
+ * - Single exercise: name + short_detail + feedbackFields/feedbackRows
+ * - Superset/Circuit: name + short_detail + nested `items` array
  */
-export interface WorkoutSetDetail {
-  reps: string;
-  weight?: string;
-  rpe?: string;
-  type?: WorkoutSetType;
-  notes?: string;
-}
-
-/**
- * A single movement within a workout section.
- * Unified schema — fill in relevant fields for the movement type.
- */
-export interface WorkoutDetailsMovement {
+export interface WorkoutItem {
+  /** References a block.id — defines which block this item belongs to */
+  blockId: string;
+  /** Short exercise or group name (keep concise for mobile) */
   name: string;
-  sets?: string;
-  reps?: string;
-  weight?: string;
-  distance?: string;
-  pace?: string;
-  duration?: string;
-  intensity?: string;
-  tempo?: string;
-  rpe?: string;
-  rest?: string;
+  /** Minimal summary for collapsed view: "5x5", "3x12", "4 rounds", "15 min" */
+  short_detail?: string;
+  /** Prescription details — intensity, rest, tempo, warmup info. NOT individual exercises. */
+  details?: WorkoutDetail[];
+  /** Coaching context, progress updates, motivation */
   notes?: string;
-  setDetails?: WorkoutSetDetail[];
-  display?: WorkoutDisplayField[];
-  tracking?: WorkoutTrackingField[];
+  /** Nested exercises for supersets/circuits (one level only) */
+  items?: WorkoutNestedItem[];
+  /** Field definitions for user tracking */
+  feedbackFields?: FeedbackField[];
+  /** Data rows for user input — pre-fill prescribed values */
+  feedbackRows?: FeedbackRow[];
 }
 
 /**
- * A section of a workout (warmup, main, conditioning, cooldown).
- * Each section is one discrete unit of work.
- * 
- * V2 Schema: Uses `block` instead of `type`, part of `exerciseGroups` array.
+ * A nested item within a superset/circuit.
+ * Same shape as WorkoutItem but without blockId (inherits from parent).
  */
-export interface WorkoutDetailsSection {
-  block: WorkoutBlockType;
-  title?: string;
-  structure: WorkoutSectionStructure;
-  notes?: string;
-  rounds?: number;
-  duration?: number;
-  rest?: string;
-  movements: WorkoutDetailsMovement[];
-  groupDisplay?: WorkoutDisplayField[];
-  groupTracking?: WorkoutTrackingField[];
+export interface WorkoutNestedItem {
+  name: string;
+  short_detail?: string;
+  details?: WorkoutDetail[];
+  /** Feedback for this specific nested exercise (supersets track per-exercise) */
+  feedbackFields?: FeedbackField[];
+  feedbackRows?: FeedbackRow[];
 }
 
+// ============================================================================
+// Block Type
+// ============================================================================
+
+/** A workout block — a logical section of the workout */
+export interface WorkoutBlock {
+  /** Unique block identifier (referenced by items via blockId) */
+  id: string;
+  /** Human-readable block label */
+  label: string;
+}
+
+// ============================================================================
+// Top-Level Workout Details
+// ============================================================================
+
 /**
- * Top-level workout details structure.
+ * Complete workout details structure.
  * Stored in `workout_instances.details` JSON column.
- * 
- * V2 Schema: Uses `exerciseGroups` (ordered array) instead of `sections`.
+ * Generated by the `workout:details` agent.
  */
 export interface WorkoutDetails {
   date: string;
@@ -117,5 +123,6 @@ export interface WorkoutDetails {
   description?: string;
   estimatedDuration?: number;
   location?: string;
-  exerciseGroups: WorkoutDetailsSection[];
+  blocks: WorkoutBlock[];
+  items: WorkoutItem[];
 }
