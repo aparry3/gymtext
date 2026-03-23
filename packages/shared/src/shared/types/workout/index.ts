@@ -1,12 +1,12 @@
 /**
  * Centralized workout type exports
  *
- * All workout data uses the Blocks + Items schema (V4).
+ * All workout data uses the Blocks + Items schema.
  * See workoutDetails.ts for the canonical type definitions.
  */
 
 // ============================================================================
-// Workout Details — Blocks + Items Schema (V4, CANONICAL)
+// Workout Details — Blocks + Items Schema (CANONICAL)
 // ============================================================================
 export {
   type WorkoutDetails,
@@ -19,26 +19,6 @@ export {
   type FeedbackFieldType,
   type FeedbackRow,
 } from './workoutDetails';
-
-// ============================================================================
-// Compatibility (V2 ↔ V4 normalization — remove when WorkoutDetailSheet is refactored)
-// ============================================================================
-export {
-  isV4Format,
-  isV2Format,
-  convertV4toV2,
-  normalizeToV2,
-  normalizeToV4,
-  type LegacyWorkoutDetails,
-  type LegacyExerciseGroup,
-  type LegacyMovement,
-  type WorkoutBlockType,
-  type WorkoutSectionStructure,
-  type WorkoutSetType,
-  type WorkoutSetDetail,
-  type WorkoutDisplayField,
-  type WorkoutTrackingField,
-} from './compat';
 
 // ============================================================================
 // Formatted Text Schema (markdown workout format — separate concern)

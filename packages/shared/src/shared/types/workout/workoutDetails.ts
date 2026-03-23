@@ -1,5 +1,5 @@
 /**
- * Workout Details Schema — Blocks + Items (V4)
+ * Workout Details Schema — Blocks + Items
  *
  * This is the CANONICAL workout schema for the entire codebase.
  * Matches the output_schema of the `workout:details` agent.
@@ -9,12 +9,6 @@
  * - `items` is a flat array of exercises, each referencing a block via `blockId`
  * - Items can nest other items (for supersets/circuits)
  * - feedbackFields + feedbackRows enable per-exercise tracking in the UI
- *
- * History:
- * - V1: workoutStructure.ts (sections → exercises) — REMOVED
- * - V2: workoutDetails.ts (exerciseGroups → movements) — REMOVED
- * - V3: openAISchema.ts (blocks with work[]) — REMOVED
- * - V4: This file (blocks + items) — CURRENT
  */
 
 // ============================================================================

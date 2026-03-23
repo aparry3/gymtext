@@ -8,7 +8,14 @@ import type {
   CardioTrackingData,
   MobilityTrackingData,
 } from './types';
-import type { WorkoutSetDetail } from '@gymtext/shared';
+/** Inline set detail — formerly from legacy compat layer */
+interface SetDetail {
+  reps: string;
+  weight?: string;
+  rpe?: string;
+  type?: 'warmup' | 'working' | 'backoff' | 'drop';
+  notes?: string;
+}
 
 interface ExerciseExpandedViewProps {
   sets?: string;
@@ -18,7 +25,7 @@ interface ExerciseExpandedViewProps {
   rpe?: string;
   tempo?: string;
   notes?: string;
-  setDetails?: WorkoutSetDetail[];
+  setDetails?: SetDetail[];
   activityType: ActivityType;
   trackingData: SetTrackingData[];
   cardioData?: CardioTrackingData;
