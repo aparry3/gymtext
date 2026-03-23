@@ -24,11 +24,17 @@ export type {
 } from './fitnessPlan';
 export { PlanStructureSchema, PlanScheduleTemplateSchema } from './fitnessPlan';
 
-// Workout types (shared types)
+// Workout types (shared types — V4 Blocks + Items schema)
 export type {
-  WorkoutStructure, WorkoutActivity, WorkoutSection, Intensity, ExerciseResolution
+  WorkoutDetails,
+  WorkoutItem,
+  WorkoutNestedItem,
+  WorkoutBlock,
+  WorkoutDetail,
+  WorkoutDetailType,
+  FeedbackField,
+  FeedbackRow,
 } from './workout';
-export { WorkoutStructureSchema, WorkoutActivitySchema, WorkoutSectionSchema, IntensitySchema, ExerciseResolutionSchema } from './workout';
 
 // Microcycle types
 export type { Microcycle, MicrocycleStructure, MicrocycleDay } from './microcycle';

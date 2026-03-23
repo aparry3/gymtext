@@ -1,10 +1,10 @@
-import type { WorkoutStructure } from '@/server/models/workout';
+import type { WorkoutDetails } from '@/server/models/workout';
 import type { UserWithProfile } from '@/server/models/user';
 import type { ExperienceLevel } from '@/server/models/profile';
 import type { WorkoutData } from '../../orchestration/trainingService';
 
 // Re-export for convenience
-export type { WorkoutStructure };
+export type { WorkoutDetails };
 
 // =============================================================================
 // Base Types
@@ -33,12 +33,12 @@ export interface WorkoutGenerateInput {
 }
 
 /**
- * Output from workout generation (flattened subAgent results)
+ * Output from workout generation
  */
 export interface WorkoutGenerateOutput {
   response: string;
   message: string;
-  structure: WorkoutStructure;
+  details?: WorkoutDetails;
 }
 
 // Alias for result type
@@ -59,7 +59,7 @@ export interface ModifyWorkoutInput {
 }
 
 /**
- * Output from workout modification (flattened subAgent results)
+ * Output from workout modification
  */
 export interface ModifyWorkoutOutput {
   response: {
@@ -68,7 +68,7 @@ export interface ModifyWorkoutOutput {
     modifications: string;
   };
   message: string;
-  structure?: WorkoutStructure;
+  details?: WorkoutDetails;
 }
 
 // Alias for result type
