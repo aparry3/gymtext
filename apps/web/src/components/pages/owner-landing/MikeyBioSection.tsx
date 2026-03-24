@@ -16,7 +16,7 @@ export function MikeyBioSection() {
               />
               <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 to-transparent p-4 md:p-8">
                 <p className="text-white font-display text-lg md:text-2xl">
-                  &quot;From a small town to a national stage.&quot;
+                  &quot;Success in sports is earned on the training ground.&quot;
                 </p>
                 <p className="text-gray-400 text-xs md:text-sm mt-1">&mdash; Mikey Swiercz</p>
               </div>
