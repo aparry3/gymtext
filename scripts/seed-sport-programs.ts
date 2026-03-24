@@ -1,0 +1,457 @@
+/**
+ * Seed Sport-Specific Program Owners & Programs
+ *
+ * Creates:
+ * 1. Program owner: Rhynia Henry (basketball coach) → slug: nextlevelbasketball
+ * 2. Program owner: Mikey Swiercz (soccer coach) → slug: mikeyswiercz
+ * 3. Basketball Fundamentals program (4-week, from template)
+ * 4. Soccer Fundamentals program (4-week, from template)
+ *
+ * Each program gets a published version with the template markdown
+ * and a parsed templateStructured (PlanStructure).
+ *
+ * Idempotent: uses ON CONFLICT / upsert patterns. Safe to re-run.
+ *
+ * Usage:
+ *   cd ~/Projects/gymtext-benji
+ *   source .env.local
+ *   npx tsx scripts/seed-sport-programs.ts
+ *   npx tsx scripts/seed-sport-programs.ts --dry-run
+ */
+
+import { Kysely, PostgresDialect, sql } from 'kysely';
+import { Pool } from 'pg';
+import { readFileSync } from 'fs';
+import { resolve } from 'path';
+import type { PlanStructure } from '../packages/shared/src/shared/types/plan/schema';
+
+// ─── CLI ─────────────────────────────────────────────────────────────────────
+
+const dryRun = process.argv.includes('--dry-run');
+
+// ─── DB ──────────────────────────────────────────────────────────────────────
+
+const databaseUrl = process.env.DATABASE_URL;
+if (!databaseUrl) {
+  throw new Error('DATABASE_URL not set. Run: source .env.local');
+}
+
+const pool = new Pool({ connectionString: databaseUrl, max: 5 });
+const db = new Kysely<any>({
+  dialect: new PostgresDialect({ pool }),
+});
+
+// ─── Constants ───────────────────────────────────────────────────────────────
+
+const BASKETBALL_SPORT_SLUG = 'basketball';
+const SOCCER_SPORT_SLUG = 'soccer';
+
+const RHYNIA_OWNER = {
+  displayName: 'Rhynia Henry',
+  slug: 'nextlevelbasketball',
+  ownerType: 'coach',
+  bio: 'AFAA-certified trainer and founder of Next Level Basketball. Specializes in fundamentals-first basketball skills development, conditioning, and the signature FIRE Workout.',
+  avatarUrl: '/coaches/next-level/rhynia-henry.jpg',
+};
+
+const MIKEY_OWNER = {
+  displayName: 'Mikey Swiercz',
+  slug: 'mikeyswiercz',
+  ownerType: 'coach',
+  bio: 'Former All-American and National Champion. Johns Hopkins All-Decade team member and U.S. Open Cup champion. Specializes in technical soccer development and match preparation.',
+  avatarUrl: '/coaches/mikey-swiercz/Hopkins-Cp.JPG',
+};
+
+// ─── Template Parsing ────────────────────────────────────────────────────────
+
+function parseTemplateToStructured(markdown: string, sportName: string): PlanStructure {
+  // Extract schedule template from the Week 1 section
+  const scheduleTemplate: { day: string; focus: string; rationale: string }[] = [];
+
+  // Find Week 1 days
+  const week1Match = markdown.match(/## Week 1:.*?\n([\s\S]*?)(?=## Week 2|$)/);
+  if (week1Match) {
+    const dayPattern = /### (\w+) — (.+)/g;
+    let match;
+    while ((match = dayPattern.exec(week1Match[1])) !== null) {
+      scheduleTemplate.push({
+        day: match[1],
+        focus: match[2],
+        rationale: '',
+      });
+    }
+  }
+
+  return {
+    name: `${sportName} Fundamentals (4-Week Progressive Program)`,
+    type: 'Sport-Specific Skills',
+    coreStrategy: `Progressive 4-week ${sportName.toLowerCase()} skills development program. Foundation → Development → Application → Testing. 6 days/week, 70-minute sessions with structured warm-up, skill blocks, game scenarios, conditioning, and cool-down.`,
+    progressionStrategy: [
+      'Week 1: Foundation — Rhythm, comfort, basic mechanics',
+      'Week 2: Development — Speed, complexity, defensive pressure',
+      'Week 3: Application — Game-speed, decision-making, competition',
+      'Week 4: Testing & Benchmarks — Measure improvement, compete under pressure',
+    ],
+    adjustmentStrategy: 'Wednesday is always a light/recovery day. Saturday is full assessment. Each week builds on the previous — master basics before advancing.',
+    conditioning: [
+      'Conditioning block included in every session (15min)',
+      'Wednesday: reduced intensity, focus on touch and form',
+      'Saturday: full assessment/test session',
+    ],
+    scheduleTemplate,
+    durationWeeks: 4,
+    frequencyPerWeek: 6,
+  };
+}
+
+// ─── Session Structure Builder ───────────────────────────────────────────────
+
+interface SessionBlock {
+  name: string;
+  durationMinutes: number;
+  order: number;
+}
+
+function buildSessionStructure(sportSlug: string): { blocks: SessionBlock[] } {
+  if (sportSlug === 'basketball') {
+    return {
+      blocks: [
+        { name: 'Warm-Up', durationMinutes: 10, order: 1 },
+        { name: 'Skill Block', durationMinutes: 25, order: 2 },
+        { name: 'Game Scenario', durationMinutes: 15, order: 3 },
+        { name: 'Conditioning', durationMinutes: 15, order: 4 },
+        { name: 'Cool-Down', durationMinutes: 5, order: 5 },
+      ],
+    };
+  }
+
+  // Soccer
+  return {
+    blocks: [
+      { name: 'Warm-Up', durationMinutes: 10, order: 1 },
+      { name: 'Technical Block', durationMinutes: 25, order: 2 },
+      { name: 'Game Scenario', durationMinutes: 15, order: 3 },
+      { name: 'Conditioning', durationMinutes: 15, order: 4 },
+      { name: 'Cool-Down', durationMinutes: 5, order: 5 },
+    ],
+  };
+}
+
+// ─── Main ────────────────────────────────────────────────────────────────────
+
+async function main() {
+  console.log('\n🏀⚽ Seed Sport-Specific Program Owners & Programs');
+  if (dryRun) console.log('🔍 DRY RUN — no data will be written\n');
+
+  // 1. Get sport records
+  const basketball = await db
+    .selectFrom('sports')
+    .selectAll()
+    .where('slug', '=', BASKETBALL_SPORT_SLUG)
+    .executeTakeFirst();
+
+  const soccer = await db
+    .selectFrom('sports')
+    .selectAll()
+    .where('slug', '=', SOCCER_SPORT_SLUG)
+    .executeTakeFirst();
+
+  if (!basketball || !soccer) {
+    console.error('❌ Sports not found. Run migrations first.');
+    process.exit(1);
+  }
+
+  console.log(`🏀 Basketball: ${basketball.id}`);
+  console.log(`⚽ Soccer: ${soccer.id}`);
+
+  // 2. Read templates
+  const basketballTemplate = readFileSync(
+    resolve(__dirname, 'fixtures/basketball-program-template.md'),
+    'utf-8'
+  );
+  const soccerTemplate = readFileSync(
+    resolve(__dirname, 'fixtures/soccer-program-template.md'),
+    'utf-8'
+  );
+
+  console.log(`📋 Basketball template: ${basketballTemplate.length} chars`);
+  console.log(`📋 Soccer template: ${soccerTemplate.length} chars`);
+
+  if (dryRun) {
+    console.log('\n✅ Dry run validation passed.');
+    await db.destroy();
+    return;
+  }
+
+  // 3. Upsert program owners
+  console.log('\n👤 Creating program owners...');
+
+  const rhyniaId = await upsertProgramOwner(RHYNIA_OWNER);
+  console.log(`   ✅ Rhynia Henry: ${rhyniaId} (slug: ${RHYNIA_OWNER.slug})`);
+
+  const mikeyId = await upsertProgramOwner(MIKEY_OWNER);
+  console.log(`   ✅ Mikey Swiercz: ${mikeyId} (slug: ${MIKEY_OWNER.slug})`);
+
+  // 4. Create basketball program
+  console.log('\n🏀 Creating Basketball Fundamentals program...');
+  const basketballStructured = parseTemplateToStructured(basketballTemplate, 'Basketball');
+  const basketballSessionStructure = buildSessionStructure('basketball');
+
+  const basketballProgramId = await upsertProgram({
+    ownerId: rhyniaId,
+    name: 'Basketball Fundamentals',
+    description: 'A 4-week progressive basketball skills development program. Master ball handling, shooting, finishing, defense, and conditioning through structured daily sessions. Foundation → Development → Application → Testing.',
+    sportId: basketball.id,
+    schedulingMode: 'rolling_start',
+    cadence: 'calendar_days',
+    billingModel: 'free',
+    isPublic: true,
+    isActive: true,
+    sessionStructure: basketballSessionStructure,
+  });
+  console.log(`   ✅ Program: ${basketballProgramId}`);
+
+  // Create published version
+  const basketballVersionId = await upsertProgramVersion({
+    programId: basketballProgramId,
+    versionNumber: 1,
+    templateMarkdown: basketballTemplate,
+    templateStructured: basketballStructured,
+    defaultDurationWeeks: 4,
+    status: 'published',
+  });
+  console.log(`   ✅ Version: ${basketballVersionId}`);
+
+  // Link published version to program
+  await sql`
+    UPDATE programs SET published_version_id = ${basketballVersionId} WHERE id = ${basketballProgramId}
+  `.execute(db);
+  console.log(`   ✅ Published version linked`);
+
+  // 5. Create soccer program
+  console.log('\n⚽ Creating Soccer Fundamentals program...');
+  const soccerStructured = parseTemplateToStructured(soccerTemplate, 'Soccer');
+  const soccerSessionStructure = buildSessionStructure('soccer');
+
+  const soccerProgramId = await upsertProgram({
+    ownerId: mikeyId,
+    name: 'Soccer Fundamentals',
+    description: 'A 4-week progressive soccer skills development program. Master ball mastery, passing, dribbling, shooting, defending, and match fitness through structured daily sessions. Foundation → Development → Application → Testing.',
+    sportId: soccer.id,
+    schedulingMode: 'rolling_start',
+    cadence: 'calendar_days',
+    billingModel: 'free',
+    isPublic: true,
+    isActive: true,
+    sessionStructure: soccerSessionStructure,
+  });
+  console.log(`   ✅ Program: ${soccerProgramId}`);
+
+  // Create published version
+  const soccerVersionId = await upsertProgramVersion({
+    programId: soccerProgramId,
+    versionNumber: 1,
+    templateMarkdown: soccerTemplate,
+    templateStructured: soccerStructured,
+    defaultDurationWeeks: 4,
+    status: 'published',
+  });
+  console.log(`   ✅ Version: ${soccerVersionId}`);
+
+  // Link published version to program
+  await sql`
+    UPDATE programs SET published_version_id = ${soccerVersionId} WHERE id = ${soccerProgramId}
+  `.execute(db);
+  console.log(`   ✅ Published version linked`);
+
+  // 6. Verify drill references
+  console.log('\n🔍 Verifying drill references...');
+  await verifyDrillRefs(basketballTemplate, 'basketball', basketball.id);
+  await verifyDrillRefs(soccerTemplate, 'soccer', soccer.id);
+
+  // 7. Summary
+  console.log('\n─── Summary ───');
+  const owners = await sql`SELECT id, display_name, slug, owner_type FROM program_owners WHERE slug IN ('nextlevelbasketball', 'mikeyswiercz')`.execute(db);
+  console.log('\nProgram Owners:');
+  for (const o of owners.rows as any[]) {
+    console.log(`  ${o.display_name} (${o.slug}) — ${o.owner_type}`);
+  }
+
+  const programs = await sql`
+    SELECT p.id, p.name, p.sport_id, s.name as sport_name, p.is_public, p.is_active, p.published_version_id IS NOT NULL as has_published
+    FROM programs p
+    JOIN sports s ON p.sport_id = s.id
+    WHERE p.sport_id IS NOT NULL
+  `.execute(db);
+  console.log('\nPrograms:');
+  for (const p of programs.rows as any[]) {
+    console.log(`  ${p.name} (${p.sport_name}) — public: ${p.is_public}, active: ${p.is_active}, published: ${p.has_published}`);
+  }
+
+  console.log('\n✅ Seed complete!\n');
+  await db.destroy();
+}
+
+// ─── Upsert Helpers ──────────────────────────────────────────────────────────
+
+async function upsertProgramOwner(owner: typeof RHYNIA_OWNER | typeof MIKEY_OWNER): Promise<string> {
+  // Check if owner exists by slug
+  const existing = await sql<{ id: string }>`
+    SELECT id FROM program_owners WHERE slug = ${owner.slug}
+  `.execute(db).then(r => r.rows[0]);
+
+  if (existing) {
+    // Update
+    await sql`
+      UPDATE program_owners SET
+        display_name = ${owner.displayName},
+        owner_type = ${owner.ownerType},
+        bio = ${owner.bio},
+        avatar_url = ${owner.avatarUrl},
+        is_active = true,
+        updated_at = now()
+      WHERE id = ${existing.id}
+    `.execute(db);
+    return existing.id;
+  }
+
+  // Insert
+  const result = await sql<{ id: string }>`
+    INSERT INTO program_owners (display_name, slug, owner_type, bio, avatar_url, is_active)
+    VALUES (${owner.displayName}, ${owner.slug}, ${owner.ownerType}, ${owner.bio}, ${owner.avatarUrl}, true)
+    RETURNING id
+  `.execute(db).then(r => r.rows[0]);
+
+  return result!.id;
+}
+
+async function upsertProgram(params: {
+  ownerId: string;
+  name: string;
+  description: string;
+  sportId: string;
+  schedulingMode: string;
+  cadence: string;
+  billingModel: string;
+  isPublic: boolean;
+  isActive: boolean;
+  sessionStructure: any;
+}): Promise<string> {
+  const { ownerId, name, description, sportId, schedulingMode, cadence, billingModel, isPublic, isActive, sessionStructure } = params;
+  const sessionStructureJson = JSON.stringify(sessionStructure);
+
+  // Check if program exists by owner + sport (one program per owner per sport)
+  const existing = await sql<{ id: string }>`
+    SELECT id FROM programs WHERE owner_id = ${ownerId} AND sport_id = ${sportId}
+  `.execute(db).then(r => r.rows[0]);
+
+  if (existing) {
+    await sql`
+      UPDATE programs SET
+        name = ${name},
+        description = ${description},
+        scheduling_mode = ${schedulingMode},
+        cadence = ${cadence},
+        billing_model = ${billingModel},
+        is_public = ${isPublic},
+        is_active = ${isActive},
+        session_structure = ${sessionStructureJson}::jsonb,
+        updated_at = now()
+      WHERE id = ${existing.id}
+    `.execute(db);
+    return existing.id;
+  }
+
+  const result = await sql<{ id: string }>`
+    INSERT INTO programs (owner_id, name, description, sport_id, scheduling_mode, cadence, billing_model, is_public, is_active, session_structure)
+    VALUES (${ownerId}, ${name}, ${description}, ${sportId}, ${schedulingMode}, ${cadence}, ${billingModel}, ${isPublic}, ${isActive}, ${sessionStructureJson}::jsonb)
+    RETURNING id
+  `.execute(db).then(r => r.rows[0]);
+
+  return result!.id;
+}
+
+async function upsertProgramVersion(params: {
+  programId: string;
+  versionNumber: number;
+  templateMarkdown: string;
+  templateStructured: PlanStructure;
+  defaultDurationWeeks: number;
+  status: string;
+}): Promise<string> {
+  const { programId, versionNumber, templateMarkdown, templateStructured, defaultDurationWeeks, status } = params;
+  const structuredJson = JSON.stringify(templateStructured);
+
+  // Check for existing version
+  const existing = await sql<{ id: string }>`
+    SELECT id FROM program_versions WHERE program_id = ${programId} AND version_number = ${versionNumber}
+  `.execute(db).then(r => r.rows[0]);
+
+  if (existing) {
+    await sql`
+      UPDATE program_versions SET
+        template_markdown = ${templateMarkdown},
+        template_structured = ${structuredJson}::jsonb,
+        default_duration_weeks = ${defaultDurationWeeks},
+        status = ${status},
+        published_at = CASE WHEN ${status} = 'published' THEN now() ELSE published_at END
+      WHERE id = ${existing.id}
+    `.execute(db);
+    return existing.id;
+  }
+
+  const publishedAt = status === 'published' ? sql`now()` : sql`NULL`;
+  const result = await sql<{ id: string }>`
+    INSERT INTO program_versions (program_id, version_number, template_markdown, template_structured, default_duration_weeks, status, published_at)
+    VALUES (${programId}, ${versionNumber}, ${templateMarkdown}, ${structuredJson}::jsonb, ${defaultDurationWeeks}, ${status}, ${publishedAt})
+    RETURNING id
+  `.execute(db).then(r => r.rows[0]);
+
+  return result!.id;
+}
+
+// ─── Drill Reference Verification ────────────────────────────────────────────
+
+async function verifyDrillRefs(template: string, sportSlug: string, sportId: string) {
+  // Extract all drill slugs from template
+  const slugPattern = new RegExp(`\`(${sportSlug}-[a-z0-9-]+)\``, 'g');
+  const allSlugs = new Set<string>();
+  let match;
+  while ((match = slugPattern.exec(template)) !== null) {
+    // Skip empty slugs like `basketball-` or `soccer-`
+    if (match[1] === `${sportSlug}-` || match[1].endsWith('-')) continue;
+    allSlugs.add(match[1]);
+  }
+
+  // Check which exist in DB
+  const existing = await sql<{ slug: string }>`
+    SELECT slug FROM exercises WHERE sport_id = ${sportId}
+  `.execute(db).then(r => new Set(r.rows.map(row => row.slug)));
+
+  const missing: string[] = [];
+  for (const slug of allSlugs) {
+    if (!existing.has(slug)) {
+      missing.push(slug);
+    }
+  }
+
+  console.log(`   ${sportSlug}: ${allSlugs.size} drill refs, ${allSlugs.size - missing.length} found, ${missing.length} missing`);
+
+  if (missing.length > 0) {
+    console.log(`   ⚠️  Missing drills (may be rest-day placeholders or template-only entries):`);
+    for (const slug of missing.slice(0, 10)) {
+      console.log(`      - ${slug}`);
+    }
+    if (missing.length > 10) {
+      console.log(`      ... and ${missing.length - 10} more`);
+    }
+  }
+}
+
+// ─── Run ─────────────────────────────────────────────────────────────────────
+
+main().catch(async (err) => {
+  console.error('❌ Seed failed:', err);
+  await db.destroy();
+  process.exit(1);
+});
