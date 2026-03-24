@@ -11,35 +11,13 @@
  * and a parsed templateStructured (PlanStructure).
  *
  * Idempotent: uses ON CONFLICT / upsert patterns. Safe to re-run.
- *
- * Usage:
- *   cd ~/Projects/gymtext-benji
- *   source .env.local
- *   npx tsx scripts/seed-sport-programs.ts
- *   npx tsx scripts/seed-sport-programs.ts --dry-run
  */
 
 import { Kysely, PostgresDialect, sql } from 'kysely';
 import { Pool } from 'pg';
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
-import type { PlanStructure } from '../packages/shared/src/shared/types/plan/schema';
-
-// ─── CLI ─────────────────────────────────────────────────────────────────────
-
-const dryRun = process.argv.includes('--dry-run');
-
-// ─── DB ──────────────────────────────────────────────────────────────────────
-
-const databaseUrl = process.env.DATABASE_URL;
-if (!databaseUrl) {
-  throw new Error('DATABASE_URL not set. Run: source .env.local');
-}
-
-const pool = new Pool({ connectionString: databaseUrl, max: 5 });
-const db = new Kysely<any>({
-  dialect: new PostgresDialect({ pool }),
-});
+import type { PlanStructure } from '../../../packages/shared/src/shared/types/plan/schema';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
@@ -137,164 +115,9 @@ function buildSessionStructure(sportSlug: string): { blocks: SessionBlock[] } {
   };
 }
 
-// ─── Main ────────────────────────────────────────────────────────────────────
-
-async function main() {
-  console.log('\n🏀⚽ Seed Sport-Specific Program Owners & Programs');
-  if (dryRun) console.log('🔍 DRY RUN — no data will be written\n');
-
-  // 1. Get sport records
-  const basketball = await db
-    .selectFrom('sports')
-    .selectAll()
-    .where('slug', '=', BASKETBALL_SPORT_SLUG)
-    .executeTakeFirst();
-
-  const soccer = await db
-    .selectFrom('sports')
-    .selectAll()
-    .where('slug', '=', SOCCER_SPORT_SLUG)
-    .executeTakeFirst();
-
-  if (!basketball || !soccer) {
-    console.error('❌ Sports not found. Run migrations first.');
-    process.exit(1);
-  }
-
-  console.log(`🏀 Basketball: ${basketball.id}`);
-  console.log(`⚽ Soccer: ${soccer.id}`);
-
-  // 2. Read templates
-  const basketballTemplate = readFileSync(
-    resolve(__dirname, 'fixtures/basketball-program-template.md'),
-    'utf-8'
-  );
-  const soccerTemplate = readFileSync(
-    resolve(__dirname, 'fixtures/soccer-program-template.md'),
-    'utf-8'
-  );
-
-  console.log(`📋 Basketball template: ${basketballTemplate.length} chars`);
-  console.log(`📋 Soccer template: ${soccerTemplate.length} chars`);
-
-  if (dryRun) {
-    console.log('\n✅ Dry run validation passed.');
-    await db.destroy();
-    return;
-  }
-
-  // 3. Upsert program owners
-  console.log('\n👤 Creating program owners...');
-
-  const rhyniaId = await upsertProgramOwner(RHYNIA_OWNER);
-  console.log(`   ✅ Rhynia Henry: ${rhyniaId} (slug: ${RHYNIA_OWNER.slug})`);
-
-  const mikeyId = await upsertProgramOwner(MIKEY_OWNER);
-  console.log(`   ✅ Mikey Swiercz: ${mikeyId} (slug: ${MIKEY_OWNER.slug})`);
-
-  // 4. Create basketball program
-  console.log('\n🏀 Creating Basketball Fundamentals program...');
-  const basketballStructured = parseTemplateToStructured(basketballTemplate, 'Basketball');
-  const basketballSessionStructure = buildSessionStructure('basketball');
-
-  const basketballProgramId = await upsertProgram({
-    ownerId: rhyniaId,
-    name: 'Basketball Fundamentals',
-    description: 'A 4-week progressive basketball skills development program. Master ball handling, shooting, finishing, defense, and conditioning through structured daily sessions. Foundation → Development → Application → Testing.',
-    sportId: basketball.id,
-    schedulingMode: 'rolling_start',
-    cadence: 'calendar_days',
-    billingModel: 'free',
-    isPublic: true,
-    isActive: true,
-    sessionStructure: basketballSessionStructure,
-  });
-  console.log(`   ✅ Program: ${basketballProgramId}`);
-
-  // Create published version
-  const basketballVersionId = await upsertProgramVersion({
-    programId: basketballProgramId,
-    versionNumber: 1,
-    templateMarkdown: basketballTemplate,
-    templateStructured: basketballStructured,
-    defaultDurationWeeks: 4,
-    status: 'published',
-  });
-  console.log(`   ✅ Version: ${basketballVersionId}`);
-
-  // Link published version to program
-  await sql`
-    UPDATE programs SET published_version_id = ${basketballVersionId} WHERE id = ${basketballProgramId}
-  `.execute(db);
-  console.log(`   ✅ Published version linked`);
-
-  // 5. Create soccer program
-  console.log('\n⚽ Creating Soccer Fundamentals program...');
-  const soccerStructured = parseTemplateToStructured(soccerTemplate, 'Soccer');
-  const soccerSessionStructure = buildSessionStructure('soccer');
-
-  const soccerProgramId = await upsertProgram({
-    ownerId: mikeyId,
-    name: 'Soccer Fundamentals',
-    description: 'A 4-week progressive soccer skills development program. Master ball mastery, passing, dribbling, shooting, defending, and match fitness through structured daily sessions. Foundation → Development → Application → Testing.',
-    sportId: soccer.id,
-    schedulingMode: 'rolling_start',
-    cadence: 'calendar_days',
-    billingModel: 'free',
-    isPublic: true,
-    isActive: true,
-    sessionStructure: soccerSessionStructure,
-  });
-  console.log(`   ✅ Program: ${soccerProgramId}`);
-
-  // Create published version
-  const soccerVersionId = await upsertProgramVersion({
-    programId: soccerProgramId,
-    versionNumber: 1,
-    templateMarkdown: soccerTemplate,
-    templateStructured: soccerStructured,
-    defaultDurationWeeks: 4,
-    status: 'published',
-  });
-  console.log(`   ✅ Version: ${soccerVersionId}`);
-
-  // Link published version to program
-  await sql`
-    UPDATE programs SET published_version_id = ${soccerVersionId} WHERE id = ${soccerProgramId}
-  `.execute(db);
-  console.log(`   ✅ Published version linked`);
-
-  // 6. Verify drill references
-  console.log('\n🔍 Verifying drill references...');
-  await verifyDrillRefs(basketballTemplate, 'basketball', basketball.id);
-  await verifyDrillRefs(soccerTemplate, 'soccer', soccer.id);
-
-  // 7. Summary
-  console.log('\n─── Summary ───');
-  const owners = await sql`SELECT id, display_name, slug, owner_type FROM program_owners WHERE slug IN ('nextlevelbasketball', 'mikeyswiercz')`.execute(db);
-  console.log('\nProgram Owners:');
-  for (const o of owners.rows as any[]) {
-    console.log(`  ${o.display_name} (${o.slug}) — ${o.owner_type}`);
-  }
-
-  const programs = await sql`
-    SELECT p.id, p.name, p.sport_id, s.name as sport_name, p.is_public, p.is_active, p.published_version_id IS NOT NULL as has_published
-    FROM programs p
-    JOIN sports s ON p.sport_id = s.id
-    WHERE p.sport_id IS NOT NULL
-  `.execute(db);
-  console.log('\nPrograms:');
-  for (const p of programs.rows as any[]) {
-    console.log(`  ${p.name} (${p.sport_name}) — public: ${p.is_public}, active: ${p.is_active}, published: ${p.has_published}`);
-  }
-
-  console.log('\n✅ Seed complete!\n');
-  await db.destroy();
-}
-
 // ─── Upsert Helpers ──────────────────────────────────────────────────────────
 
-async function upsertProgramOwner(owner: typeof RHYNIA_OWNER | typeof MIKEY_OWNER): Promise<string> {
+async function upsertProgramOwner(db: Kysely<any>, owner: typeof RHYNIA_OWNER | typeof MIKEY_OWNER): Promise<string> {
   // Check if owner exists by slug
   const existing = await sql<{ id: string }>`
     SELECT id FROM program_owners WHERE slug = ${owner.slug}
@@ -325,7 +148,7 @@ async function upsertProgramOwner(owner: typeof RHYNIA_OWNER | typeof MIKEY_OWNE
   return result!.id;
 }
 
-async function upsertProgram(params: {
+async function upsertProgram(db: Kysely<any>, params: {
   ownerId: string;
   name: string;
   description: string;
@@ -371,7 +194,7 @@ async function upsertProgram(params: {
   return result!.id;
 }
 
-async function upsertProgramVersion(params: {
+async function upsertProgramVersion(db: Kysely<any>, params: {
   programId: string;
   versionNumber: number;
   templateMarkdown: string;
@@ -412,7 +235,7 @@ async function upsertProgramVersion(params: {
 
 // ─── Drill Reference Verification ────────────────────────────────────────────
 
-async function verifyDrillRefs(template: string, sportSlug: string, sportId: string) {
+async function verifyDrillRefs(db: Kysely<any>, template: string, sportSlug: string, sportId: string) {
   // Extract all drill slugs from template
   const slugPattern = new RegExp(`\`(${sportSlug}-[a-z0-9-]+)\``, 'g');
   const allSlugs = new Set<string>();
@@ -448,10 +271,154 @@ async function verifyDrillRefs(template: string, sportSlug: string, sportId: str
   }
 }
 
-// ─── Run ─────────────────────────────────────────────────────────────────────
+// ─── Main Export ─────────────────────────────────────────────────────────────
 
-main().catch(async (err) => {
-  console.error('❌ Seed failed:', err);
-  await db.destroy();
-  process.exit(1);
-});
+export async function seedSportPrograms(): Promise<void> {
+  console.log('Seeding sport-specific programs...');
+
+  const databaseUrl = process.env.DATABASE_URL || process.env.SANDBOX_DATABASE_URL;
+  if (!databaseUrl) {
+    throw new Error('DATABASE_URL not set');
+  }
+
+  const pool = new Pool({ connectionString: databaseUrl, max: 5 });
+  const db = new Kysely<any>({
+    dialect: new PostgresDialect({ pool }),
+  });
+
+  try {
+    // 1. Get sport records
+    const basketball = await db
+      .selectFrom('sports')
+      .selectAll()
+      .where('slug', '=', BASKETBALL_SPORT_SLUG)
+      .executeTakeFirst();
+
+    const soccer = await db
+      .selectFrom('sports')
+      .selectAll()
+      .where('slug', '=', SOCCER_SPORT_SLUG)
+      .executeTakeFirst();
+
+    if (!basketball || !soccer) {
+      console.log('  ⚠️  Sports not found. Run migrations first.');
+      return;
+    }
+
+    console.log(`  🏀 Basketball: ${basketball.id}`);
+    console.log(`  ⚽ Soccer: ${soccer.id}`);
+
+    // 2. Read templates
+    const fixturesDir = resolve(__dirname, '../../fixtures');
+    const basketballTemplate = readFileSync(
+      resolve(fixturesDir, 'basketball-program-template.md'),
+      'utf-8'
+    );
+    const soccerTemplate = readFileSync(
+      resolve(fixturesDir, 'soccer-program-template.md'),
+      'utf-8'
+    );
+
+    console.log(`  📋 Basketball template: ${basketballTemplate.length} chars`);
+    console.log(`  📋 Soccer template: ${soccerTemplate.length} chars`);
+
+    // 3. Upsert program owners
+    console.log('  👤 Creating program owners...');
+
+    const rhyniaId = await upsertProgramOwner(db, RHYNIA_OWNER);
+    console.log(`     ✓ Rhynia Henry (${RHYNIA_OWNER.slug})`);
+
+    const mikeyId = await upsertProgramOwner(db, MIKEY_OWNER);
+    console.log(`     ✓ Mikey Swiercz (${MIKEY_OWNER.slug})`);
+
+    // 4. Create basketball program
+    console.log('  🏀 Creating Basketball Fundamentals program...');
+    const basketballStructured = parseTemplateToStructured(basketballTemplate, 'Basketball');
+    const basketballSessionStructure = buildSessionStructure('basketball');
+
+    const basketballProgramId = await upsertProgram(db, {
+      ownerId: rhyniaId,
+      name: 'Basketball Fundamentals',
+      description: 'A 4-week progressive basketball skills development program. Master ball handling, shooting, finishing, defense, and conditioning through structured daily sessions. Foundation → Development → Application → Testing.',
+      sportId: basketball.id,
+      schedulingMode: 'rolling_start',
+      cadence: 'calendar_days',
+      billingModel: 'free',
+      isPublic: true,
+      isActive: true,
+      sessionStructure: basketballSessionStructure,
+    });
+    console.log(`     ✓ Program created`);
+
+    // Create published version
+    const basketballVersionId = await upsertProgramVersion(db, {
+      programId: basketballProgramId,
+      versionNumber: 1,
+      templateMarkdown: basketballTemplate,
+      templateStructured: basketballStructured,
+      defaultDurationWeeks: 4,
+      status: 'published',
+    });
+
+    // Link published version to program
+    await sql`
+      UPDATE programs SET published_version_id = ${basketballVersionId} WHERE id = ${basketballProgramId}
+    `.execute(db);
+    console.log(`     ✓ Version published`);
+
+    // 5. Create soccer program
+    console.log('  ⚽ Creating Soccer Fundamentals program...');
+    const soccerStructured = parseTemplateToStructured(soccerTemplate, 'Soccer');
+    const soccerSessionStructure = buildSessionStructure('soccer');
+
+    const soccerProgramId = await upsertProgram(db, {
+      ownerId: mikeyId,
+      name: 'Soccer Fundamentals',
+      description: 'A 4-week progressive soccer skills development program. Master ball mastery, passing, dribbling, shooting, defending, and match fitness through structured daily sessions. Foundation → Development → Application → Testing.',
+      sportId: soccer.id,
+      schedulingMode: 'rolling_start',
+      cadence: 'calendar_days',
+      billingModel: 'free',
+      isPublic: true,
+      isActive: true,
+      sessionStructure: soccerSessionStructure,
+    });
+    console.log(`     ✓ Program created`);
+
+    // Create published version
+    const soccerVersionId = await upsertProgramVersion(db, {
+      programId: soccerProgramId,
+      versionNumber: 1,
+      templateMarkdown: soccerTemplate,
+      templateStructured: soccerStructured,
+      defaultDurationWeeks: 4,
+      status: 'published',
+    });
+
+    // Link published version to program
+    await sql`
+      UPDATE programs SET published_version_id = ${soccerVersionId} WHERE id = ${soccerProgramId}
+    `.execute(db);
+    console.log(`     ✓ Version published`);
+
+    // 6. Verify drill references
+    console.log('  🔍 Verifying drill references...');
+    await verifyDrillRefs(db, basketballTemplate, 'basketball', basketball.id);
+    await verifyDrillRefs(db, soccerTemplate, 'soccer', soccer.id);
+  } finally {
+    await db.destroy();
+  }
+}
+
+// Allow standalone execution
+if (require.main === module) {
+  seedSportPrograms()
+    .then(() => {
+      console.log('✅ Sport programs seed complete!');
+      process.exit(0);
+    })
+    .catch((err) => {
+      console.error('❌ Seed failed:', err);
+      process.exit(1);
+    });
+}

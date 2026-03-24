@@ -1,5 +1,17 @@
 import { Kysely, sql } from 'kysely';
 
+/**
+ * Sport-Specific Exercises & Programs Schema
+ *
+ * Adds support for sport-specific training programs:
+ * - Sports reference table (basketball, soccer, etc.)
+ * - Tags system (unified tagging across exercises)
+ * - Exercise tagging (many-to-many)
+ * - Sport linking for exercises and programs
+ * - Program version content (simplified from template_markdown/template_structured)
+ * - Program scheduling fields
+ */
+
 export async function up(db: Kysely<unknown>): Promise<void> {
   // 1. Create sports reference table
   await sql`
@@ -72,7 +84,6 @@ export async function up(db: Kysely<unknown>): Promise<void> {
 
   // 5. Add columns to programs table
   await sql`ALTER TABLE programs ADD COLUMN sport_id UUID REFERENCES sports(id)`.execute(db);
-  await sql`ALTER TABLE programs ADD COLUMN session_structure JSONB`.execute(db);
   await sql`ALTER TABLE programs ADD COLUMN scheduling_enabled BOOLEAN NOT NULL DEFAULT false`.execute(db);
   await sql`ALTER TABLE programs ADD COLUMN scheduling_type TEXT`.execute(db);
   await sql`ALTER TABLE programs ADD COLUMN scheduling_url TEXT`.execute(db);
@@ -82,10 +93,21 @@ export async function up(db: Kysely<unknown>): Promise<void> {
   // 6. Add columns to program_versions table
   await sql`ALTER TABLE program_versions ADD COLUMN age_group TEXT`.execute(db);
   await sql`ALTER TABLE program_versions ADD COLUMN position_focus TEXT[]`.execute(db);
+
+  // 7. Simplify program_versions content storage
+  // Drop template_structured (derived data) if it exists
+  await sql`ALTER TABLE program_versions DROP COLUMN IF EXISTS template_structured`.execute(db);
+
+  // Rename template_markdown → content (single source of truth)
+  await sql`ALTER TABLE program_versions RENAME COLUMN template_markdown TO content`.execute(db);
 }
 
 export async function down(db: Kysely<unknown>): Promise<void> {
   // Reverse order: remove columns, then drop tables
+
+  // 7. Restore program_versions content columns
+  await sql`ALTER TABLE program_versions RENAME COLUMN content TO template_markdown`.execute(db);
+  await sql`ALTER TABLE program_versions ADD COLUMN template_structured JSONB`.execute(db);
 
   // 6. Remove program_versions columns
   await sql`ALTER TABLE program_versions DROP COLUMN IF EXISTS position_focus`.execute(db);
@@ -97,7 +119,6 @@ export async function down(db: Kysely<unknown>): Promise<void> {
   await sql`ALTER TABLE programs DROP COLUMN IF EXISTS scheduling_url`.execute(db);
   await sql`ALTER TABLE programs DROP COLUMN IF EXISTS scheduling_type`.execute(db);
   await sql`ALTER TABLE programs DROP COLUMN IF EXISTS scheduling_enabled`.execute(db);
-  await sql`ALTER TABLE programs DROP COLUMN IF EXISTS session_structure`.execute(db);
   await sql`ALTER TABLE programs DROP COLUMN IF EXISTS sport_id`.execute(db);
 
   // 4. Remove exercises columns
