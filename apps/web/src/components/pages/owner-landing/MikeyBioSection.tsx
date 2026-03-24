@@ -55,8 +55,8 @@ export function MikeyBioSection() {
 
             <div className="mt-6 md:mt-10 flex flex-wrap gap-3 md:gap-4">
               <div className="px-4 md:px-6 py-2 md:py-3 bg-gray-100 rounded-lg border-l-4 border-[#002D72]">
-                <p className="text-xs md:text-sm font-bold text-gray-800">Johns Hopkins</p>
-                <p className="text-[10px] md:text-xs text-gray-500">All-American &amp; Captain</p>
+                <p className="text-xs md:text-sm font-bold text-gray-800">All-American &amp; Captain</p>
+                <p className="text-[10px] md:text-xs text-gray-500">Hopkins Soccer</p>
               </div>
               <div className="px-4 md:px-6 py-2 md:py-3 bg-gray-100 rounded-lg border-l-4 border-[#002D72]">
                 <p className="text-xs md:text-sm font-bold text-gray-800">All-Decade Team</p>

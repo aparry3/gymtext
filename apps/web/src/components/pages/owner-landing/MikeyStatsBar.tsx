@@ -30,7 +30,7 @@ const STATS: Stat[] = [
   },
   {
     accolade: 'National Champion',
-    label: 'US Open Cup · Christos FC',
+    label: 'US Open Cup * Christos FC',
     icon: <Trophy className="w-6 h-6 text-[#cfae70]" />,
   },
 ];
