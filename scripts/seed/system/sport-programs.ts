@@ -7,8 +7,7 @@
  * 3. Basketball Fundamentals program (4-week, from template)
  * 4. Soccer Fundamentals program (4-week, from template)
  *
- * Each program gets a published version with the template markdown
- * and a parsed templateStructured (PlanStructure).
+ * Each program gets a published version with the markdown content.
  *
  * Idempotent: uses ON CONFLICT / upsert patterns. Safe to re-run.
  */
@@ -17,7 +16,6 @@ import { Kysely, PostgresDialect, sql } from 'kysely';
 import { Pool } from 'pg';
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
-import type { PlanStructure } from '../../../packages/shared/src/shared/types/plan/schema';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
@@ -39,81 +37,6 @@ const MIKEY_OWNER = {
   bio: 'Former All-American and National Champion. Johns Hopkins All-Decade team member and U.S. Open Cup champion. Specializes in technical soccer development and match preparation.',
   avatarUrl: '/coaches/mikey-swiercz/Hopkins-Cp.JPG',
 };
-
-// ─── Template Parsing ────────────────────────────────────────────────────────
-
-function parseTemplateToStructured(markdown: string, sportName: string): PlanStructure {
-  // Extract schedule template from the Week 1 section
-  const scheduleTemplate: { day: string; focus: string; rationale: string }[] = [];
-
-  // Find Week 1 days
-  const week1Match = markdown.match(/## Week 1:.*?\n([\s\S]*?)(?=## Week 2|$)/);
-  if (week1Match) {
-    const dayPattern = /### (\w+) — (.+)/g;
-    let match;
-    while ((match = dayPattern.exec(week1Match[1])) !== null) {
-      scheduleTemplate.push({
-        day: match[1],
-        focus: match[2],
-        rationale: '',
-      });
-    }
-  }
-
-  return {
-    name: `${sportName} Fundamentals (4-Week Progressive Program)`,
-    type: 'Sport-Specific Skills',
-    coreStrategy: `Progressive 4-week ${sportName.toLowerCase()} skills development program. Foundation → Development → Application → Testing. 6 days/week, 70-minute sessions with structured warm-up, skill blocks, game scenarios, conditioning, and cool-down.`,
-    progressionStrategy: [
-      'Week 1: Foundation — Rhythm, comfort, basic mechanics',
-      'Week 2: Development — Speed, complexity, defensive pressure',
-      'Week 3: Application — Game-speed, decision-making, competition',
-      'Week 4: Testing & Benchmarks — Measure improvement, compete under pressure',
-    ],
-    adjustmentStrategy: 'Wednesday is always a light/recovery day. Saturday is full assessment. Each week builds on the previous — master basics before advancing.',
-    conditioning: [
-      'Conditioning block included in every session (15min)',
-      'Wednesday: reduced intensity, focus on touch and form',
-      'Saturday: full assessment/test session',
-    ],
-    scheduleTemplate,
-    durationWeeks: 4,
-    frequencyPerWeek: 6,
-  };
-}
-
-// ─── Session Structure Builder ───────────────────────────────────────────────
-
-interface SessionBlock {
-  name: string;
-  durationMinutes: number;
-  order: number;
-}
-
-function buildSessionStructure(sportSlug: string): { blocks: SessionBlock[] } {
-  if (sportSlug === 'basketball') {
-    return {
-      blocks: [
-        { name: 'Warm-Up', durationMinutes: 10, order: 1 },
-        { name: 'Skill Block', durationMinutes: 25, order: 2 },
-        { name: 'Game Scenario', durationMinutes: 15, order: 3 },
-        { name: 'Conditioning', durationMinutes: 15, order: 4 },
-        { name: 'Cool-Down', durationMinutes: 5, order: 5 },
-      ],
-    };
-  }
-
-  // Soccer
-  return {
-    blocks: [
-      { name: 'Warm-Up', durationMinutes: 10, order: 1 },
-      { name: 'Technical Block', durationMinutes: 25, order: 2 },
-      { name: 'Game Scenario', durationMinutes: 15, order: 3 },
-      { name: 'Conditioning', durationMinutes: 15, order: 4 },
-      { name: 'Cool-Down', durationMinutes: 5, order: 5 },
-    ],
-  };
-}
 
 // ─── Upsert Helpers ──────────────────────────────────────────────────────────
 
@@ -158,10 +81,8 @@ async function upsertProgram(db: Kysely<any>, params: {
   billingModel: string;
   isPublic: boolean;
   isActive: boolean;
-  sessionStructure: any;
 }): Promise<string> {
-  const { ownerId, name, description, sportId, schedulingMode, cadence, billingModel, isPublic, isActive, sessionStructure } = params;
-  const sessionStructureJson = JSON.stringify(sessionStructure);
+  const { ownerId, name, description, sportId, schedulingMode, cadence, billingModel, isPublic, isActive } = params;
 
   // Check if program exists by owner + sport (one program per owner per sport)
   const existing = await sql<{ id: string }>`
@@ -178,7 +99,6 @@ async function upsertProgram(db: Kysely<any>, params: {
         billing_model = ${billingModel},
         is_public = ${isPublic},
         is_active = ${isActive},
-        session_structure = ${sessionStructureJson}::jsonb,
         updated_at = now()
       WHERE id = ${existing.id}
     `.execute(db);
@@ -186,8 +106,8 @@ async function upsertProgram(db: Kysely<any>, params: {
   }
 
   const result = await sql<{ id: string }>`
-    INSERT INTO programs (owner_id, name, description, sport_id, scheduling_mode, cadence, billing_model, is_public, is_active, session_structure)
-    VALUES (${ownerId}, ${name}, ${description}, ${sportId}, ${schedulingMode}, ${cadence}, ${billingModel}, ${isPublic}, ${isActive}, ${sessionStructureJson}::jsonb)
+    INSERT INTO programs (owner_id, name, description, sport_id, scheduling_mode, cadence, billing_model, is_public, is_active)
+    VALUES (${ownerId}, ${name}, ${description}, ${sportId}, ${schedulingMode}, ${cadence}, ${billingModel}, ${isPublic}, ${isActive})
     RETURNING id
   `.execute(db).then(r => r.rows[0]);
 
@@ -197,13 +117,11 @@ async function upsertProgram(db: Kysely<any>, params: {
 async function upsertProgramVersion(db: Kysely<any>, params: {
   programId: string;
   versionNumber: number;
-  templateMarkdown: string;
-  templateStructured: PlanStructure;
+  content: string;
   defaultDurationWeeks: number;
   status: string;
 }): Promise<string> {
-  const { programId, versionNumber, templateMarkdown, templateStructured, defaultDurationWeeks, status } = params;
-  const structuredJson = JSON.stringify(templateStructured);
+  const { programId, versionNumber, content, defaultDurationWeeks, status } = params;
 
   // Check for existing version
   const existing = await sql<{ id: string }>`
@@ -213,8 +131,7 @@ async function upsertProgramVersion(db: Kysely<any>, params: {
   if (existing) {
     await sql`
       UPDATE program_versions SET
-        template_markdown = ${templateMarkdown},
-        template_structured = ${structuredJson}::jsonb,
+        content = ${content},
         default_duration_weeks = ${defaultDurationWeeks},
         status = ${status},
         published_at = CASE WHEN ${status} = 'published' THEN now() ELSE published_at END
@@ -225,8 +142,8 @@ async function upsertProgramVersion(db: Kysely<any>, params: {
 
   const publishedAt = status === 'published' ? sql`now()` : sql`NULL`;
   const result = await sql<{ id: string }>`
-    INSERT INTO program_versions (program_id, version_number, template_markdown, template_structured, default_duration_weeks, status, published_at)
-    VALUES (${programId}, ${versionNumber}, ${templateMarkdown}, ${structuredJson}::jsonb, ${defaultDurationWeeks}, ${status}, ${publishedAt})
+    INSERT INTO program_versions (program_id, version_number, content, default_duration_weeks, status, published_at)
+    VALUES (${programId}, ${versionNumber}, ${content}, ${defaultDurationWeeks}, ${status}, ${publishedAt})
     RETURNING id
   `.execute(db).then(r => r.rows[0]);
 
@@ -333,8 +250,6 @@ export async function seedSportPrograms(): Promise<void> {
 
     // 4. Create basketball program
     console.log('  🏀 Creating Basketball Fundamentals program...');
-    const basketballStructured = parseTemplateToStructured(basketballTemplate, 'Basketball');
-    const basketballSessionStructure = buildSessionStructure('basketball');
 
     const basketballProgramId = await upsertProgram(db, {
       ownerId: rhyniaId,
@@ -346,7 +261,6 @@ export async function seedSportPrograms(): Promise<void> {
       billingModel: 'free',
       isPublic: true,
       isActive: true,
-      sessionStructure: basketballSessionStructure,
     });
     console.log(`     ✓ Program created`);
 
@@ -354,8 +268,7 @@ export async function seedSportPrograms(): Promise<void> {
     const basketballVersionId = await upsertProgramVersion(db, {
       programId: basketballProgramId,
       versionNumber: 1,
-      templateMarkdown: basketballTemplate,
-      templateStructured: basketballStructured,
+      content: basketballTemplate,
       defaultDurationWeeks: 4,
       status: 'published',
     });
@@ -368,8 +281,6 @@ export async function seedSportPrograms(): Promise<void> {
 
     // 5. Create soccer program
     console.log('  ⚽ Creating Soccer Fundamentals program...');
-    const soccerStructured = parseTemplateToStructured(soccerTemplate, 'Soccer');
-    const soccerSessionStructure = buildSessionStructure('soccer');
 
     const soccerProgramId = await upsertProgram(db, {
       ownerId: mikeyId,
@@ -381,7 +292,6 @@ export async function seedSportPrograms(): Promise<void> {
       billingModel: 'free',
       isPublic: true,
       isActive: true,
-      sessionStructure: soccerSessionStructure,
     });
     console.log(`     ✓ Program created`);
 
@@ -389,8 +299,7 @@ export async function seedSportPrograms(): Promise<void> {
     const soccerVersionId = await upsertProgramVersion(db, {
       programId: soccerProgramId,
       versionNumber: 1,
-      templateMarkdown: soccerTemplate,
-      templateStructured: soccerStructured,
+      content: soccerTemplate,
       defaultDurationWeeks: 4,
       status: 'published',
     });
