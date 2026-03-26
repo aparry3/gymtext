@@ -16,6 +16,7 @@
     "lint": "turbo lint",
     "inngest": "npx inngest-cli@latest dev",
     "db:codegen": "pnpm --filter @gymtext/shared db:codegen",
+    "import:drills": "tsx scripts/import-drills.ts",
     "db:migrate": "tsx scripts/migrations/run.ts latest",
     "db:migrate:down": "tsx scripts/migrations/run.ts down",
     "db:migrate:create": "tsx scripts/migrations/create.ts",
