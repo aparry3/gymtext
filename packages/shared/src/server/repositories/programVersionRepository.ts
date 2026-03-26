@@ -22,7 +22,6 @@ export class ProgramVersionRepository extends BaseRepository {
     // Stringify JSON fields for JSONB columns - Kysely doesn't auto-serialize
     const insertData = {
       ...data,
-      templateStructured: data.templateStructured ? JSON.stringify(data.templateStructured) : null,
       generationConfig: data.generationConfig ? JSON.stringify(data.generationConfig) : null,
       difficultyMetadata: data.difficultyMetadata ? JSON.stringify(data.difficultyMetadata) : null,
       questions: data.questions ? JSON.stringify(data.questions) : null,
@@ -117,9 +116,6 @@ export class ProgramVersionRepository extends BaseRepository {
     // Stringify JSON fields if they're being updated - Kysely doesn't auto-serialize
     const updateData = {
       ...data,
-      ...(data.templateStructured !== undefined && {
-        templateStructured: data.templateStructured ? JSON.stringify(data.templateStructured) : null,
-      }),
       ...(data.generationConfig !== undefined && {
         generationConfig: data.generationConfig ? JSON.stringify(data.generationConfig) : null,
       }),

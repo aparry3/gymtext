@@ -398,9 +398,9 @@ export default function ProgramDetailPage() {
           <TabsContent value="template">
             <Card className="p-6">
               <h3 className="font-semibold mb-4">Program Template</h3>
-              {latestVersion?.templateMarkdown ? (
+              {latestVersion?.content ? (
                 <pre className="whitespace-pre-wrap bg-gray-50 p-4 rounded-lg text-sm">
-                  {latestVersion.templateMarkdown}
+                  {latestVersion.content}
                 </pre>
               ) : (
                 <p className="text-muted-foreground italic">

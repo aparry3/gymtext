@@ -61,8 +61,7 @@ export async function PATCH(
     // Update allowed fields
     const updateData: Record<string, unknown> = {};
 
-    if (body.templateMarkdown !== undefined) updateData.templateMarkdown = body.templateMarkdown || null;
-    if (body.templateStructured !== undefined) updateData.templateStructured = body.templateStructured || null;
+    if (body.content !== undefined) updateData.content = body.content || null;
     if (body.generationConfig !== undefined) updateData.generationConfig = body.generationConfig || null;
     if (body.defaultDurationWeeks !== undefined) updateData.defaultDurationWeeks = body.defaultDurationWeeks || null;
     if (body.difficultyMetadata !== undefined) updateData.difficultyMetadata = body.difficultyMetadata || null;

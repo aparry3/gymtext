@@ -10,6 +10,9 @@ import { Kysely, sql } from 'kysely';
  * - Sport linking for exercises and programs
  * - Program version content (simplified from template_markdown/template_structured)
  * - Program scheduling fields
+ *
+ * Note: age_group and position_focus are NOT on program_versions —
+ * different positions/ages should be separate programs entirely.
  */
 
 export async function up(db: Kysely<unknown>): Promise<void> {
@@ -90,11 +93,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
   await sql`ALTER TABLE programs ADD COLUMN scheduling_notes TEXT`.execute(db);
   await sql`CREATE INDEX idx_programs_sport ON programs(sport_id)`.execute(db);
 
-  // 6. Add columns to program_versions table
-  await sql`ALTER TABLE program_versions ADD COLUMN age_group TEXT`.execute(db);
-  await sql`ALTER TABLE program_versions ADD COLUMN position_focus TEXT[]`.execute(db);
-
-  // 7. Simplify program_versions content storage
+  // 6. Simplify program_versions content storage
   // Drop template_structured (derived data) if it exists
   await sql`ALTER TABLE program_versions DROP COLUMN IF EXISTS template_structured`.execute(db);
 
@@ -108,10 +107,6 @@ export async function down(db: Kysely<unknown>): Promise<void> {
   // 7. Restore program_versions content columns
   await sql`ALTER TABLE program_versions RENAME COLUMN content TO template_markdown`.execute(db);
   await sql`ALTER TABLE program_versions ADD COLUMN template_structured JSONB`.execute(db);
-
-  // 6. Remove program_versions columns
-  await sql`ALTER TABLE program_versions DROP COLUMN IF EXISTS position_focus`.execute(db);
-  await sql`ALTER TABLE program_versions DROP COLUMN IF EXISTS age_group`.execute(db);
 
   // 5. Remove programs columns
   await sql`DROP INDEX IF EXISTS idx_programs_sport`.execute(db);

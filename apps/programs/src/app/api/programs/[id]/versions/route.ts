@@ -49,8 +49,7 @@ export async function POST(
     }
 
     const {
-      templateMarkdown,
-      templateStructured,
+      content,
       generationConfig,
       defaultDurationWeeks,
       difficultyMetadata,
@@ -59,8 +58,7 @@ export async function POST(
 
     // Create the version using createDraft
     const version = await services.programVersion.createDraft(programId, {
-      templateMarkdown: templateMarkdown || null,
-      templateStructured: templateStructured || null,
+      content: content || null,
       generationConfig: generationConfig || null,
       defaultDurationWeeks: defaultDurationWeeks || null,
       difficultyMetadata: difficultyMetadata || null,
