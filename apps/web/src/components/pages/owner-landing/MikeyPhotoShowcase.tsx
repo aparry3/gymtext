@@ -10,27 +10,27 @@ interface Photo {
 const PHOTOS: Photo[] = [
   {
     src: '/coaches/mikey-swiercz/JHU-Header.jpeg',
-    alt: 'Mikey Swiercz heading the ball at Johns Hopkins',
-    caption: 'Commanding the Air',
-    subcaption: 'Johns Hopkins University',
-  },
-  {
-    src: '/coaches/mikey-swiercz/JHU-Dribble.jpeg',
-    alt: 'Mikey Swiercz dribbling at Johns Hopkins',
-    caption: 'Elite Ball Control',
+    alt: 'Mikey Swiercz NCAA All-American at Johns Hopkins',
+    caption: 'NCAA All-American',
     subcaption: 'Johns Hopkins University',
   },
   {
     src: '/coaches/mikey-swiercz/Christos-Natty-Ship.jpeg',
     alt: 'Christos FC National Championship celebration',
-    caption: 'National Champions',
-    subcaption: 'U.S. Open Cup · Christos FC',
+    caption: 'National Champion',
+    subcaption: 'US Open Cup | Christos FC',
+  },
+  {
+    src: '/coaches/mikey-swiercz/PCB-Pirates.jpeg',
+    alt: 'Mikey Swiercz with PCB Pirates',
+    caption: 'Semi-Professional',
+    subcaption: 'PDL | PCB Pirates',
   },
   {
     src: '/coaches/mikey-swiercz/PB-Suns-Action2.jpeg',
     alt: 'Mikey Swiercz in USL2 action',
-    caption: 'Professional Play',
-    subcaption: 'USL2 · PB Suns',
+    caption: 'Professional',
+    subcaption: 'USL2 | PB Suns',
   },
 ];
 
