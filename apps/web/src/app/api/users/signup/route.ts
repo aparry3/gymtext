@@ -382,6 +382,19 @@ async function completeSignupFlow(
     }
   }
 
+  // Handle promo code if present and no valid referral
+  const promoCode = formData.promoCode as string | undefined;
+  if (!refereeCouponId && promoCode) {
+    console.log(`[Signup] Validating promo code: ${promoCode}`);
+    const promoValidation = await services.promoCode.validatePromoCode(promoCode);
+    if (promoValidation.valid && promoValidation.stripeCouponId) {
+      refereeCouponId = promoValidation.stripeCouponId;
+      console.log(`[Signup] Promo code valid, applying Stripe coupon: ${refereeCouponId}`);
+    } else {
+      console.log(`[Signup] Promo code invalid: ${promoValidation.error}`);
+    }
+  }
+
   // Build checkout session options
   const checkoutOptions: Stripe.Checkout.SessionCreateParams = {
     customer: stripeCustomerId,

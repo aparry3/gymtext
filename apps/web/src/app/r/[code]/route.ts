@@ -5,13 +5,9 @@ import { isProductionEnvironment } from '@/shared/config/public';
 /**
  * GET /r/:code
  *
- * Referral link handler
- * Validates the referral code, sets a cookie, and redirects to the landing page
- *
- * Flow:
- * 1. Validate the referral code exists
- * 2. Set gt_ref cookie with the code (7 days expiry)
- * 3. Redirect to landing page with ?ref= query param
+ * Referral / promo link handler.
+ * Checks user referral codes first, then promo codes.
+ * Sets the appropriate cookie and redirects to /start.
  */
 export async function GET(
   request: NextRequest,
@@ -19,46 +15,55 @@ export async function GET(
 ) {
   const { code } = await params;
 
-  // Validate code format (6 alphanumeric characters)
-  if (!code || code.length !== 6 || !/^[A-Za-z0-9]{6}$/.test(code)) {
-    // Invalid format - redirect to landing page without ref
-    return NextResponse.redirect(new URL('/', request.url));
+  // Validate code format (2-30 alphanumeric characters)
+  if (!code || code.length < 2 || code.length > 30 || !/^[A-Za-z0-9]+$/.test(code)) {
+    return NextResponse.redirect(new URL('/start', request.url));
   }
 
   const upperCode = code.toUpperCase();
+  const redirectUrl = new URL('/start', request.url);
 
   try {
-    // Validate the referral code exists
     const services = getServices();
-    const validation = await services.referral.validateReferralCode(upperCode);
 
-    // Create redirect URL
-    const redirectUrl = new URL('/', request.url);
-
-    if (validation.valid) {
-      // Add ref param to URL
-      redirectUrl.searchParams.set('ref', upperCode);
+    // 1. Try user referral code (6-char codes tied to users)
+    if (upperCode.length === 6) {
+      const validation = await services.referral.validateReferralCode(upperCode);
+      if (validation.valid) {
+        redirectUrl.searchParams.set('ref', upperCode);
+        const response = NextResponse.redirect(redirectUrl, { status: 307 });
+        response.cookies.set('gt_ref', upperCode, {
+          httpOnly: false,
+          secure: isProductionEnvironment(),
+          sameSite: 'lax',
+          maxAge: 7 * 24 * 60 * 60,
+          path: '/',
+        });
+        console.log(`[Referral] Set referral cookie for code ${upperCode}`);
+        return response;
+      }
     }
 
-    const response = NextResponse.redirect(redirectUrl, { status: 307 });
-
-    // Set referral cookie if valid (7 days expiry)
-    if (validation.valid) {
-      response.cookies.set('gt_ref', upperCode, {
-        httpOnly: false, // Needs to be readable by client JS
+    // 2. Try promo code
+    const promoValidation = await services.promoCode.validatePromoCode(upperCode);
+    if (promoValidation.valid) {
+      redirectUrl.searchParams.set('promo', upperCode);
+      const response = NextResponse.redirect(redirectUrl, { status: 307 });
+      response.cookies.set('gt_promo', upperCode, {
+        httpOnly: false,
         secure: isProductionEnvironment(),
         sameSite: 'lax',
-        maxAge: 7 * 24 * 60 * 60, // 7 days
+        maxAge: 7 * 24 * 60 * 60,
         path: '/',
       });
-
-      console.log(`[Referral] Set referral cookie for code ${upperCode}`);
+      console.log(`[Promo] Set promo cookie for code ${upperCode}`);
+      return response;
     }
 
-    return response;
+    // Neither valid — redirect without code
+    return NextResponse.redirect(redirectUrl, { status: 307 });
   } catch (error) {
-    console.error('[Referral] Error validating referral code:', error);
-    // On error, redirect to landing page without ref
-    return NextResponse.redirect(new URL('/', request.url));
+    console.error('[Referral/Promo] Error validating code:', error);
+    return NextResponse.redirect(new URL('/start', request.url));
   }
 }

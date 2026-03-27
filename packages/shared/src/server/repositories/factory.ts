@@ -47,6 +47,7 @@ import { AgentDefinitionRepository } from './agentDefinitionRepository';
 import { AgentLogRepository } from './agentLogRepository';
 import { WorkoutInstanceRepository } from './workoutInstanceRepository';
 import { FormatterRepository } from './formatterRepository';
+import { PromoCodeRepository } from './promoCodeRepository';
 
 /**
  * Container for all repository instances
@@ -86,6 +87,7 @@ export interface RepositoryContainer {
   agentLog: AgentLogRepository;
   workoutInstance: WorkoutInstanceRepository;
   formatter: FormatterRepository;
+  promoCode: PromoCodeRepository;
   // Direct db access for complex queries
   db: Kysely<DB>;
 }
@@ -142,6 +144,7 @@ export function createRepositories(db: Kysely<DB>): RepositoryContainer {
     agentLog: new AgentLogRepository(db),
     workoutInstance: new WorkoutInstanceRepository(db),
     formatter: new FormatterRepository(db),
+    promoCode: new PromoCodeRepository(db),
     db,
   };
 

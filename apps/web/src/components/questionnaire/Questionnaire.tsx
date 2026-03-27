@@ -183,6 +183,16 @@ export function Questionnaire({ programId, programName, ownerWordmarkUrl, questi
         }
       });
 
+      // Read referral code from cookie or query param
+      const refCookie = document.cookie.match(/(?:^|;\s*)gt_ref=([A-Za-z0-9]{6})/)?.[1];
+      const refParam = new URLSearchParams(window.location.search).get('ref');
+      const referralCode = (refCookie || refParam || '').toUpperCase() || undefined;
+
+      // Read promo code from cookie or query param
+      const promoCookie = document.cookie.match(/(?:^|;\s*)gt_promo=([A-Za-z0-9]+)/)?.[1];
+      const promoParam = new URLSearchParams(window.location.search).get('promo');
+      const promoCode = (promoCookie || promoParam || '').toUpperCase() || undefined;
+
       // Build form data - fitness fields are optional for program signups
       const formData = {
         // User info
@@ -223,6 +233,8 @@ export function Questionnaire({ programId, programName, ownerWordmarkUrl, questi
         // Program info
         ...(programId && { programId }),
         ...(Object.keys(programAnswers).length > 0 && { programAnswers }),
+        ...(referralCode && { referralCode }),
+        ...(!referralCode && promoCode && { promoCode }),
       };
 
       // Track signup submission
