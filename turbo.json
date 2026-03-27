@@ -57,6 +57,7 @@
       "dependsOn": ["^build"]
     },
     "db:codegen": {
+      "dependsOn": ["//#migrate"],
       "cache": false,
       "passThroughEnv": ["DATABASE_URL"]
     },
@@ -70,7 +71,7 @@
       "outputs": ["dist/**"]
     },
     "@gymtext/shared#build": {
-      "dependsOn": ["db:codegen", "//#migrate"],
+      "dependsOn": ["db:codegen"],
       "outputs": ["dist/**"],
       "env": [
         "DATABASE_URL",
@@ -78,7 +79,7 @@
       ]
     },
     "web#build": {
-      "dependsOn": ["@gymtext/shared#build", "//#migrate"],
+      "dependsOn": ["@gymtext/shared#build"],
       "outputs": [".next/**", "!.next/cache/**"],
       "env": [
         "DATABASE_URL",
@@ -123,7 +124,7 @@
       ]
     },
     "admin#build": {
-      "dependsOn": ["@gymtext/shared#build", "//#migrate"],
+      "dependsOn": ["@gymtext/shared#build"],
       "outputs": [".next/**", "!.next/cache/**"],
       "env": [
         "DATABASE_URL",
@@ -150,7 +151,7 @@
       ]
     },
     "programs#build": {
-      "dependsOn": ["@gymtext/shared#build", "//#migrate"],
+      "dependsOn": ["@gymtext/shared#build"],
       "outputs": [".next/**", "!.next/cache/**"],
       "env": [
         "DATABASE_URL",
