@@ -60,13 +60,17 @@
       "cache": false,
       "passThroughEnv": ["DATABASE_URL"]
     },
+    "//#migrate": {
+      "cache": false,
+      "passThroughEnv": ["DATABASE_URL"]
+    },
     "@gymtext/local-sms-cli#build": {
       "cache": false,
       "dependsOn": [],
       "outputs": ["dist/**"]
     },
     "@gymtext/shared#build": {
-      "dependsOn": ["db:codegen"],
+      "dependsOn": ["db:codegen", "//#migrate"],
       "outputs": ["dist/**"],
       "env": [
         "DATABASE_URL",
@@ -74,7 +78,7 @@
       ]
     },
     "web#build": {
-      "dependsOn": ["@gymtext/shared#build"],
+      "dependsOn": ["@gymtext/shared#build", "//#migrate"],
       "outputs": [".next/**", "!.next/cache/**"],
       "env": [
         "DATABASE_URL",
@@ -119,7 +123,7 @@
       ]
     },
     "admin#build": {
-      "dependsOn": ["@gymtext/shared#build"],
+      "dependsOn": ["@gymtext/shared#build", "//#migrate"],
       "outputs": [".next/**", "!.next/cache/**"],
       "env": [
         "DATABASE_URL",
@@ -146,7 +150,7 @@
       ]
     },
     "programs#build": {
-      "dependsOn": ["@gymtext/shared#build"],
+      "dependsOn": ["@gymtext/shared#build", "//#migrate"],
       "outputs": [".next/**", "!.next/cache/**"],
       "env": [
         "DATABASE_URL",
