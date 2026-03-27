@@ -3,7 +3,7 @@
 ## Program Overview
 - **Duration:** 4 weeks, 6 days/week + 1 rest day
 - **Session Length:** 70 minutes
-- **Structure:** Warm-Up (10min) → Technical Block (25min) → Game Scenario (15min) → Conditioning (15min) → Cool-Down (5min)
+- **Structure:** Warm-Up (10 min) → Technical Block (25 min) → Game Scenario (15 min) → Conditioning (15 min) → Cool-Down (5 min)
 - **Progression:** Foundation → Development → Application → Testing
 
 ## Key Principles
@@ -11,672 +11,547 @@
 - **Saturday:** Full assessment/test session
 - **Progression:** Each week builds on the previous — master basics before advancing
 
+
+
 ---
+
+
 
 ## Week 1: Foundation
 **Focus:** Rhythm, comfort, basic mechanics
 
 ### Monday — Ball Mastery & Touch
 
-#### Warm-Up (10min)
-- `soccer-toe-taps-tempo` — Toe Taps Tempo
-- `soccer-sole-rolls-fwd-back` — Sole Rolls Fwd-Back
+#### Warm-Up (10 min)
+- Toe Taps Tempo
+- Sole Rolls Forward & Back
 
-#### Technical Block (25min)
-- `soccer-ball-mastery-box` — Ball Mastery Box (4 rounds)
-- `soccer-v-pulls` — V-Pulls
-- `soccer-pendulum-swings` — Pendulum Swings
+#### Technical Block (25 min)
+- Ball Mastery Box (4 rounds)
+- V-Pulls
+- Pendulum Swings
 
-#### Game Scenario (15min)
-- `soccer-freeze-dribble` — Freeze Dribble (4x60s)
+#### Game Scenario (15 min)
+- Freeze Dribble (4×60s)
 
-#### Conditioning (15min)
-- `soccer-10` — 10x30m Sprint Intervals
+#### Conditioning (15 min)
+- 30m Sprint Intervals ×10
 
-#### Cool-Down (5min)
-- `soccer-juggling-streak` — Juggling Streak x5 attempts
+#### Cool-Down (5 min)
+- Juggling Streak — 5 attempts
 
 > **Session notes:** Focus on rhythm and clean touches
 
----
-
 ### Tuesday — Passing & First Touch
 
-#### Warm-Up (10min)
-- `soccer-figure-8-rolls` — Figure 8 Rolls
-- `soccer-tick-tock-speed-touch` — Tick-Tock Speed Touch
+#### Warm-Up (10 min)
+- Figure 8 Rolls
+- Tick-Tock Speed Touch
 
-#### Technical Block (25min)
-- `soccer-wall-pass-basic` — Wall Pass Basic (4x20)
-- `soccer-cushion-control-wall` — Cushion Control Wall (3x20)
-- `soccer-angled-wall-pass` — Angled Wall Pass
+#### Technical Block (25 min)
+- Wall Pass Basic (4×20)
+- Cushion Control Wall (3×20)
+- Angled Wall Pass
 
-#### Game Scenario (15min)
-- `soccer-through-ball-targets` — Through-Ball Targets (4x10)
+#### Game Scenario (15 min)
+- Through-Ball Targets (4×10)
 
-#### Conditioning (15min)
-- `soccer-fartlek-run-15min` — Fartlek Run 15min
+#### Conditioning (15 min)
+- Fartlek Run (15 min)
 
-#### Cool-Down (5min)
-- `soccer-sole-rolls-cooldown` — Sole Rolls cooldown
+#### Cool-Down (5 min)
+- Sole Rolls Cooldown
 
 > **Session notes:** Wall work is your best friend
 
----
-
 ### Wednesday — REST / Light Juggling
 
-#### Warm-Up (10min)
-- `soccer-` — -
-
-#### Technical Block (25min)
-- `soccer-optional-juggling-catch-series` — Optional: Juggling Catch Series
-
-#### Game Scenario (15min)
-- `soccer-` — -
-
-#### Conditioning (15min)
-- `soccer-` — -
-
-#### Cool-Down (5min)
-- `soccer-` — -
+**Optional:**
+- Juggling Catch Series
 
 > **Session notes:** Active recovery day
 
----
-
 ### Thursday — Dribbling & 1v1 Skills
 
-#### Warm-Up (10min)
-- `soccer-cone-weave-close-control` — Cone Weave Close Control
-- `soccer-quick-feet-ladder` — Quick Feet Ladder
+#### Warm-Up (10 min)
+- Cone Weave Close Control
+- Quick Feet Ladder
 
-#### Technical Block (25min)
-- `soccer-matthews-cut` — Matthews Cut (4x10)
-- `soccer-body-feint-explosion` — Body Feint Explosion
-- `soccer-fake-shot-dribble` — Fake Shot Dribble
+#### Technical Block (25 min)
+- Matthews Cut (4×10)
+- Body Feint Explosion
+- Fake Shot Dribble
 
-#### Game Scenario (15min)
-- `soccer-1v-imaginary-defender` — 1v Imaginary Defender (4x10)
+#### Game Scenario (15 min)
+- 1v Imaginary Defender (4×10)
 
-#### Conditioning (15min)
-- `soccer-5-10-5-cod-conditioning` — 5-10-5 COD Conditioning x10
+#### Conditioning (15 min)
+- 5-10-5 Change of Direction ×10
 
-#### Cool-Down (5min)
-- `soccer-circle-dribble-cooldown` — Circle Dribble cooldown
+#### Cool-Down (5 min)
+- Circle Dribble Cooldown
 
 > **Session notes:** Sell every move — exaggerate
 
----
-
 ### Friday — Shooting & Finishing
 
-#### Warm-Up (10min)
-- `soccer-tick-tock-speed-touch` — Tick-Tock Speed Touch
-- `soccer-toe-taps` — Toe Taps
+#### Warm-Up (10 min)
+- Tick-Tock Speed Touch
+- Toe Taps
 
-#### Technical Block (25min)
-- `soccer-wall-target-shooting` — Wall Target Shooting (4x10)
-- `soccer-side-foot-placement` — Side-Foot Placement (4x10)
-- `soccer-penalty-spot-drill` — Penalty Spot Drill
+#### Technical Block (25 min)
+- Wall Target Shooting (4×10)
+- Side-Foot Placement (4×10)
+- Penalty Spot Drill
 
-#### Game Scenario (15min)
-- `soccer-first-time-finish` — First-Time Finish (4x10)
+#### Game Scenario (15 min)
+- First-Time Finish (4×10)
 
-#### Conditioning (15min)
-- `soccer-pyramid-sprints` — Pyramid Sprints x2
+#### Conditioning (15 min)
+- Pyramid Sprints ×2
 
-#### Cool-Down (5min)
-- `soccer-juggling-cooldown` — Juggling cooldown
+#### Cool-Down (5 min)
+- Juggling Cooldown
 
 > **Session notes:** Placement before power this week
 
----
-
 ### Saturday — Full Session
 
-#### Warm-Up (10min)
-- `soccer-t-test-agility` — T-Test Agility x4
-- `soccer-ball-mastery-box` — Ball Mastery Box
+#### Warm-Up (10 min)
+- T-Test Agility ×4
+- Ball Mastery Box
 
-#### Technical Block (25min)
-- `soccer-stepover-exit` — Stepover Exit
-- `soccer-cruyff-turn` — Cruyff Turn
-- `soccer-outside-hook-turn` — Outside Hook Turn (3x10 each)
+#### Technical Block (25 min)
+- Stepover Exit
+- Cruyff Turn
+- Outside Hook Turn (3×10 each)
 
-#### Game Scenario (15min)
-- `soccer-dribble-and-shoot` — Dribble and Shoot (4x8)
+#### Game Scenario (15 min)
+- Dribble and Shoot (4×8)
 
-#### Conditioning (15min)
-- `soccer-match-simulation-run-15min` — Match Simulation Run 15min
+#### Conditioning (15 min)
+- Match Simulation Run (15 min)
 
-#### Cool-Down (5min)
-- `soccer-stretching` — Stretching
-- `soccer-light-juggles` — light juggles
+#### Cool-Down (5 min)
+- Stretching
+- Light Juggles
 
 > **Session notes:** Combine everything from the week
 
----
-
 ### Sunday — REST
 
-#### Warm-Up (10min)
-- `soccer-` — -
+Full rest — hydrate and sleep.
 
-#### Technical Block (25min)
-- `soccer-` — -
 
-#### Game Scenario (15min)
-- `soccer-` — -
-
-#### Conditioning (15min)
-- `soccer-` — -
-
-#### Cool-Down (5min)
-- `soccer-` — -
-
-> **Session notes:** Full rest — hydrate and sleep
 
 ---
+
+
 
 ## Week 2: Development
 **Focus:** Speed, complexity, defensive pressure
 
 ### Monday — Advanced Touch & Control
 
-#### Warm-Up (10min)
-- `soccer-sole-roll-360` — Sole Roll 360
-- `soccer-inside-outside-rolls` — Inside-Outside Rolls
+#### Warm-Up (10 min)
+- Sole Roll 360
+- Inside-Outside Rolls
 
-#### Technical Block (25min)
-- `soccer-directional-first-touch` — Directional First Touch (3x20)
-- `soccer-open-up-touch` — Open-Up Touch (3x12)
-- `soccer-outside-foot-receive` — Outside Foot Receive
+#### Technical Block (25 min)
+- Directional First Touch (3×20)
+- Open-Up Touch (3×12)
+- Outside Foot Receive
 
-#### Game Scenario (15min)
-- `soccer-bounce-spin-control` — Bounce-Spin-Control (3x10)
+#### Game Scenario (15 min)
+- Bounce-Spin-Control (3×10)
 
-#### Conditioning (15min)
-- `soccer-hollow-sprints` — Hollow Sprints x6
+#### Conditioning (15 min)
+- Hollow Sprints ×6
 
-#### Cool-Down (5min)
-- `soccer-juggling-weak-foot` — Juggling Weak Foot x5
+#### Cool-Down (5 min)
+- Juggling Weak Foot — 5 attempts
 
 > **Session notes:** Push your weak foot this week
 
----
-
 ### Tuesday — Passing Range
 
-#### Warm-Up (10min)
-- `soccer-pendulum-swings` — Pendulum Swings
-- `soccer-figure-8-rolls` — Figure 8 Rolls
+#### Warm-Up (10 min)
+- Pendulum Swings
+- Figure 8 Rolls
 
-#### Technical Block (25min)
-- `soccer-driven-wall-pass` — Driven Wall Pass (3x20)
-- `soccer-long-wall-pass` — Long Wall Pass (3x15)
-- `soccer-switching-play-pass` — Switching Play Pass
+#### Technical Block (25 min)
+- Driven Wall Pass (3×20)
+- Long Wall Pass (3×15)
+- Switching Play Pass
 
-#### Game Scenario (15min)
-- `soccer-quick-combo-wall` — Quick Combo Wall (4x45s)
+#### Game Scenario (15 min)
+- Quick Combo Wall (4×45s)
 
-#### Conditioning (15min)
-- `soccer-30-30-intervals` — 30-30 Intervals x10
+#### Conditioning (15 min)
+- 30-30 Intervals ×10
 
-#### Cool-Down (5min)
-- `soccer-chest-control-off-wall` — Chest Control Off Wall
+#### Cool-Down (5 min)
+- Chest Control Off Wall
 
 > **Session notes:** Weight of pass is critical
 
----
-
 ### Wednesday — Active Recovery
 
-#### Warm-Up (10min)
-- `soccer-light-jog-10min` — Light jog 10min
+#### Warm-Up (10 min)
+- Light Jog (10 min)
 
-#### Technical Block (25min)
-- `soccer-juggling-streak` — Juggling Streak
-- `soccer-ball-mastery-box` — Ball Mastery Box
+#### Technical Block (25 min)
+- Juggling Streak
+- Ball Mastery Box
 
-#### Game Scenario (15min)
-- `soccer-shadow-play-movement` — Shadow Play Movement (4x60s)
-
-#### Conditioning (15min)
-- `soccer-` — -
-
-#### Cool-Down (5min)
-- `soccer-stretching` — Stretching
+#### Game Scenario (15 min)
+- Shadow Play Movement (4×60s)
 
 > **Session notes:** Visualization + light touch work
 
----
-
 ### Thursday — Speed Dribbling
 
-#### Warm-Up (10min)
-- `soccer-zig-zag-sprint` — Zig-Zag Sprint x4
-- `soccer-carioca` — Carioca x4
+#### Warm-Up (10 min)
+- Zig-Zag Sprint ×4
+- Carioca ×4
 
-#### Technical Block (25min)
-- `soccer-speed-dribble-40m` — Speed Dribble 40m (6x)
-- `soccer-slalom-sprint-dribble` — Slalom Sprint Dribble (6 runs)
-- `soccer-acceleration-touch-drill` — Acceleration Touch Drill
+#### Technical Block (25 min)
+- Speed Dribble 40m ×6
+- Slalom Sprint Dribble (6 runs)
+- Acceleration Touch Drill
 
-#### Game Scenario (15min)
-- `soccer-lane-change-dribble` — Lane Change Dribble (4x40m)
+#### Game Scenario (15 min)
+- Lane Change Dribble (4×40m)
 
-#### Conditioning (15min)
-- `soccer-repeat-sprint-ability` — Repeat Sprint Ability (10x20m)
+#### Conditioning (15 min)
+- Repeat Sprint Ability (10×20m)
 
-#### Cool-Down (5min)
-- `soccer-close-control-box-cooldown` — Close Control Box cooldown
+#### Cool-Down (5 min)
+- Close Control Box Cooldown
 
 > **Session notes:** Speed WITH control — not one or the other
 
----
-
 ### Friday — Power Shooting
 
-#### Warm-Up (10min)
-- `soccer-t-test` — T-Test x4
-- `soccer-quick-feet-ladder` — Quick Feet Ladder
+#### Warm-Up (10 min)
+- T-Test ×4
+- Quick Feet Ladder
 
-#### Technical Block (25min)
-- `soccer-power-shot-drill` — Power Shot Drill (3x10)
-- `soccer-driven-low-shot` — Driven Low Shot (3x10)
-- `soccer-weak-foot-shooting-circuit` — Weak Foot Shooting Circuit
+#### Technical Block (25 min)
+- Power Shot Drill (3×10)
+- Driven Low Shot (3×10)
+- Weak Foot Shooting Circuit
 
-#### Game Scenario (15min)
-- `soccer-spin-and-shoot` — Spin and Shoot (3x10)
+#### Game Scenario (15 min)
+- Spin and Shoot (3×10)
 
-#### Conditioning (15min)
-- `soccer-tabata-sprints` — Tabata Sprints
+#### Conditioning (15 min)
+- Tabata Sprints
 
-#### Cool-Down (5min)
-- `soccer-juggling-cooldown` — Juggling cooldown
+#### Cool-Down (5 min)
+- Juggling Cooldown
 
 > **Session notes:** Lock that ankle — power comes from technique
 
----
-
 ### Saturday — Full Session + Testing
 
-#### Warm-Up (10min)
-- `soccer-box-drill` — Box Drill x6
-- `soccer-toe-taps` — Toe Taps
+#### Warm-Up (10 min)
+- Box Drill ×6
+- Toe Taps
 
-#### Technical Block (25min)
-- `soccer-elastico-drill` — Elastico Drill
-- `soccer-la-croqueta` — La Croqueta
-- `soccer-maradona-turn` — Maradona Turn (3x8 each)
+#### Technical Block (25 min)
+- Elastico Drill
+- La Croqueta
+- Maradona Turn (3×8 each)
 
-#### Game Scenario (15min)
-- `soccer-counter-attack-sprint-finish` — Counter-Attack Sprint Finish (4x5)
+#### Game Scenario (15 min)
+- Counter-Attack Sprint Finish (4×5)
 
-#### Conditioning (15min)
-- `soccer-cooper-test` — Cooper Test (12min)
+#### Conditioning (15 min)
+- Cooper Test (12 min)
 
-#### Cool-Down (5min)
-- `soccer-stretching` — Stretching
+#### Cool-Down (5 min)
+- Stretching
 
 > **Session notes:** Record Cooper Test distance as benchmark
 
----
-
 ### Sunday — REST
 
-#### Warm-Up (10min)
-- `soccer-` — -
+Full rest.
 
-#### Technical Block (25min)
-- `soccer-` — -
 
-#### Game Scenario (15min)
-- `soccer-` — -
-
-#### Conditioning (15min)
-- `soccer-` — -
-
-#### Cool-Down (5min)
-- `soccer-` — -
-
-> **Session notes:** Full rest
 
 ---
+
+
 
 ## Week 3: Application
 **Focus:** Game-speed, decision-making, competition
 
 ### Monday — Elite Ball Mastery
 
-#### Warm-Up (10min)
-- `soccer-tick-tock-speed-touch` — Tick-Tock Speed Touch
-- `soccer-sole-roll-360` — Sole Roll 360
+#### Warm-Up (10 min)
+- Tick-Tock Speed Touch
+- Sole Roll 360
 
-#### Technical Block (25min)
-- `soccer-seal-dribble` — Seal Dribble (3x5)
-- `soccer-sole-pull-scissor` — Sole Pull Scissor (3x12)
-- `soccer-tight-space-360-dribble` — Tight Space 360 Dribble
+#### Technical Block (25 min)
+- Seal Dribble (3×5)
+- Sole Pull Scissor (3×12)
+- Tight Space 360 Dribble
 
-#### Game Scenario (15min)
-- `soccer-freestyle-dribble-circuit` — Freestyle Dribble Circuit (5 runs)
+#### Game Scenario (15 min)
+- Freestyle Dribble Circuit (5 runs)
 
-#### Conditioning (15min)
-- `soccer-sprint-float-sprint` — Sprint-Float-Sprint x8
+#### Conditioning (15 min)
+- Sprint-Float-Sprint ×8
 
-#### Cool-Down (5min)
-- `soccer-juggling-3min-continuous` — Juggling 3min continuous
+#### Cool-Down (5 min)
+- Juggling — 3 min continuous
 
 > **Session notes:** Push creative boundaries
 
----
-
 ### Tuesday — Passing Combos
 
-#### Warm-Up (10min)
-- `soccer-carioca` — Carioca x4
-- `soccer-pendulum-swings` — Pendulum Swings
+#### Warm-Up (10 min)
+- Carioca ×4
+- Pendulum Swings
 
-#### Technical Block (25min)
-- `soccer-wall-one-two-sprint` — Wall One-Two Sprint (4x10)
-- `soccer-back-foot-pass-wall` — Back-Foot Pass Wall (3x10)
-- `soccer-ping-pong-touch-drill` — Ping-Pong Touch Drill
+#### Technical Block (25 min)
+- Wall One-Two Sprint (4×10)
+- Back-Foot Pass Wall (3×10)
+- Ping-Pong Touch Drill
 
-#### Game Scenario (15min)
-- `soccer-decision-making-gates` — Decision Making Gates (4x15)
+#### Game Scenario (15 min)
+- Decision Making Gates (4×15)
 
-#### Conditioning (15min)
-- `soccer-200m-repeats` — 200m Repeats x6
+#### Conditioning (15 min)
+- 200m Repeats ×6
 
-#### Cool-Down (5min)
-- `soccer-lofted-ball-kill-cooldown` — Lofted Ball Kill cooldown
+#### Cool-Down (5 min)
+- Lofted Ball Kill Cooldown
 
 > **Session notes:** Add scanning to every passing drill
 
----
-
 ### Wednesday — Light Technical
 
-#### Warm-Up (10min)
-- `soccer-juggling-5min` — Juggling 5min
+#### Warm-Up (10 min)
+- Juggling (5 min)
 
-#### Technical Block (25min)
-- `soccer-chip-to-self` — Chip to Self (3x12)
-- `soccer-flick-up-control` — Flick-Up Control (3x10)
+#### Technical Block (25 min)
+- Chip to Self (3×12)
+- Flick-Up Control (3×10)
 
-#### Game Scenario (15min)
-- `soccer-head-up-dribble-count` — Head-Up Dribble Count (4x60s)
-
-#### Conditioning (15min)
-- `soccer-` — -
-
-#### Cool-Down (5min)
-- `soccer-stretching` — Stretching
-- `soccer-foam-roll` — foam roll
+#### Game Scenario (15 min)
+- Head-Up Dribble Count (4×60s)
 
 > **Session notes:** Mental focus day — quality over quantity
 
----
-
 ### Thursday — Defending & Agility
 
-#### Warm-Up (10min)
-- `soccer-defensive-shuffle-cone` — Defensive Shuffle Cone
-- `soccer-jockey-drill` — Jockey Drill
+#### Warm-Up (10 min)
+- Defensive Shuffle Cone
+- Jockey Drill
 
-#### Technical Block (25min)
-- `soccer-recovery-run-sprint` — Recovery Run Sprint (6x)
-- `soccer-block-shot-drill` — Block Shot Drill (4x8)
-- `soccer-interception-sprint` — Interception Sprint (4x10)
+#### Technical Block (25 min)
+- Recovery Run Sprint ×6
+- Block Shot Drill (4×8)
+- Interception Sprint (4×10)
 
-#### Game Scenario (15min)
-- `soccer-press-and-recover-cone` — Press and Recover Cone (4x8)
+#### Game Scenario (15 min)
+- Press and Recover Cone (4×8)
 
-#### Conditioning (15min)
-- `soccer-star-run` — Star Run x4
-- `soccer-decel-reaccel` — Decel-Reaccel x8
+#### Conditioning (15 min)
+- Star Run ×4
+- Decel-Reaccel ×8
 
-#### Cool-Down (5min)
-- `soccer-backward-sprint-cooldown` — Backward Sprint cooldown
+#### Cool-Down (5 min)
+- Backward Sprint Cooldown
 
 > **Session notes:** Defenders need fitness too
 
----
-
 ### Friday — Finishing Clinic
 
-#### Warm-Up (10min)
-- `soccer-compass-drill` — Compass Drill x4
-- `soccer-ball-mastery-box` — Ball Mastery Box
+#### Warm-Up (10 min)
+- Compass Drill ×4
+- Ball Mastery Box
 
-#### Technical Block (25min)
-- `soccer-near-post-finish` — Near-Post Finish
-- `soccer-far-post-curl` — Far-Post Curl
-- `soccer-chip-shot-practice` — Chip Shot Practice (3x10 each)
+#### Technical Block (25 min)
+- Near-Post Finish
+- Far-Post Curl
+- Chip Shot Practice (3×10 each)
 
-#### Game Scenario (15min)
-- `soccer-pressure-finishing` — Pressure Finishing (5 balls in 30s) x4
+#### Game Scenario (15 min)
+- Pressure Finishing (5 balls in 30s) ×4
 
-#### Conditioning (15min)
-- `soccer-dribble-sprint-dribble` — Dribble-Sprint-Dribble x8
+#### Conditioning (15 min)
+- Dribble-Sprint-Dribble ×8
 
-#### Cool-Down (5min)
-- `soccer-volley-technique-cooldown` — Volley Technique cooldown
+#### Cool-Down (5 min)
+- Volley Technique Cooldown
 
 > **Session notes:** Variety of finishes = unpredictable striker
 
----
-
 ### Saturday — Full Match Simulation
 
-#### Warm-Up (10min)
-- `soccer-illinois-agility` — Illinois Agility x4
-- `soccer-reactive-cone-touch` — Reactive Cone Touch
+#### Warm-Up (10 min)
+- Illinois Agility ×4
+- Reactive Cone Touch
 
-#### Technical Block (25min)
-- `soccer-movement-pattern-finish` — Movement Pattern Finish (3x8)
-- `soccer-turn-and-finish` — Turn and Finish (3x10)
-- `soccer-cut-back-and-finish` — Cut-Back and Finish
+#### Technical Block (25 min)
+- Movement Pattern Finish (3×8)
+- Turn and Finish (3×10)
+- Cut-Back and Finish
 
-#### Game Scenario (15min)
-- `soccer-inside-the-box-movement` — Inside-the-Box Movement (3x rotation)
+#### Game Scenario (15 min)
+- Inside-the-Box Movement (3 rotations)
 
-#### Conditioning (15min)
-- `soccer-match-simulation-run-20min` — Match Simulation Run 20min
+#### Conditioning (15 min)
+- Match Simulation Run (20 min)
 
-#### Cool-Down (5min)
-- `soccer-stretching` — Stretching
+#### Cool-Down (5 min)
+- Stretching
 
 > **Session notes:** Everything at game intensity
 
----
-
 ### Sunday — REST
 
-#### Warm-Up (10min)
-- `soccer-` — -
+Full rest — big week coming.
 
-#### Technical Block (25min)
-- `soccer-` — -
 
-#### Game Scenario (15min)
-- `soccer-` — -
-
-#### Conditioning (15min)
-- `soccer-` — -
-
-#### Cool-Down (5min)
-- `soccer-` — -
-
-> **Session notes:** Full rest — big week coming
 
 ---
+
+
 
 ## Week 4: Testing & Benchmarks
 **Focus:** Measure improvement, compete under pressure
 
 ### Monday — Technical Mastery Test
 
-#### Warm-Up (10min)
-- `soccer-toe-taps` — Toe Taps (3x60s)
-- `soccer-figure-8-rolls` — Figure 8 Rolls
+#### Warm-Up (10 min)
+- Toe Taps (3×60s)
+- Figure 8 Rolls
 
-#### Technical Block (25min)
-- `soccer-ball-mastery-box` — Ball Mastery Box (time trial)
-- `soccer-juggling-streak` — Juggling Streak (beat PB)
-- `soccer-drag-control` — Drag Control (3x10)
+#### Technical Block (25 min)
+- Ball Mastery Box (time trial)
+- Juggling Streak (beat personal best)
+- Drag Control (3×10)
 
-#### Game Scenario (15min)
-- `soccer-peripheral-vision-dribble` — Peripheral Vision Dribble (4x45s)
+#### Game Scenario (15 min)
+- Peripheral Vision Dribble (4×45s)
 
-#### Conditioning (15min)
-- `soccer-flying-20s` — Flying 20s x8
+#### Conditioning (15 min)
+- Flying 20s ×8
 
-#### Cool-Down (5min)
-- `soccer-juggling-cooldown` — Juggling cooldown
+#### Cool-Down (5 min)
+- Juggling Cooldown
 
 > **Session notes:** Beat all personal bests this week
 
----
-
 ### Tuesday — Passing Mastery
 
-#### Warm-Up (10min)
-- `soccer-quick-feet-ladder` — Quick Feet Ladder x6
-- `soccer-carioca` — Carioca
+#### Warm-Up (10 min)
+- Quick Feet Ladder ×6
+- Carioca
 
-#### Technical Block (25min)
-- `soccer-wall-volley-passing` — Wall Volley Passing (3x10)
-- `soccer-outside-curve-pass` — Outside Curve Pass (3x10)
-- `soccer-lofted-pass-accuracy` — Lofted Pass Accuracy
+#### Technical Block (25 min)
+- Wall Volley Passing (3×10)
+- Outside Curve Pass (3×10)
+- Lofted Pass Accuracy
 
-#### Game Scenario (15min)
-- `soccer-ping-pass-drill` — Ping Pass Drill (4x10)
+#### Game Scenario (15 min)
+- Ping Pass Drill (4×10)
 
-#### Conditioning (15min)
-- `soccer-cruise-intervals-4` — Cruise Intervals 4x5min
+#### Conditioning (15 min)
+- Cruise Intervals (4×5 min)
 
-#### Cool-Down (5min)
-- `soccer-thigh-control-cooldown` — Thigh Control cooldown
+#### Cool-Down (5 min)
+- Thigh Control Cooldown
 
 > **Session notes:** Every pass with purpose and precision
 
----
-
 ### Wednesday — Active Recovery
 
-#### Warm-Up (10min)
-- `soccer-light-jog-10min` — Light jog 10min
+#### Warm-Up (10 min)
+- Light Jog (10 min)
 
-#### Technical Block (25min)
-- `soccer-juggling` — Juggling
-- `soccer-shadow-play-movement` — Shadow Play Movement
+#### Technical Block (25 min)
+- Juggling
+- Shadow Play Movement
 
-#### Game Scenario (15min)
-- `soccer-positional-shadow-play` — Positional Shadow Play (5min)
-
-#### Conditioning (15min)
-- `soccer-` — -
-
-#### Cool-Down (5min)
-- `soccer-stretching` — Stretching
-- `soccer-visualization` — visualization
+#### Game Scenario (15 min)
+- Positional Shadow Play (5 min)
 
 > **Session notes:** Mentally prepare for test days
 
----
-
 ### Thursday — Speed & Agility Test
 
-#### Warm-Up (10min)
-- `soccer-5-10-5` — 5-10-5 x4
-- `soccer-lateral-bounds` — Lateral Bounds
+#### Warm-Up (10 min)
+- 5-10-5 ×4
+- Lateral Bounds
 
-#### Technical Block (25min)
-- `soccer-nutmeg-cone-drill` — Nutmeg Cone Drill
-- `soccer-double-touch-burst` — Double Touch Burst
-- `soccer-dribble-turn-escape` — Dribble Turn Escape (4x6 each)
+#### Technical Block (25 min)
+- Nutmeg Cone Drill
+- Double Touch Burst
+- Dribble Turn Escape (4×6 each)
 
-#### Game Scenario (15min)
-- `soccer-breakaway-finish` — Breakaway Finish (4x5)
+#### Game Scenario (15 min)
+- Breakaway Finish (4×5)
 
-#### Conditioning (15min)
-- `soccer-3-step-explosion` — 3-Step Explosion x10
-- `soccer-falling-starts` — Falling Starts x8
+#### Conditioning (15 min)
+- 3-Step Explosion ×10
+- Falling Starts ×8
 
-#### Cool-Down (5min)
-- `soccer-stretching` — Stretching
+#### Cool-Down (5 min)
+- Stretching
 
 > **Session notes:** Record all test scores
 
----
-
 ### Friday — Shooting Test Day
 
-#### Warm-Up (10min)
-- `soccer-t-test` — T-Test x4
-- `soccer-ball-mastery-box` — Ball Mastery Box
+#### Warm-Up (10 min)
+- T-Test ×4
+- Ball Mastery Box
 
-#### Technical Block (25min)
-- `soccer-edge-of-box-curler` — Edge of Box Curler (3x10)
-- `soccer-knuckleball` — Knuckleball (3x10)
-- `soccer-side-netting-drill` — Side-Netting Drill
+#### Technical Block (25 min)
+- Edge of Box Curler (3×10)
+- Knuckleball (3×10)
+- Side-Netting Drill
 
-#### Game Scenario (15min)
-- `soccer-rapid-fire` — Rapid Fire (4 rounds)
-- `soccer-snapshot-drill` — Snapshot Drill (4x10)
+#### Game Scenario (15 min)
+- Rapid Fire (4 rounds)
+- Snapshot Drill (4×10)
 
-#### Conditioning (15min)
-- `soccer-yo-yo-recovery-test` — Yo-Yo Recovery Test
+#### Conditioning (15 min)
+- Yo-Yo Recovery Test
 
-#### Cool-Down (5min)
-- `soccer-cooldown-jog` — Cooldown jog
-- `soccer-stretch` — stretch
+#### Cool-Down (5 min)
+- Cooldown Jog & Stretch
 
 > **Session notes:** Record Yo-Yo level — compare to Week 2
 
----
-
 ### Saturday — Grand Finale Session
 
-#### Warm-Up (10min)
-- `soccer-full-warm-up-jog-dynamic-stretches-ball-mastery` — Full warm-up: jog, dynamic stretches, ball mastery
+#### Warm-Up (10 min)
+- Full Warm-Up: Jog, Dynamic Stretches, Ball Mastery
 
-#### Technical Block (25min)
-- `soccer-choose-your-best-5-drills-perform-each-at-max-quality` — Choose your best 5 drills — perform each at max quality
+#### Technical Block (25 min)
+- Choose Your Best 5 Drills — perform each at max quality
 
-#### Game Scenario (15min)
-- `soccer-choose-best-finishing-drill-20-shots-record-accuracy` — Choose best finishing drill — 20 shots, record accuracy
+#### Game Scenario (15 min)
+- Choose Best Finishing Drill — 20 shots, record accuracy
 
-#### Conditioning (15min)
-- `soccer-1km-time-trial` — 1km Time Trial
+#### Conditioning (15 min)
+- 1km Time Trial
 
-#### Cool-Down (5min)
-- `soccer-celebrate` — Celebrate
-- `soccer-stretch` — stretch
+#### Cool-Down (5 min)
+- Celebrate 🎉
+- Stretch
 
 > **Session notes:** Compare ALL scores to Week 1
 
----
-
 ### Sunday — REST & REVIEW
 
-#### Warm-Up (10min)
-- `soccer-` — -
-
-#### Technical Block (25min)
-- `soccer-` — -
-
-#### Game Scenario (15min)
-- `soccer-` — -
-
-#### Conditioning (15min)
-- `soccer-` — -
-
-#### Cool-Down (5min)
-- `soccer-` — -
-
-> **Session notes:** Review all metrics. Plan next 4-week cycle.
+Review all metrics. Plan next 4-week cycle.
 
 ---

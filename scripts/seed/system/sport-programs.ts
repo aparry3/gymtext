@@ -150,44 +150,6 @@ async function upsertProgramVersion(db: Kysely<any>, params: {
   return result!.id;
 }
 
-// ─── Drill Reference Verification ────────────────────────────────────────────
-
-async function verifyDrillRefs(db: Kysely<any>, template: string, sportSlug: string, sportId: string) {
-  // Extract all drill slugs from template
-  const slugPattern = new RegExp(`\`(${sportSlug}-[a-z0-9-]+)\``, 'g');
-  const allSlugs = new Set<string>();
-  let match;
-  while ((match = slugPattern.exec(template)) !== null) {
-    // Skip empty slugs like `basketball-` or `soccer-`
-    if (match[1] === `${sportSlug}-` || match[1].endsWith('-')) continue;
-    allSlugs.add(match[1]);
-  }
-
-  // Check which exist in DB
-  const existing = await sql<{ slug: string }>`
-    SELECT slug FROM exercises WHERE sport_id = ${sportId}
-  `.execute(db).then(r => new Set(r.rows.map(row => row.slug)));
-
-  const missing: string[] = [];
-  for (const slug of allSlugs) {
-    if (!existing.has(slug)) {
-      missing.push(slug);
-    }
-  }
-
-  console.log(`   ${sportSlug}: ${allSlugs.size} drill refs, ${allSlugs.size - missing.length} found, ${missing.length} missing`);
-
-  if (missing.length > 0) {
-    console.log(`   ⚠️  Missing drills (may be rest-day placeholders or template-only entries):`);
-    for (const slug of missing.slice(0, 10)) {
-      console.log(`      - ${slug}`);
-    }
-    if (missing.length > 10) {
-      console.log(`      ... and ${missing.length - 10} more`);
-    }
-  }
-}
-
 // ─── Main Export ─────────────────────────────────────────────────────────────
 
 export async function seedSportPrograms(): Promise<void> {
@@ -310,10 +272,6 @@ export async function seedSportPrograms(): Promise<void> {
     `.execute(db);
     console.log(`     ✓ Version published`);
 
-    // 6. Verify drill references
-    console.log('  🔍 Verifying drill references...');
-    await verifyDrillRefs(db, basketballTemplate, 'basketball', basketball.id);
-    await verifyDrillRefs(db, soccerTemplate, 'soccer', soccer.id);
   } finally {
     await db.destroy();
   }
