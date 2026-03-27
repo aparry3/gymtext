@@ -1,42 +1,25 @@
 import { NextResponse } from 'next/server';
-import { getAdminContext, getEnvironmentMode } from '@/lib/context';
-import { getStripeClient } from '@/lib/stripe';
+import { getAdminContext } from '@/lib/context';
 
 /**
  * GET /api/promotions
  *
- * Lists promo codes from DB with Stripe coupon details.
+ * Lists promotion codes from Stripe.
  */
 export async function GET() {
   try {
     const { services } = await getAdminContext();
-    const mode = await getEnvironmentMode();
-    const stripe = getStripeClient(mode);
 
     const promoCodes = await services.promoCode.listAll();
 
-    // Fetch Stripe coupon details for each promo code
-    const codes = await Promise.all(
-      promoCodes.map(async (pc) => {
-        let coupon = null;
-        try {
-          const c = await stripe.coupons.retrieve(pc.stripeCouponId);
-          coupon = {
-            name: c.name,
-            amountOff: c.amount_off,
-            percentOff: c.percent_off,
-            currency: c.currency,
-            duration: c.duration,
-            durationInMonths: c.duration_in_months,
-            timesRedeemed: c.times_redeemed ?? 0,
-            valid: c.valid,
-          };
-        } catch {
-          // Coupon may have been deleted from Stripe
-        }
-        return { ...pc, coupon };
-      })
-    );
+    const codes = promoCodes.map((pc) => ({
+      id: pc.id,
+      code: pc.code,
+      name: pc.coupon?.name || pc.code,
+      isActive: pc.active,
+      createdAt: pc.created,
+      coupon: pc.coupon,
+    }));
 
     const stats = {
       total: codes.length,
@@ -57,7 +40,7 @@ export async function GET() {
 /**
  * POST /api/promotions
  *
- * Creates a Stripe coupon + DB promo code record.
+ * Creates a Stripe coupon and promotion code.
  * Body: { code, name, discountType, amount, duration, durationInMonths? }
  */
 export async function POST(request: Request) {
@@ -106,7 +89,14 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       success: true,
-      data: promoCode,
+      data: {
+        id: promoCode.id,
+        code: promoCode.code,
+        name: promoCode.coupon?.name || promoCode.code,
+        isActive: promoCode.active,
+        createdAt: promoCode.created,
+        coupon: promoCode.coupon,
+      },
     }, { status: 201 });
   } catch (error) {
     console.error('Error creating promotion code:', error);

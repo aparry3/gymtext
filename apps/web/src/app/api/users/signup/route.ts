@@ -383,13 +383,14 @@ async function completeSignupFlow(
   }
 
   // Handle promo code if present and no valid referral
+  let stripePromotionCodeId: string | undefined;
   const promoCode = formData.promoCode as string | undefined;
   if (!refereeCouponId && promoCode) {
     console.log(`[Signup] Validating promo code: ${promoCode}`);
     const promoValidation = await services.promoCode.validatePromoCode(promoCode);
-    if (promoValidation.valid && promoValidation.stripeCouponId) {
-      refereeCouponId = promoValidation.stripeCouponId;
-      console.log(`[Signup] Promo code valid, applying Stripe coupon: ${refereeCouponId}`);
+    if (promoValidation.valid && promoValidation.stripePromotionCodeId) {
+      stripePromotionCodeId = promoValidation.stripePromotionCodeId;
+      console.log(`[Signup] Promo code valid, applying Stripe promotion code: ${stripePromotionCodeId}`);
     } else {
       console.log(`[Signup] Promo code invalid: ${promoValidation.error}`);
     }
@@ -415,9 +416,11 @@ async function completeSignupFlow(
     client_reference_id: userId,
   };
 
-  // Add discount if referral is valid, otherwise allow promo codes
+  // Add discount: referral coupon > promo code > allow manual entry
   if (refereeCouponId) {
     checkoutOptions.discounts = [{ coupon: refereeCouponId }];
+  } else if (stripePromotionCodeId) {
+    checkoutOptions.discounts = [{ promotion_code: stripePromotionCodeId }];
   } else {
     checkoutOptions.allow_promotion_codes = true;
   }

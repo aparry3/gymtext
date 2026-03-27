@@ -163,12 +163,12 @@ export function createServices(repos: RepositoryContainer, clients?: ExternalCli
   const getPromoCode = (): PromoCodeServiceInstance => {
     if (!_promoCode) {
       if (clients?.stripeClient) {
-        _promoCode = createPromoCodeService(repos, { stripeClient: clients.stripeClient });
+        _promoCode = createPromoCodeService({ stripeClient: clients.stripeClient });
       } else {
         const { getStripeSecrets } = require('../config');
         const Stripe = require('stripe').default;
         const { secretKey } = getStripeSecrets();
-        _promoCode = createPromoCodeService(repos, { stripeClient: new Stripe(secretKey, { apiVersion: '2023-10-16' }) });
+        _promoCode = createPromoCodeService({ stripeClient: new Stripe(secretKey, { apiVersion: '2023-10-16' }) });
       }
     }
     return _promoCode;

@@ -1,11 +1,9 @@
 import Stripe from 'stripe';
-import type { PromoCode } from '@/server/models/promoCode';
-import type { RepositoryContainer } from '../../../repositories/factory';
 
 export interface ValidatePromoResult {
   valid: boolean;
   stripeCouponId?: string;
-  promoCodeId?: string;
+  stripePromotionCodeId?: string;
   error?: string;
 }
 
@@ -21,6 +19,15 @@ export interface StripeCouponDetails {
   valid: boolean;
 }
 
+export interface StripePromoCode {
+  id: string;
+  code: string;
+  active: boolean;
+  coupon: StripeCouponDetails;
+  created: number;
+  timesRedeemed: number;
+}
+
 export interface CreatePromoCodeParams {
   code: string;
   name: string;
@@ -32,9 +39,9 @@ export interface CreatePromoCodeParams {
 
 export interface PromoCodeServiceInstance {
   validatePromoCode(code: string): Promise<ValidatePromoResult>;
-  createPromoCode(params: CreatePromoCodeParams): Promise<PromoCode>;
-  deactivatePromoCode(id: string): Promise<PromoCode>;
-  listAll(): Promise<PromoCode[]>;
+  createPromoCode(params: CreatePromoCodeParams): Promise<StripePromoCode>;
+  deactivatePromoCode(id: string): Promise<StripePromoCode>;
+  listAll(): Promise<StripePromoCode[]>;
   getStripeCouponDetails(stripeCouponId: string): Promise<StripeCouponDetails | null>;
 }
 
@@ -42,8 +49,36 @@ export interface PromoCodeServiceDeps {
   stripeClient: Stripe;
 }
 
+function mapCoupon(coupon: Stripe.Coupon): StripeCouponDetails {
+  return {
+    id: coupon.id,
+    name: coupon.name,
+    amountOff: coupon.amount_off,
+    percentOff: coupon.percent_off,
+    currency: coupon.currency,
+    duration: coupon.duration,
+    durationInMonths: coupon.duration_in_months,
+    timesRedeemed: coupon.times_redeemed ?? 0,
+    valid: coupon.valid,
+  };
+}
+
+function mapPromoCode(pc: Stripe.PromotionCode): StripePromoCode {
+  const coupon = typeof pc.coupon === 'string'
+    ? null
+    : mapCoupon(pc.coupon);
+
+  return {
+    id: pc.id,
+    code: pc.code,
+    active: pc.active,
+    coupon: coupon!,
+    created: pc.created,
+    timesRedeemed: pc.times_redeemed,
+  };
+}
+
 export function createPromoCodeService(
-  repos: RepositoryContainer,
   deps: PromoCodeServiceDeps
 ): PromoCodeServiceInstance {
   const { stripeClient } = deps;
@@ -54,20 +89,34 @@ export function createPromoCodeService(
         return { valid: false, error: 'Invalid promo code format' };
       }
 
-      const promoCode = await repos.promoCode.findByCode(code);
-      if (!promoCode) {
-        return { valid: false, error: 'Promo code not found' };
-      }
+      try {
+        const result = await stripeClient.promotionCodes.list({
+          code: code.toUpperCase(),
+          active: true,
+          limit: 1,
+        });
 
-      return {
-        valid: true,
-        stripeCouponId: promoCode.stripeCouponId,
-        promoCodeId: promoCode.id,
-      };
+        const promoCode = result.data[0];
+        if (!promoCode) {
+          return { valid: false, error: 'Promo code not found' };
+        }
+
+        const couponId = typeof promoCode.coupon === 'string'
+          ? promoCode.coupon
+          : promoCode.coupon.id;
+
+        return {
+          valid: true,
+          stripeCouponId: couponId,
+          stripePromotionCodeId: promoCode.id,
+        };
+      } catch {
+        return { valid: false, error: 'Failed to validate promo code' };
+      }
     },
 
-    async createPromoCode(params: CreatePromoCodeParams): Promise<PromoCode> {
-      // Create Stripe coupon
+    async createPromoCode(params: CreatePromoCodeParams): Promise<StripePromoCode> {
+      // Create Stripe coupon (discount definition)
       const couponParams: Stripe.CouponCreateParams = {
         name: params.name,
         duration: params.duration,
@@ -81,36 +130,36 @@ export function createPromoCodeService(
 
       const coupon = await stripeClient.coupons.create(couponParams);
 
-      // Save mapping in DB
-      return repos.promoCode.create({
-        code: params.code,
-        name: params.name,
-        stripeCouponId: coupon.id,
+      // Create Stripe promotion code (customer-facing code)
+      const promoCode = await stripeClient.promotionCodes.create({
+        coupon: coupon.id,
+        code: params.code.toUpperCase(),
       });
+
+      return mapPromoCode(promoCode);
     },
 
-    async deactivatePromoCode(id: string): Promise<PromoCode> {
-      return repos.promoCode.deactivate(id);
+    async deactivatePromoCode(id: string): Promise<StripePromoCode> {
+      const promoCode = await stripeClient.promotionCodes.update(id, {
+        active: false,
+      });
+
+      return mapPromoCode(promoCode);
     },
 
-    async listAll(): Promise<PromoCode[]> {
-      return repos.promoCode.findAll();
+    async listAll(): Promise<StripePromoCode[]> {
+      const result = await stripeClient.promotionCodes.list({
+        limit: 100,
+        expand: ['data.coupon'],
+      });
+
+      return result.data.map(mapPromoCode);
     },
 
     async getStripeCouponDetails(stripeCouponId: string): Promise<StripeCouponDetails | null> {
       try {
         const coupon = await stripeClient.coupons.retrieve(stripeCouponId);
-        return {
-          id: coupon.id,
-          name: coupon.name,
-          amountOff: coupon.amount_off,
-          percentOff: coupon.percent_off,
-          currency: coupon.currency,
-          duration: coupon.duration,
-          durationInMonths: coupon.duration_in_months,
-          timesRedeemed: coupon.times_redeemed ?? 0,
-          valid: coupon.valid,
-        };
+        return mapCoupon(coupon);
       } catch {
         return null;
       }

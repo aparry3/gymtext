@@ -43,9 +43,8 @@ interface PromoCode {
   id: string
   code: string
   name: string
-  stripeCouponId: string
   isActive: boolean
-  createdAt: string
+  createdAt: number | string
   coupon: StripeCoupon | null
 }
 
@@ -327,7 +326,7 @@ function CreatePromoDialog({
         <DialogHeader>
           <DialogTitle>Create Promo Code</DialogTitle>
           <DialogDescription>
-            Creates a coupon in Stripe and a promo code in the database.
+            Creates a coupon and promotion code in Stripe.
             Share via gymtext.co/r/CODE or customers can enter it at checkout.
           </DialogDescription>
         </DialogHeader>

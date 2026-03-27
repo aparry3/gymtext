@@ -4,7 +4,7 @@ import { getAdminContext } from '@/lib/context';
 /**
  * PATCH /api/promotions/:id
  *
- * Deactivates a promo code in the DB.
+ * Deactivates a Stripe promotion code.
  */
 export async function PATCH(
   request: Request,
@@ -21,7 +21,7 @@ export async function PATCH(
       data: {
         id: promoCode.id,
         code: promoCode.code,
-        isActive: promoCode.isActive,
+        isActive: promoCode.active,
       },
     });
   } catch (error) {
