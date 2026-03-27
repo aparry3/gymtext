@@ -11,7 +11,11 @@
 - **Saturday:** Full assessment/test session
 - **Progression:** Each week builds on the previous — master basics before advancing
 
+
+
 ---
+
+
 
 ## Week 1: Foundation
 **Focus:** Rhythm, comfort, basic mechanics
@@ -40,8 +44,6 @@
 
 > **Session notes:** Foundation handles — rhythm & comfort
 
----
-
 ### Tuesday — Shooting Form
 
 #### Warm-Up (10 min)
@@ -65,8 +67,6 @@
 
 > **Session notes:** Form before volume — perfect the mechanics
 
----
-
 ### Wednesday — REST / Light Shooting
 
 **Optional:**
@@ -74,8 +74,6 @@
 - Juggling
 
 > **Session notes:** Active recovery day
-
----
 
 ### Thursday — Finishing & Footwork
 
@@ -100,8 +98,6 @@
 
 > **Session notes:** Footwork is the foundation of finishing
 
----
-
 ### Friday — Defense & Toughness
 
 #### Warm-Up (10 min)
@@ -124,8 +120,6 @@
 - Wall Sit with Ball Handling
 
 > **Session notes:** Defense wins championships — commit to it
-
----
 
 ### Saturday — Full Session
 
@@ -151,13 +145,15 @@
 
 > **Session notes:** Combine everything from the week
 
----
-
 ### Sunday — REST
 
 Full rest — hydrate and sleep 8+ hours.
 
+
+
 ---
+
+
 
 ## Week 2: Development
 **Focus:** Speed, complexity, defensive pressure
@@ -185,8 +181,6 @@ Full rest — hydrate and sleep 8+ hours.
 
 > **Session notes:** Push the handles — speed and creativity
 
----
-
 ### Tuesday — Mid-Range & Shooting
 
 #### Warm-Up (10 min)
@@ -210,8 +204,6 @@ Full rest — hydrate and sleep 8+ hours.
 
 > **Session notes:** Mid-range is the forgotten weapon — master it
 
----
-
 ### Wednesday — Active Recovery
 
 #### Warm-Up (10 min)
@@ -225,8 +217,6 @@ Full rest — hydrate and sleep 8+ hours.
 - Pivot Series (3×30)
 
 > **Session notes:** Mental focus — visualize game scenarios
-
----
 
 ### Thursday — Finishing Package
 
@@ -250,8 +240,6 @@ Full rest — hydrate and sleep 8+ hours.
 - Free Throws While Fatigued
 
 > **Session notes:** Develop 4+ ways to finish at the rim
-
----
 
 ### Friday — 3-Point Shooting
 
@@ -277,8 +265,6 @@ Full rest — hydrate and sleep 8+ hours.
 
 > **Session notes:** Feet set before catch — that's the secret to 3PT shooting
 
----
-
 ### Saturday — Full Session + Testing
 
 #### Warm-Up (10 min)
@@ -302,13 +288,15 @@ Full rest — hydrate and sleep 8+ hours.
 
 > **Session notes:** Record Cooper Test as benchmark
 
----
-
 ### Sunday — REST
 
 Full rest.
 
+
+
 ---
+
+
 
 ## Week 3: Application
 **Focus:** Game-speed, decision-making, competition
@@ -336,8 +324,6 @@ Full rest.
 
 > **Session notes:** Two-ball work builds independent hands
 
----
-
 ### Tuesday — Passing & Court Vision
 
 #### Warm-Up (10 min)
@@ -361,8 +347,6 @@ Full rest.
 
 > **Session notes:** Great passers see the play before it happens
 
----
-
 ### Wednesday — Light Technical
 
 #### Warm-Up (10 min)
@@ -377,8 +361,6 @@ Full rest.
 - Shadow Footwork Visualization
 
 > **Session notes:** Footwork day — quality over quantity
-
----
 
 ### Thursday — Post Play & Rebounding
 
@@ -404,8 +386,6 @@ Full rest.
 
 > **Session notes:** Post players dominate the 4th quarter — build stamina
 
----
-
 ### Friday — Finishing Clinic
 
 #### Warm-Up (10 min)
@@ -429,8 +409,6 @@ Full rest.
 
 > **Session notes:** Elite finishers have 6+ ways to score at the rim
 
----
-
 ### Saturday — Game Simulation
 
 #### Warm-Up (10 min)
@@ -453,13 +431,15 @@ Full rest.
 
 > **Session notes:** Everything at game intensity today
 
----
-
 ### Sunday — REST
 
 Full rest — big test week ahead.
 
+
+
 ---
+
+
 
 ## Week 4: Testing & Benchmarks
 **Focus:** Measure improvement, compete under pressure
@@ -486,8 +466,6 @@ Full rest — big test week ahead.
 
 > **Session notes:** Beat ALL personal bests this week
 
----
-
 ### Tuesday — Shooting Mastery
 
 #### Warm-Up (10 min)
@@ -511,8 +489,6 @@ Full rest — big test week ahead.
 
 > **Session notes:** Every shot with purpose and precision
 
----
-
 ### Wednesday — Active Recovery
 
 #### Warm-Up (10 min)
@@ -526,8 +502,6 @@ Full rest — big test week ahead.
 - Triple Threat Reads (mental walk-through)
 
 > **Session notes:** Mentally prepare for test days
-
----
 
 ### Thursday — Speed & Defense Test
 
@@ -551,8 +525,6 @@ Full rest — big test week ahead.
 
 > **Session notes:** Record ALL test times
 
----
-
 ### Friday — Finishing & Scoring Test
 
 #### Warm-Up (10 min)
@@ -575,8 +547,6 @@ Full rest — big test week ahead.
 
 > **Session notes:** Compare to Week 2 benchmarks
 
----
-
 ### Saturday — Grand Finale Session
 
 #### Warm-Up (10 min)
@@ -597,8 +567,6 @@ Full rest — big test week ahead.
 - Stretch
 
 > **Session notes:** Compare ALL scores to Week 1
-
----
 
 ### Sunday — REST & REVIEW
 

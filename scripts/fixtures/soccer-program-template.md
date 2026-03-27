@@ -11,7 +11,11 @@
 - **Saturday:** Full assessment/test session
 - **Progression:** Each week builds on the previous — master basics before advancing
 
+
+
 ---
+
+
 
 ## Week 1: Foundation
 **Focus:** Rhythm, comfort, basic mechanics
@@ -38,8 +42,6 @@
 
 > **Session notes:** Focus on rhythm and clean touches
 
----
-
 ### Tuesday — Passing & First Touch
 
 #### Warm-Up (10 min)
@@ -62,16 +64,12 @@
 
 > **Session notes:** Wall work is your best friend
 
----
-
 ### Wednesday — REST / Light Juggling
 
 **Optional:**
 - Juggling Catch Series
 
 > **Session notes:** Active recovery day
-
----
 
 ### Thursday — Dribbling & 1v1 Skills
 
@@ -95,8 +93,6 @@
 
 > **Session notes:** Sell every move — exaggerate
 
----
-
 ### Friday — Shooting & Finishing
 
 #### Warm-Up (10 min)
@@ -118,8 +114,6 @@
 - Juggling Cooldown
 
 > **Session notes:** Placement before power this week
-
----
 
 ### Saturday — Full Session
 
@@ -144,13 +138,15 @@
 
 > **Session notes:** Combine everything from the week
 
----
-
 ### Sunday — REST
 
 Full rest — hydrate and sleep.
 
+
+
 ---
+
+
 
 ## Week 2: Development
 **Focus:** Speed, complexity, defensive pressure
@@ -177,8 +173,6 @@ Full rest — hydrate and sleep.
 
 > **Session notes:** Push your weak foot this week
 
----
-
 ### Tuesday — Passing Range
 
 #### Warm-Up (10 min)
@@ -201,8 +195,6 @@ Full rest — hydrate and sleep.
 
 > **Session notes:** Weight of pass is critical
 
----
-
 ### Wednesday — Active Recovery
 
 #### Warm-Up (10 min)
@@ -216,8 +208,6 @@ Full rest — hydrate and sleep.
 - Shadow Play Movement (4×60s)
 
 > **Session notes:** Visualization + light touch work
-
----
 
 ### Thursday — Speed Dribbling
 
@@ -241,8 +231,6 @@ Full rest — hydrate and sleep.
 
 > **Session notes:** Speed WITH control — not one or the other
 
----
-
 ### Friday — Power Shooting
 
 #### Warm-Up (10 min)
@@ -264,8 +252,6 @@ Full rest — hydrate and sleep.
 - Juggling Cooldown
 
 > **Session notes:** Lock that ankle — power comes from technique
-
----
 
 ### Saturday — Full Session + Testing
 
@@ -289,13 +275,15 @@ Full rest — hydrate and sleep.
 
 > **Session notes:** Record Cooper Test distance as benchmark
 
----
-
 ### Sunday — REST
 
 Full rest.
 
+
+
 ---
+
+
 
 ## Week 3: Application
 **Focus:** Game-speed, decision-making, competition
@@ -322,8 +310,6 @@ Full rest.
 
 > **Session notes:** Push creative boundaries
 
----
-
 ### Tuesday — Passing Combos
 
 #### Warm-Up (10 min)
@@ -346,8 +332,6 @@ Full rest.
 
 > **Session notes:** Add scanning to every passing drill
 
----
-
 ### Wednesday — Light Technical
 
 #### Warm-Up (10 min)
@@ -361,8 +345,6 @@ Full rest.
 - Head-Up Dribble Count (4×60s)
 
 > **Session notes:** Mental focus day — quality over quantity
-
----
 
 ### Thursday — Defending & Agility
 
@@ -387,8 +369,6 @@ Full rest.
 
 > **Session notes:** Defenders need fitness too
 
----
-
 ### Friday — Finishing Clinic
 
 #### Warm-Up (10 min)
@@ -410,8 +390,6 @@ Full rest.
 - Volley Technique Cooldown
 
 > **Session notes:** Variety of finishes = unpredictable striker
-
----
 
 ### Saturday — Full Match Simulation
 
@@ -435,13 +413,15 @@ Full rest.
 
 > **Session notes:** Everything at game intensity
 
----
-
 ### Sunday — REST
 
 Full rest — big week coming.
 
+
+
 ---
+
+
 
 ## Week 4: Testing & Benchmarks
 **Focus:** Measure improvement, compete under pressure
@@ -468,8 +448,6 @@ Full rest — big week coming.
 
 > **Session notes:** Beat all personal bests this week
 
----
-
 ### Tuesday — Passing Mastery
 
 #### Warm-Up (10 min)
@@ -492,8 +470,6 @@ Full rest — big week coming.
 
 > **Session notes:** Every pass with purpose and precision
 
----
-
 ### Wednesday — Active Recovery
 
 #### Warm-Up (10 min)
@@ -507,8 +483,6 @@ Full rest — big week coming.
 - Positional Shadow Play (5 min)
 
 > **Session notes:** Mentally prepare for test days
-
----
 
 ### Thursday — Speed & Agility Test
 
@@ -533,8 +507,6 @@ Full rest — big week coming.
 
 > **Session notes:** Record all test scores
 
----
-
 ### Friday — Shooting Test Day
 
 #### Warm-Up (10 min)
@@ -558,8 +530,6 @@ Full rest — big week coming.
 
 > **Session notes:** Record Yo-Yo level — compare to Week 2
 
----
-
 ### Saturday — Grand Finale Session
 
 #### Warm-Up (10 min)
@@ -579,8 +549,6 @@ Full rest — big week coming.
 - Stretch
 
 > **Session notes:** Compare ALL scores to Week 1
-
----
 
 ### Sunday — REST & REVIEW
 
