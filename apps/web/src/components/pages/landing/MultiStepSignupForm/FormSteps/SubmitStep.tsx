@@ -52,7 +52,7 @@ export function SubmitStep({ register, errors }: SubmitStepProps) {
       <div className="p-6 bg-gradient-to-br from-primary/5 to-primary/10 rounded-xl border border-primary/20">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h3 className="text-2xl font-bold text-foreground">$19.99/month</h3>
+            <h3 className="text-2xl font-bold text-foreground">$7.99/month</h3>
             <p className="text-sm text-muted-foreground">Cancel anytime, no questions asked</p>
           </div>
         </div>
@@ -64,7 +64,7 @@ export function SubmitStep({ register, errors }: SubmitStepProps) {
           </div>
           <div className="flex items-center gap-2 text-sm">
             <CheckCircle2 className="h-4 w-4 text-success" />
-            <span className="text-foreground">24/7 access to your coach</span>
+            <span className="text-foreground">24/7 access to your AI coach</span>
           </div>
           <div className="flex items-center gap-2 text-sm">
             <CheckCircle2 className="h-4 w-4 text-success" />

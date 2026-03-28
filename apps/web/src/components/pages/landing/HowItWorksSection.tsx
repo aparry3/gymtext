@@ -42,7 +42,7 @@ export function HowItWorksSection() {
               2. Get a custom plan
             </h4>
             <p className="leading-relaxed text-gray-500">
-              Your coach builds a personalized routine designed specifically for
+              Your AI coach builds a personalized routine designed specifically for
               your life.
             </p>
           </div>

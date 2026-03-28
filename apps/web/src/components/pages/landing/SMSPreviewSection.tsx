@@ -34,12 +34,12 @@ export function SMSPreviewSection() {
 
           <div className="lg:w-1/2 text-center lg:text-left">
             <h2 className="text-3xl md:text-5xl font-bold mb-6 text-gray-900">
-              Real Coaching. <br />
+              AI Coaching. <br />
               <span className="text-[#1B81FF]">In Your Pocket.</span>
             </h2>
             <p className="text-lg mb-8 leading-relaxed text-gray-600">
               Most fitness apps are just databases of exercises. GymText is a
-              direct line to your daily routine. It&apos;s human, interactive,
+              direct line to your daily routine. It&apos;s intelligent, interactive,
               and frictionless.
             </p>
 
@@ -68,7 +68,7 @@ export function SMSPreviewSection() {
                     Instant Accountability
                   </h4>
                   <p className="text-gray-500">
-                    Knowing your coach is waiting for a reply changes
+                    Knowing your AI coach is tracking your progress changes
                     everything.
                   </p>
                 </div>
