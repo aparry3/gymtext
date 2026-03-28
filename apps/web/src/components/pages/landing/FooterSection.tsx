@@ -34,6 +34,12 @@ export function FooterSection() {
               Terms
             </Link>
             <Link
+              href="/about"
+              className="transition-colors hover:text-gray-900"
+            >
+              About
+            </Link>
+            <Link
               href="mailto:support@gymtext.co"
               className="transition-colors hover:text-gray-900"
             >

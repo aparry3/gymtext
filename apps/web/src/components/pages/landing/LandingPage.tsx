@@ -95,6 +95,12 @@ export function LandingPage() {
               Blog
             </Link>
             <Link
+              href="/about"
+              className={`transition-colors ${isScrolled ? 'hover:text-gray-900' : 'hover:text-white/80'}`}
+            >
+              Meet the Team
+            </Link>
+            <Link
               href="/start"
               onClick={() => trackCTAClicked('navbar', 'Start Training')}
               className="bg-[#1B81FF] hover:bg-[#1468CC] text-white px-5 py-2 rounded-full font-semibold transition-all"
@@ -145,6 +151,13 @@ export function LandingPage() {
               className="text-lg text-left text-gray-600 hover:text-gray-900"
             >
               Blog
+            </Link>
+            <Link
+              href="/about"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="text-lg text-left text-gray-600 hover:text-gray-900"
+            >
+              Meet the Team
             </Link>
             <Link
               href="/start"
