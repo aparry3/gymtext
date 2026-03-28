@@ -1,10 +1,10 @@
 import { Suspense } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { getServices } from '@/lib/context';
 import { BlogPostCard } from '@/components/pages/blog/BlogPostCard';
 import { PopularPostsSidebar } from '@/components/pages/blog/PopularPostsSidebar';
 import { SearchInput } from '@/components/pages/blog/SearchInput';
+import { SiteHeader } from '@/components/SiteHeader';
 
 export const metadata = {
   title: 'Blog | GymText',
@@ -45,28 +45,7 @@ export default async function BlogPage({ searchParams }: BlogPageProps) {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white border-b border-gray-100">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <Link href="/" className="flex items-center">
-              <Image
-                src="/Wordmark.png"
-                alt="GymText"
-                width={120}
-                height={28}
-                className="h-7 w-auto"
-              />
-            </Link>
-            <Link
-              href="/start"
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-full text-sm font-semibold transition-colors"
-            >
-              Start Training
-            </Link>
-          </div>
-        </div>
-      </header>
+      <SiteHeader />
 
       {/* Hero Section */}
       <section className="bg-white py-12 border-b border-gray-100">

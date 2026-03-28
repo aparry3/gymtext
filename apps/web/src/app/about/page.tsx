@@ -1,7 +1,7 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowLeft } from 'lucide-react';
+import { SiteHeader } from '@/components/SiteHeader';
 
 export const metadata: Metadata = {
   title: 'Meet the Team | GymText',
@@ -52,16 +52,10 @@ function getInitials(name: string) {
 export default function AboutPage() {
   return (
     <main className="min-h-screen bg-white">
+      <SiteHeader />
+
       <div className="container mx-auto px-4 py-12 md:py-16">
         <div className="mx-auto max-w-4xl">
-          <Link
-            href="/"
-            className="mb-8 inline-flex items-center gap-2 text-sm font-medium text-gray-500 transition-colors hover:text-gray-900"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back to Home
-          </Link>
-
           <h1 className="mb-4 text-4xl font-bold text-gray-900">
             Meet the Team
           </h1>
