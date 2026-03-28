@@ -111,7 +111,7 @@ export function LandingPage() {
 
           {/* Mobile Menu Button */}
           <button
-            className={`md:hidden ${isScrolled ? 'text-gray-900' : 'text-white'}`}
+            className="md:hidden text-gray-900"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           >
             {isMobileMenuOpen ? <X size={28} /> : <Menu size={28} />}

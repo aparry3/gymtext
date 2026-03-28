@@ -23,7 +23,7 @@ export function PricingSection() {
             Simple, Affordable Pricing
           </h2>
           <p className="text-lg text-gray-500">
-            Less than the cost of a single personal training session.
+            Less than the price of a salad per month.
           </p>
         </div>
 

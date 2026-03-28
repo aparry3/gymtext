@@ -62,7 +62,7 @@ export function SiteHeader() {
 
       {/* Mobile Nav */}
       {isMobileMenuOpen && (
-        <div className="md:hidden px-4 pb-6 flex flex-col gap-4 bg-white border-t border-gray-100">
+        <div className="md:hidden p-6 flex flex-col gap-6 shadow-2xl bg-white border-b border-gray-200">
           {navLinks.map((link) => (
             <Link
               key={link.href}
