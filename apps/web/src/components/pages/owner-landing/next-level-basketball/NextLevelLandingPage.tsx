@@ -11,7 +11,11 @@ import { NextLevelCTA } from './NextLevelCTA';
 import { NextLevelStickyCTA } from './NextLevelStickyCTA';
 import { NextLevelFooter } from './NextLevelFooter';
 
-export function NextLevelLandingPage() {
+interface NextLevelLandingPageProps {
+  startUrl?: string;
+}
+
+export function NextLevelLandingPage({ startUrl = '/start' }: NextLevelLandingPageProps) {
   return (
     <div className="min-h-screen bg-white">
       {/* Navigation Overlay */}
@@ -26,21 +30,21 @@ export function NextLevelLandingPage() {
           />
         </Link>
         <Link
-          href="/start"
+          href={startUrl}
           className="bg-white/10 backdrop-blur-md border border-white/20 text-white px-4 md:px-5 py-2 rounded-full text-xs md:text-sm font-semibold hover:bg-white hover:text-black transition-all"
         >
           Get Started
         </Link>
       </nav>
 
-      <NextLevelHero />
+      <NextLevelHero startUrl={startUrl} />
       <NextLevelStatsBar />
       <NextLevelBioSection />
-      <NextLevelPrograms />
+      <NextLevelPrograms startUrl={startUrl} />
       <NextLevelTestimonials />
-      <NextLevelCTA />
+      <NextLevelCTA startUrl={startUrl} />
       <NextLevelFooter />
-      <NextLevelStickyCTA />
+      <NextLevelStickyCTA startUrl={startUrl} />
     </div>
   );
 }

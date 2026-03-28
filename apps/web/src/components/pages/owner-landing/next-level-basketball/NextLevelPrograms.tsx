@@ -50,7 +50,11 @@ const PROGRAM_TRACKS: ProgramTrack[] = [
   },
 ];
 
-export function NextLevelPrograms() {
+interface NextLevelProgramsProps {
+  startUrl?: string;
+}
+
+export function NextLevelPrograms({ startUrl = '/start' }: NextLevelProgramsProps) {
   return (
     <section className="py-16 md:py-24 bg-white" id="programs">
       <div className="container mx-auto px-4">
@@ -96,7 +100,7 @@ export function NextLevelPrograms() {
               </div>
 
               <Link
-                href="/start"
+                href={startUrl}
                 className="w-full py-2 md:py-3 px-3 md:px-4 rounded-lg border-2 border-gray-900 text-gray-900 font-bold hover:bg-nlb-orange hover:border-nlb-orange hover:text-white transition-colors text-center text-xs md:text-base"
               >
                 Select
