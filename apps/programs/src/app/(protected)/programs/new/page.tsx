@@ -30,7 +30,7 @@ interface ProgramForm {
   description: string;
   coverImageId: string | null;
   questions: ProgramQuestion[];
-  templateMarkdown: string;
+  content: string;
   defaultDurationWeeks: number | null;
   schedulingMode: 'rolling_start' | 'cohort';
 }
@@ -57,7 +57,7 @@ export default function CreateProgramPage() {
     description: '',
     coverImageId: null,
     questions: [],
-    templateMarkdown: '',
+    content: '',
     defaultDurationWeeks: null,
     schedulingMode: 'rolling_start',
   });
@@ -133,7 +133,7 @@ export default function CreateProgramPage() {
       const result = await response.json();
 
       if (result.success) {
-        setForm(prev => ({ ...prev, templateMarkdown: result.data.templateMarkdown }));
+        setForm(prev => ({ ...prev, content: result.data.content }));
         setUploadedFile(null);
       } else {
         setGenerateError(result.message);
@@ -181,7 +181,7 @@ export default function CreateProgramPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          templateMarkdown: form.templateMarkdown || null,
+          content: form.content || null,
           defaultDurationWeeks: form.defaultDurationWeeks,
           questions: form.questions.length > 0 ? form.questions : null,
         }),
@@ -472,8 +472,8 @@ export default function CreateProgramPage() {
                 </TabsList>
                 <TabsContent value="edit">
                   <textarea
-                    value={form.templateMarkdown}
-                    onChange={(e) => setForm(prev => ({ ...prev, templateMarkdown: e.target.value }))}
+                    value={form.content}
+                    onChange={(e) => setForm(prev => ({ ...prev, content: e.target.value }))}
                     placeholder={`# Week 1-4: Foundation Phase
 
 ## Monday: Easy Run
@@ -497,8 +497,8 @@ export default function CreateProgramPage() {
                 </TabsContent>
                 <TabsContent value="preview">
                   <div className="prose prose-sm max-w-none p-4 border rounded-lg bg-gray-50 min-h-[400px]">
-                    {form.templateMarkdown ? (
-                      <pre className="whitespace-pre-wrap">{form.templateMarkdown}</pre>
+                    {form.content ? (
+                      <pre className="whitespace-pre-wrap">{form.content}</pre>
                     ) : (
                       <p className="text-muted-foreground italic">
                         No template content yet. Start typing in the Edit tab.

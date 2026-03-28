@@ -2,7 +2,11 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { ArrowRight } from 'lucide-react';
 
-export function NextLevelHero() {
+interface NextLevelHeroProps {
+  startUrl?: string;
+}
+
+export function NextLevelHero({ startUrl = '/start' }: NextLevelHeroProps) {
   return (
     <div className="relative min-h-[100vh] md:min-h-[90vh] flex items-center justify-center bg-black overflow-hidden pb-24 md:pb-28">
       {/* Background Image with Overlay */}
@@ -39,7 +43,7 @@ export function NextLevelHero() {
 
         <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
           <Link
-            href="/start"
+            href={startUrl}
             className="group bg-nlb-orange text-white px-8 py-4 rounded-full font-bold text-lg hover:bg-orange-500 transition-all transform hover:scale-105 shadow-[0_0_20px_rgba(234,88,12,0.4)] flex items-center gap-2"
           >
             Get The Workouts

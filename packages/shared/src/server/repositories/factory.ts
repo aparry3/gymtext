@@ -48,6 +48,7 @@ import { AgentLogRepository } from './agentLogRepository';
 import { WorkoutInstanceRepository } from './workoutInstanceRepository';
 import { FormatterRepository } from './formatterRepository';
 
+
 /**
  * Container for all repository instances
  */

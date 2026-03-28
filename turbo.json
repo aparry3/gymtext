@@ -49,6 +49,9 @@
         "WHATSAPP_TEMPLATE_WELCOME",
         "WHATSAPP_TEMPLATE_SUBSCRIPTION_REMINDER",
         "MESSAGING_PROVIDER",
+        "FORCE_STRIPE",
+        "ADMIN_APP_URL",
+        "NEXT_PUBLIC_WEB_APP_URL",
         "NEXT_PUBLIC_POSTHOG_KEY",
         "NEXT_PUBLIC_POSTHOG_HOST"
       ]
@@ -57,6 +60,11 @@
       "dependsOn": ["^build"]
     },
     "db:codegen": {
+      "dependsOn": ["//#migrate"],
+      "cache": false,
+      "passThroughEnv": ["DATABASE_URL"]
+    },
+    "//#migrate": {
       "cache": false,
       "passThroughEnv": ["DATABASE_URL"]
     },
@@ -115,7 +123,9 @@
         "WHATSAPP_TEMPLATE_WEEKLY_CHECKIN",
         "WHATSAPP_TEMPLATE_WELCOME",
         "WHATSAPP_TEMPLATE_SUBSCRIPTION_REMINDER",
-        "MESSAGING_PROVIDER"
+        "MESSAGING_PROVIDER",
+        "FORCE_STRIPE",
+        "ADMIN_APP_URL"
       ]
     },
     "admin#build": {
@@ -127,6 +137,7 @@
         "PROD_WEB_API_URL",
         "SANDBOX_WEB_API_URL",
         "ADMIN_PHONE_NUMBERS",
+        "NEXT_PUBLIC_WEB_APP_URL",
         "SESSION_ENCRYPTION_KEY",
         "NODE_ENV",
         "TWILIO_ACCOUNT_SID",

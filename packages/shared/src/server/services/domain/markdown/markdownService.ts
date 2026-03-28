@@ -23,6 +23,7 @@ export interface MarkdownServiceInstance {
   getWeekForDate(userId: string, date: Date): Promise<Microcycle | null>;
   createWeek(userId: string, planId: string, content: string, startDate: Date, options?: { message?: string; details?: Record<string, unknown> }): Promise<Microcycle>;
   getContext(userId: string, types: ContextType[], options?: ContextOptions): Promise<string[]>;
+  getProgramContext(programVersionId: string): Promise<string | null>;
 }
 
 export function createMarkdownService(repos: RepositoryContainer): MarkdownServiceInstance {
@@ -111,6 +112,46 @@ export function createMarkdownService(repos: RepositoryContainer): MarkdownServi
       }
 
       return context;
+    },
+
+    async getProgramContext(programVersionId: string): Promise<string | null> {
+      const version = await repos.programVersion.findById(programVersionId);
+      if (!version) return null;
+
+      const sections: string[] = [];
+
+      if (version.content) {
+        sections.push(version.content);
+      }
+
+      const genCtx = version.generationConfig?.context;
+      if (genCtx?.emphasis?.length) {
+        sections.push(`### Emphasis Areas\n${genCtx.emphasis.map((e: string) => `- ${e}`).join('\n')}`);
+      }
+      if (genCtx?.constraints?.length) {
+        sections.push(`### Program Constraints\n${genCtx.constraints.map((c: string) => `- ${c}`).join('\n')}`);
+      }
+      if (genCtx?.style) {
+        sections.push(`### Style\n${genCtx.style}`);
+      }
+
+      const diff = version.difficultyMetadata;
+      if (diff) {
+        const meta: string[] = [];
+        if (diff.minExperienceLevel) meta.push(`- Min experience: ${diff.minExperienceLevel}`);
+        if (diff.intensityScore) meta.push(`- Intensity: ${diff.intensityScore}/10`);
+        if (diff.requiredEquipment?.length) meta.push(`- Required equipment: ${diff.requiredEquipment.join(', ')}`);
+        if (diff.weeklyHoursEstimate) meta.push(`- Weekly hours: ${diff.weeklyHoursEstimate}`);
+        if (meta.length) sections.push(`### Difficulty & Requirements\n${meta.join('\n')}`);
+      }
+
+      if (version.defaultDurationWeeks) {
+        sections.push(`### Duration\n${version.defaultDurationWeeks} weeks`);
+      }
+
+      if (sections.length === 0) return null;
+
+      return `## Program Template\nThis user enrolled in a specific program. The plan MUST align with the program template below — use it as the primary guide for structure, emphasis, and constraints. Personalize to the user's profile within these boundaries.\n\n${sections.join('\n\n')}`;
     },
   };
 }

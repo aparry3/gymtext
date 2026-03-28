@@ -3,7 +3,11 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 
-export function NextLevelStickyCTA() {
+interface NextLevelStickyCTAProps {
+  startUrl?: string;
+}
+
+export function NextLevelStickyCTA({ startUrl = '/start' }: NextLevelStickyCTAProps) {
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
@@ -29,7 +33,7 @@ export function NextLevelStickyCTA() {
           <p className="text-sm font-bold text-nlb-orange">Next Level Training</p>
         </div>
         <Link
-          href="/start"
+          href={startUrl}
           className="bg-nlb-orange text-white px-6 py-3 rounded-full font-bold text-sm shadow-lg hover:bg-orange-500 transition-colors"
         >
           Get Workouts

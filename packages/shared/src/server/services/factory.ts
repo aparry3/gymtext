@@ -23,6 +23,7 @@ import { createSubscriptionService, type SubscriptionServiceInstance } from './d
 import { createDayConfigService, type DayConfigServiceInstance } from './domain/calendar/dayConfigService';
 import { createShortLinkService, type ShortLinkServiceInstance } from './domain/links/shortLinkService';
 import { createReferralService, type ReferralServiceInstance } from './domain/referral/referralService';
+import { createPromoCodeService, type PromoCodeServiceInstance } from './domain/promotion/promoCodeService';
 import { createAdminAuthService, type AdminAuthServiceInstance } from './domain/auth/adminAuthService';
 import { createUserAuthService, type UserAuthServiceInstance } from './domain/auth/userAuthService';
 import { createProgramOwnerAuthService, type ProgramOwnerAuthServiceInstance } from './domain/auth/programOwnerAuthService';
@@ -76,6 +77,7 @@ export interface ServiceContainer {
   dayConfig: DayConfigServiceInstance;
   shortLink: ShortLinkServiceInstance;
   referral: ReferralServiceInstance;
+  promoCode: PromoCodeServiceInstance;
   adminAuth: AdminAuthServiceInstance;
   userAuth: UserAuthServiceInstance;
   programOwnerAuth: ProgramOwnerAuthServiceInstance;
@@ -139,6 +141,7 @@ export function createServices(repos: RepositoryContainer, clients?: ExternalCli
 
   // Lazy external-client services
   let _referral: ReferralServiceInstance | null = null;
+  let _promoCode: PromoCodeServiceInstance | null = null;
   let _adminAuth: AdminAuthServiceInstance | null = null;
   let _userAuth: UserAuthServiceInstance | null = null;
   let _programOwnerAuth: ProgramOwnerAuthServiceInstance | null = null;
@@ -156,6 +159,19 @@ export function createServices(repos: RepositoryContainer, clients?: ExternalCli
       }
     }
     return _referral;
+  };
+  const getPromoCode = (): PromoCodeServiceInstance => {
+    if (!_promoCode) {
+      if (clients?.stripeClient) {
+        _promoCode = createPromoCodeService({ stripeClient: clients.stripeClient });
+      } else {
+        const { getStripeSecrets } = require('../config');
+        const Stripe = require('stripe').default;
+        const { secretKey } = getStripeSecrets();
+        _promoCode = createPromoCodeService({ stripeClient: new Stripe(secretKey, { apiVersion: '2023-10-16' }) });
+      }
+    }
+    return _promoCode;
   };
   const getAdminAuth = (): AdminAuthServiceInstance => {
     if (!_adminAuth) {
@@ -294,6 +310,7 @@ export function createServices(repos: RepositoryContainer, clients?: ExternalCli
     workoutInstance,
     microcycle, progress, subscription, dayConfig, shortLink,
     get referral() { return getReferral(); },
+    get promoCode() { return getPromoCode(); },
     get adminAuth() { return getAdminAuth(); },
     get userAuth() { return getUserAuth(); },
     get programOwnerAuth() { return getProgramOwnerAuth(); },
@@ -318,7 +335,7 @@ export type {
   WorkoutInstanceServiceInstance,
   MicrocycleServiceInstance, ProgressServiceInstance,
   SubscriptionServiceInstance, DayConfigServiceInstance, ShortLinkServiceInstance,
-  ReferralServiceInstance, AdminAuthServiceInstance, UserAuthServiceInstance,
+  ReferralServiceInstance, PromoCodeServiceInstance, AdminAuthServiceInstance, UserAuthServiceInstance,
   ProgramOwnerAuthServiceInstance, MessagingOrchestratorInstance,
   DailyMessageServiceInstance, WeeklyMessageServiceInstance, OnboardingServiceInstance,
   OnboardingCoordinatorInstance, MessagingAgentServiceInstance,

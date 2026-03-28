@@ -190,22 +190,7 @@ async function handleIncomingMessages(value: any, services: any): Promise<void> 
       continue;
     }
 
-    // Store inbound message
-    await services.message.storeInboundMessage({
-      clientId: user.id,
-      from: phoneNumber,
-      to: value.metadata?.display_phone_number || 'whatsapp-business',
-      content: messageText,
-      twilioData: {
-        MessageSid: messageId,
-        From: phoneNumber,
-        Body: messageText,
-        whatsappMessageId: messageId,
-        whatsappMetadata: value.metadata,
-      },
-    });
-
-    // Ingest message for chat agent processing
+    // Ingest message for chat agent processing (also stores inbound message)
     const result = await services.message.ingestMessage({
       user: userWithProfile,
       content: messageText,
@@ -215,8 +200,20 @@ async function handleIncomingMessages(value: any, services: any): Promise<void> 
         MessageSid: messageId,
         From: phoneNumber,
         Body: messageText,
+        whatsappMessageId: messageId,
+        whatsappMetadata: value.metadata,
       },
     });
+
+    // If subscription gate blocked the message, send the gate message via WhatsApp
+    if (result.action === 'subscriptionGate' && result.ackMessage) {
+      await services.messagingOrchestrator.sendImmediate(
+        userWithProfile,
+        result.ackMessage,
+        undefined,
+        'whatsapp'
+      );
+    }
 
     console.log('[WhatsApp Webhook] Message ingested, ack:', result.ackMessage);
   }

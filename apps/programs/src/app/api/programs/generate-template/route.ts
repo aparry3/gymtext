@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      data: { templateMarkdown: result.response },
+      data: { content: result.response },
     });
   } catch (error) {
     console.error('[Generate Template] Error:', error);

@@ -1,11 +1,11 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import Image from 'next/image';
 import type { Metadata } from 'next';
 import { ArrowLeft, Clock, Eye } from 'lucide-react';
 import { getServices, getRepositories } from '@/lib/context';
 import { ContentRenderer } from '@/components/pages/blog/ContentRenderer';
 import { ShareButtons } from '@/components/pages/blog/ShareButtons';
+import { SiteHeader } from '@/components/SiteHeader';
 
 interface BlogPostPageProps {
   params: Promise<{ slug: string }>;
@@ -67,28 +67,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Header */}
-      <header className="bg-white border-b border-gray-100 sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <Link href="/" className="flex items-center">
-              <Image
-                src="/Wordmark.png"
-                alt="GymText"
-                width={120}
-                height={28}
-                className="h-7 w-auto"
-              />
-            </Link>
-            <Link
-              href="/start"
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-full text-sm font-semibold transition-colors"
-            >
-              Start Training
-            </Link>
-          </div>
-        </div>
-      </header>
+      <SiteHeader />
 
       {/* Back Link */}
       <div className="container mx-auto px-4 py-6">

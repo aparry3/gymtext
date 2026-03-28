@@ -67,11 +67,17 @@ export function createTrainingService(deps: TrainingServiceDeps): TrainingServic
   } = deps;
 
   return {
-    async createFitnessPlan(user: UserWithProfile, _options?: { programId?: string; programVersionId?: string }): Promise<FitnessPlan> {
+    async createFitnessPlan(user: UserWithProfile, options?: { programId?: string; programVersionId?: string }): Promise<FitnessPlan> {
       console.log(`[TrainingService] Creating fitness plan for user ${user.id}`);
 
       // Fetch profile context
       const context = await markdownService.getContext(user.id, ['profile']);
+
+      // Append program context if enrolling via a program
+      if (options?.programVersionId) {
+        const programContext = await markdownService.getProgramContext(options.programVersionId);
+        if (programContext) context.push(programContext);
+      }
 
       // Generate plan via AI agent
       const result = await simpleAgentRunner.invoke('plan:generate', {

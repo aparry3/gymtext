@@ -31,3 +31,13 @@ export const HELP_MESSAGE =
 
 // Unknown user
 export const UNKNOWN_USER_MESSAGE = "Sign up now! https://www.gymtext.co/";
+
+// Subscription gate messages (inbound chat from users without active subscription)
+export const NO_SUBSCRIPTION_INCOMPLETE_CHECKOUT =
+  "Hey! It looks like you haven't finished setting up your GymText subscription. Complete checkout at gymtext.co to start getting personalized workouts!";
+
+export const NO_SUBSCRIPTION_CANCELED =
+  "Your GymText subscription has ended. Resubscribe at gymtext.co to get back to your workouts!";
+
+export const NO_SUBSCRIPTION_CANCEL_PENDING =
+  "Your GymText subscription has been canceled. Resubscribe at gymtext.co or reply START to reactivate!";

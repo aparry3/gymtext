@@ -7,7 +7,6 @@ import type {
   GenerationConfig,
 } from '../../../models/programVersion';
 import { AI_PROGRAM_VERSION_ID } from '../../../models/programVersion';
-import type { PlanStructure } from '../../../models/fitnessPlan';
 
 /**
  * Program Version Service Instance Interface
@@ -53,14 +52,11 @@ export interface ProgramVersionServiceInstance {
   update(id: string, data: ProgramVersionUpdate): Promise<ProgramVersion | null>;
 
   /**
-   * Update version template content (for coach programs)
+   * Update version content (for coach programs)
    */
-  updateTemplate(
+  updateContent(
     id: string,
-    data: {
-      templateMarkdown?: string;
-      templateStructured?: PlanStructure;
-    }
+    content: string
   ): Promise<ProgramVersion | null>;
 
   /**
@@ -109,8 +105,7 @@ export function createProgramVersionService(
         programId,
         versionNumber: nextVersionNumber,
         status: 'draft',
-        templateMarkdown: data.templateMarkdown ?? null,
-        templateStructured: data.templateStructured ?? null,
+        content: data.content ?? null,
         generationConfig: data.generationConfig ?? null,
         defaultDurationWeeks: data.defaultDurationWeeks ?? null,
         difficultyMetadata: data.difficultyMetadata ?? null,
@@ -158,23 +153,11 @@ export function createProgramVersionService(
       return repos.programVersion.update(id, data);
     },
 
-    async updateTemplate(
+    async updateContent(
       id: string,
-      data: {
-        templateMarkdown?: string;
-        templateStructured?: PlanStructure;
-      }
+      content: string
     ): Promise<ProgramVersion | null> {
-      const updateData: ProgramVersionUpdate = {};
-
-      if (data.templateMarkdown !== undefined) {
-        updateData.templateMarkdown = data.templateMarkdown;
-      }
-      if (data.templateStructured !== undefined) {
-        updateData.templateStructured = data.templateStructured as any;
-      }
-
-      return this.update(id, updateData);
+      return this.update(id, { content });
     },
 
     async updateGenerationConfig(id: string, config: GenerationConfig): Promise<ProgramVersion | null> {

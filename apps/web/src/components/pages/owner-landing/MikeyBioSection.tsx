@@ -16,7 +16,7 @@ export function MikeyBioSection() {
               />
               <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 to-transparent p-4 md:p-8">
                 <p className="text-white font-display text-lg md:text-2xl">
-                  &quot;From a small town to a national stage.&quot;
+                  &quot;Success in sports is earned on the training ground.&quot;
                 </p>
                 <p className="text-gray-400 text-xs md:text-sm mt-1">&mdash; Mikey Swiercz</p>
               </div>
@@ -55,8 +55,8 @@ export function MikeyBioSection() {
 
             <div className="mt-6 md:mt-10 flex flex-wrap gap-3 md:gap-4">
               <div className="px-4 md:px-6 py-2 md:py-3 bg-gray-100 rounded-lg border-l-4 border-[#002D72]">
-                <p className="text-xs md:text-sm font-bold text-gray-800">Johns Hopkins</p>
-                <p className="text-[10px] md:text-xs text-gray-500">All-American &amp; Captain</p>
+                <p className="text-xs md:text-sm font-bold text-gray-800">All-American &amp; Captain</p>
+                <p className="text-[10px] md:text-xs text-gray-500">Hopkins Soccer</p>
               </div>
               <div className="px-4 md:px-6 py-2 md:py-3 bg-gray-100 rounded-lg border-l-4 border-[#002D72]">
                 <p className="text-xs md:text-sm font-bold text-gray-800">All-Decade Team</p>

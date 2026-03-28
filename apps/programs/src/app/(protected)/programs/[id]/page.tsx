@@ -377,7 +377,7 @@ export default function ProgramDetailPage() {
             {program.isPublic ? 'Make Private' : 'Make Public'}
           </Button>
           <a
-            href={`https://gymtext.com/start?program=${program.id}`}
+            href={`${process.env.NEXT_PUBLIC_WEB_BASE_URL || 'https://gymtext.co'}/start?program=${program.id}`}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center justify-center whitespace-nowrap rounded-xl text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 shadow-sm border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 hover:shadow-md hover:border-gray-300 h-10 px-4 py-2"
@@ -398,9 +398,9 @@ export default function ProgramDetailPage() {
           <TabsContent value="template">
             <Card className="p-6">
               <h3 className="font-semibold mb-4">Program Template</h3>
-              {latestVersion?.templateMarkdown ? (
+              {latestVersion?.content ? (
                 <pre className="whitespace-pre-wrap bg-gray-50 p-4 rounded-lg text-sm">
-                  {latestVersion.templateMarkdown}
+                  {latestVersion.content}
                 </pre>
               ) : (
                 <p className="text-muted-foreground italic">

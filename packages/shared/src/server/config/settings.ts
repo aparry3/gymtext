@@ -22,5 +22,7 @@ export function getEnvironmentSettings() {
     isTest: env.NODE_ENV === 'test',
     // Allow explicit override for Vercel preview deployments
     enableDevBypass: !isProduction || env.ENABLE_DEV_BYPASS === 'true',
+    // Force Stripe payment flow in dev mode
+    forceStripe: env.FORCE_STRIPE === 'true',
   };
 }

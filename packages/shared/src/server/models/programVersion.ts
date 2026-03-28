@@ -1,6 +1,5 @@
 import type { Insertable, Selectable, Updateable } from 'kysely';
 import type { ProgramVersions } from './_types';
-import type { PlanStructure } from './fitnessPlan';
 
 export type ProgramVersionDB = Selectable<ProgramVersions>;
 export type NewProgramVersion = Insertable<ProgramVersions>;
@@ -83,17 +82,15 @@ export interface DifficultyMetadata {
  *
  * A program version represents a specific version of a program template.
  * For AI programs, it contains generation_config for personalizing plans.
- * For coach programs, it contains template_markdown and template_structured.
+ * For coach programs, it contains content (markdown).
  */
 export interface ProgramVersion {
   id: string;
   programId: string;
   versionNumber: number;
   status: ProgramVersionStatus;
-  /** Raw markdown template for coach-created programs */
-  templateMarkdown: string | null;
-  /** Parsed structured plan data for UI rendering */
-  templateStructured: PlanStructure | null;
+  /** Content for coach-created programs */
+  content: string | null;
   /** Configuration for AI plan generation */
   generationConfig: GenerationConfig | null;
   /** Default duration for fixed-length programs */
@@ -114,8 +111,7 @@ export class ProgramVersionModel {
       programId: row.programId,
       versionNumber: row.versionNumber,
       status: row.status as ProgramVersionStatus,
-      templateMarkdown: row.templateMarkdown,
-      templateStructured: row.templateStructured as PlanStructure | null,
+      content: row.content,
       generationConfig: row.generationConfig as GenerationConfig | null,
       defaultDurationWeeks: row.defaultDurationWeeks,
       difficultyMetadata: row.difficultyMetadata as DifficultyMetadata | null,

@@ -2,7 +2,11 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { MessageSquare, Smartphone, CheckCircle2 } from 'lucide-react';
 
-export function NextLevelCTA() {
+interface NextLevelCTAProps {
+  startUrl?: string;
+}
+
+export function NextLevelCTA({ startUrl = '/start' }: NextLevelCTAProps) {
   return (
     <section className="py-16 md:py-24 bg-gray-50">
       <div className="container mx-auto px-4">
@@ -41,7 +45,7 @@ export function NextLevelCTA() {
               </ul>
 
               <Link
-                href="/start"
+                href={startUrl}
                 className="w-full bg-black text-white py-3 md:py-4 rounded-xl font-bold hover:bg-gray-800 transition-colors flex items-center justify-center gap-2 text-sm md:text-base"
               >
                 <MessageSquare className="w-4 h-4 md:w-5 md:h-5" /> Start Your Training

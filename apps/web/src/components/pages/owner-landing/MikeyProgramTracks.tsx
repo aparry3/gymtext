@@ -1,4 +1,4 @@
-import { Activity, Crosshair, Shield, ClipboardList, Check } from 'lucide-react';
+import { Shield, Crosshair, Brain, Check } from 'lucide-react';
 import type { ReactNode } from 'react';
 import Link from 'next/link';
 
@@ -13,40 +13,31 @@ interface ProgramTrack {
 
 const PROGRAM_TRACKS: ProgramTrack[] = [
   {
-    title: 'The Engine',
-    role: 'Fitness',
+    title: 'The Powerhouse',
+    role: 'Physical Presence',
     description:
-      'Build the endurance and athleticism that powered an All-American career. Conditioning, agility, and functional strength.',
-    features: ['Match-Day Conditioning', 'Speed & Agility Drills', 'Functional Strength'],
-    icon: <Activity className="w-8 h-8 text-white" />,
-    recommendedFor: 'All Positions',
+      'Dominate the game like an All-Decade defender. Combine your physicality and technique to become a force to be reckoned with.',
+    features: ['Strength & Power', 'Aerial Dominance', 'Physical Conditioning'],
+    icon: <Shield className="w-8 h-8 text-white" />,
+    recommendedFor: 'CB, DCM, ST',
+  },
+  {
+    title: 'The Creator',
+    role: 'Ball Mastery',
+    description:
+      'Promote the creativity of a four-year starting attacker. Focus on tight dribbling and vision to bring your playmaking to the next level.',
+    features: ['Tight Dribbling', 'Creative Vision', 'Attacking Movement'],
+    icon: <Crosshair className="w-8 h-8 text-white" />,
+    recommendedFor: 'Winger / Attacker',
   },
   {
     title: 'The Technician',
-    role: 'Ball Mastery',
+    role: 'Soccer IQ',
     description:
-      'Develop the touch and control that made Mikey a four-year varsity starter. Technical drills for confident play under pressure.',
-    features: ['First Touch Refinement', 'Dribbling Under Pressure', 'Passing Accuracy'],
-    icon: <Crosshair className="w-8 h-8 text-white" />,
-    recommendedFor: 'Midfield / Attack',
-  },
-  {
-    title: 'The Defender',
-    role: 'Defensive IQ',
-    description:
-      'Read the game like an All-Decade defender. Positioning, tackling technique, and leadership from the back.',
-    features: ['Positioning & Angles', '1v1 Defending', 'Organizing the Backline'],
-    icon: <Shield className="w-8 h-8 text-white" />,
-    recommendedFor: 'Defenders / CDM',
-  },
-  {
-    title: 'The Captain',
-    role: 'Leadership',
-    description:
-      'Develop the mentality of a multi-year captain. Mental toughness, communication, and competitive mindset.',
-    features: ['Game Preparation', 'Team Communication', 'Competitive Mindset'],
-    icon: <ClipboardList className="w-8 h-8 text-white" />,
-    recommendedFor: 'All Players',
+      'Develop the touch and control that made Mikey a two-year NCAA captain. Technical drills for confident play under pressure.',
+    features: ['First Touch Refinement', 'Passing Accuracy', 'Composure Under Pressure'],
+    icon: <Brain className="w-8 h-8 text-white" />,
+    recommendedFor: 'Midfield, Outside Back',
   },
 ];
 
@@ -67,7 +58,7 @@ export function MikeyProgramTracks() {
           </p>
         </div>
 
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-6">
           {PROGRAM_TRACKS.map((track, index) => (
             <div
               key={index}

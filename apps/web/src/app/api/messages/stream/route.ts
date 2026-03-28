@@ -12,6 +12,28 @@ import { getMessagingConfig } from '@/shared/config';
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
+function getCorsOrigin(request: NextRequest): string | null {
+  const origin = request.headers.get('origin');
+  if (!origin) return null;
+  const allowedOrigins = [
+    process.env.ADMIN_APP_URL,
+    'http://localhost:3001',
+  ].filter(Boolean);
+  return allowedOrigins.includes(origin) ? origin : null;
+}
+
+export async function OPTIONS(request: NextRequest): Promise<Response> {
+  const corsOrigin = getCorsOrigin(request);
+  return new Response(null, {
+    status: 204,
+    headers: {
+      ...(corsOrigin && { 'Access-Control-Allow-Origin': corsOrigin }),
+      'Access-Control-Allow-Methods': 'GET, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type',
+    },
+  });
+}
+
 export async function GET(request: NextRequest): Promise<Response> {
   // Only allow SSE when using local messaging provider
   const { provider } = getMessagingConfig();
@@ -20,6 +42,8 @@ export async function GET(request: NextRequest): Promise<Response> {
       status: 400,
     });
   }
+
+  const corsOrigin = getCorsOrigin(request);
 
   // Optional: Filter by phoneNumber from query params
   const { searchParams } = new URL(request.url);
@@ -93,6 +117,9 @@ export async function GET(request: NextRequest): Promise<Response> {
       'Content-Type': 'text/event-stream',
       'Cache-Control': 'no-cache',
       'Connection': 'keep-alive',
+      ...(corsOrigin && {
+        'Access-Control-Allow-Origin': corsOrigin,
+      }),
     },
   });
 }

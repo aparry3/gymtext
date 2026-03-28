@@ -354,7 +354,7 @@ export default function EditBlogPostPage({ params }: EditBlogPostPageProps) {
               </span>
             )}
             <a
-              href={`${process.env.NEXT_PUBLIC_WEB_BASE_URL || 'https://gymtext.com'}/blog/${post.slug}`}
+              href={`${process.env.NEXT_PUBLIC_WEB_BASE_URL || 'https://gymtext.co'}/blog/${post.slug}`}
               target="_blank"
               rel="noopener noreferrer"
               className="text-blue-600 hover:underline"
