@@ -15,22 +15,21 @@ const team = [
     role: 'Chief Executive Officer',
     // TODO: Replace with actual bio from grant deck (Slide 10)
     bio: 'Kevin leads the vision and strategy for GymText, driving the company\'s mission to make personal training accessible to everyone through the simplicity of text messaging.',
-    // TODO: Add headshot path, e.g. /team/kevin.jpg
-    image: null,
+    image: '/team/kevin.png',
   },
   {
     name: 'Kyle',
     role: 'Chief Financial Officer',
     // TODO: Replace with actual bio from grant deck (Slide 10)
     bio: 'Kyle oversees GymText\'s financial strategy and operations, ensuring the company grows sustainably while keeping personal training affordable for everyone.',
-    image: null,
+    image: '/team/kyle.png',
   },
   {
     name: 'Aaron',
     role: 'Chief Technology Officer',
     // TODO: Replace with actual bio from grant deck (Slide 10)
     bio: 'Aaron architects and builds the technology powering GymText — from the AI coaching engine to the SMS delivery platform that makes personalized training as simple as a text message.',
-    image: null,
+    image: '/team/aaron.png',
   },
 ];
 
