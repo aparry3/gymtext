@@ -6,7 +6,12 @@ import type { RepositoryContainer } from '../../../repositories/factory';
 import type { UserServiceInstance } from '../user/userService';
 import type { SubscriptionServiceInstance } from '../subscription/subscriptionService';
 import type { Json } from '../../../models/_types';
-import { HELP_MESSAGE } from '../../orchestration/messagingConstants';
+import {
+  HELP_MESSAGE,
+  NO_SUBSCRIPTION_INCOMPLETE_CHECKOUT,
+  NO_SUBSCRIPTION_CANCELED,
+  NO_SUBSCRIPTION_CANCEL_PENDING,
+} from '../../orchestration/messagingConstants';
 
 // Keywords for subscription management (case-insensitive)
 const STOP_KEYWORDS = ['STOP', 'STOPALL', 'UNSUBSCRIBE', 'CANCEL', 'END', 'QUIT'];
@@ -78,7 +83,7 @@ export interface KeywordResult {
 export interface IngestMessageResult {
   jobId?: string;
   ackMessage: string;
-  action: 'resendWorkout' | 'fullChatAgent' | null;
+  action: 'resendWorkout' | 'fullChatAgent' | 'subscriptionGate' | null;
   reasoning: string;
 }
 
@@ -301,6 +306,35 @@ export function createMessageService(
 
       if (!storedMessage) {
         throw new Error('Failed to store inbound message');
+      }
+
+      // Subscription gate: check before triggering AI processing
+      const subscriptionStatus = await deps.subscription.getSubscriptionStatus(user.id);
+      if (subscriptionStatus !== 'active') {
+        let gateMessage: string;
+        switch (subscriptionStatus) {
+          case 'none':
+            gateMessage = NO_SUBSCRIPTION_INCOMPLETE_CHECKOUT;
+            break;
+          case 'canceled':
+            gateMessage = NO_SUBSCRIPTION_CANCELED;
+            break;
+          case 'cancel_pending':
+            gateMessage = NO_SUBSCRIPTION_CANCEL_PENDING;
+            break;
+        }
+
+        console.log('[MessageService] Subscription gate:', {
+          userId: user.id,
+          messageId: storedMessage.id,
+          subscriptionStatus,
+        });
+
+        return {
+          ackMessage: gateMessage,
+          action: 'subscriptionGate',
+          reasoning: `User subscription status: ${subscriptionStatus}`,
+        };
       }
 
       const { ids } = await inngest.send({
