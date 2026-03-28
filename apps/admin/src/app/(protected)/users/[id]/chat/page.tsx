@@ -149,12 +149,19 @@ export default function AdminChatPage() {
     return () => container.removeEventListener('scroll', handleScroll)
   }, [hasMore, isLoadingMore, loadMoreMessages])
 
-  // Set up SSE connection for real-time messages
+  // Set up SSE connection for real-time messages (connects to web app)
   useEffect(() => {
     if (!id || !userPhoneNumber) return
 
-    // Try to connect to SSE endpoint (only works with MESSAGING_PROVIDER=local)
-    const eventSource = new EventSource(`/api/messages/stream?phoneNumber=${encodeURIComponent(userPhoneNumber)}`)
+    const webAppUrl = process.env.NEXT_PUBLIC_WEB_APP_URL
+    if (!webAppUrl) {
+      console.log('[SSE] NEXT_PUBLIC_WEB_APP_URL not set, falling back to polling')
+      return
+    }
+
+    const eventSource = new EventSource(
+      `${webAppUrl}/api/messages/stream?phoneNumber=${encodeURIComponent(userPhoneNumber)}`
+    )
     eventSourceRef.current = eventSource
 
     eventSource.onopen = () => {
@@ -212,6 +219,39 @@ export default function AdminChatPage() {
       setSseConnected(false)
     }
   }, [id, userPhoneNumber])
+
+  // Polling fallback when SSE is not connected
+  useEffect(() => {
+    if (sseConnected || !id || isInitialLoading) return
+
+    const pollInterval = setInterval(async () => {
+      try {
+        const response = await fetch(`/api/users/${id}/chat?limit=5&offset=0`)
+        const result = await response.json()
+        if (!response.ok || !result.success) return
+
+        const newMessages: Message[] = result.data.messages ?? []
+        if (newMessages.length === 0) return
+
+        setMessages(prev => {
+          const existingIds = new Set(prev.map(m => m.id))
+          const fresh = newMessages.filter(m => !existingIds.has(m.id))
+          if (fresh.length === 0) return prev
+
+          const hasRealOutbound = fresh.some(m => m.direction === 'outbound')
+          const base = hasRealOutbound
+            ? prev.filter(m => !m.id.startsWith('temp-ack-'))
+            : prev
+
+          return [...base, ...fresh]
+        })
+      } catch (err) {
+        console.error('[Polling] Error fetching messages:', err)
+      }
+    }, 3000)
+
+    return () => clearInterval(pollInterval)
+  }, [sseConnected, id, isInitialLoading])
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -311,10 +351,15 @@ export default function AdminChatPage() {
                   <h1 className="text-xl font-semibold">{userName}</h1>
                   <p className="text-sm text-muted-foreground">
                     Admin Chat Simulator
-                    {sseConnected && (
+                    {sseConnected ? (
                       <span className="ml-2 inline-flex items-center gap-1 text-green-600">
                         <span className="h-2 w-2 rounded-full bg-green-600 animate-pulse" />
                         Live
+                      </span>
+                    ) : (
+                      <span className="ml-2 inline-flex items-center gap-1 text-yellow-600">
+                        <span className="h-2 w-2 rounded-full bg-yellow-600 animate-pulse" />
+                        Polling
                       </span>
                     )}
                   </p>

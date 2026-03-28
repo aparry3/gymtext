@@ -3,7 +3,7 @@ import Stripe from 'stripe';
 import { getServices, getRepositories, type ServiceContainer } from '@/lib/context';
 import { inngest } from '@/server/connections/inngest/client';
 import type { SignupData } from '@/server/repositories/onboardingRepository';
-import { getStripeSecrets } from '@/server/config';
+import { getStripeSecrets, getEnvironmentSettings } from '@/server/config';
 import { getStripeConfig, getUrlsConfig } from '@/shared/config';
 import { isProductionEnvironment } from '@/shared/config/public';
 
@@ -13,7 +13,9 @@ const stripe = new Stripe(secretKey, {
 });
 
 function isLocalDev(): boolean {
-  return process.env.NODE_ENV === 'development';
+  const settings = getEnvironmentSettings();
+  if (settings.forceStripe) return false;
+  return settings.isDevelopment;
 }
 
 /**
