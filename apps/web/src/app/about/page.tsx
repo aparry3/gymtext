@@ -11,24 +11,32 @@ export const metadata: Metadata = {
 
 const team = [
   {
-    name: 'Kevin',
-    role: 'Chief Executive Officer',
-    // TODO: Replace with actual bio from grant deck (Slide 10)
-    bio: 'Kevin leads the vision and strategy for GymText, driving the company\'s mission to make personal training accessible to everyone through the simplicity of text messaging.',
-    image: '/team/kevin.png',
-  },
-  {
-    name: 'Kyle',
-    role: 'Chief Financial Officer',
-    // TODO: Replace with actual bio from grant deck (Slide 10)
-    bio: 'Kyle oversees GymText\'s financial strategy and operations, ensuring the company grows sustainably while keeping personal training affordable for everyone.',
+    name: 'Kyle Doran',
+    role: 'CEO',
+    focus: 'Partnerships & Growth',
+    bio: 'Private equity investor with experience scaling growth companies. Former collegiate athlete with deep understanding of training markets.',
+    credentials: ['Johns Hopkins', 'McKinsey & Company', 'Nonantum Capital'],
     image: '/team/kyle.png',
   },
   {
-    name: 'Aaron',
-    role: 'Chief Technology Officer',
-    // TODO: Replace with actual bio from grant deck (Slide 10)
-    bio: 'Aaron architects and builds the technology powering GymText — from the AI coaching engine to the SMS delivery platform that makes personalized training as simple as a text message.',
+    name: 'Kevin Doran',
+    role: 'CPO',
+    focus: 'Product & Commercialization',
+    bio: 'Strategy and operations leader. Former U.S. Navy officer, Naval Academy graduate, and collegiate basketball player.',
+    credentials: [
+      'U.S. Naval Academy',
+      'USC Marshall',
+      'U.S. Navy',
+      'EY-Parthenon',
+    ],
+    image: '/team/kevin.png',
+  },
+  {
+    name: 'Aaron Parry',
+    role: 'CTO',
+    focus: 'Technology & AI',
+    bio: 'Software engineer building scalable AI platforms. Former engineer at Spotify with full-stack and high-performance systems expertise.',
+    credentials: ['Georgia Tech', 'Spotify'],
     image: '/team/aaron.png',
   },
 ];
@@ -57,14 +65,16 @@ export default function AboutPage() {
           <h1 className="mb-4 text-4xl font-bold text-gray-900">
             Meet the Team
           </h1>
-          <p className="mb-12 text-lg text-gray-600 max-w-2xl">
-            We started GymText because we believe everyone deserves access to
-            quality personal training — without the hefty price tag or
-            complicated apps. Our team combines expertise in fitness, finance,
-            and technology to deliver coaching that fits in your pocket.
+          <p className="mb-4 text-lg text-gray-600 max-w-2xl">
+            Built by operators across consulting, PE, and technology.
+          </p>
+          <p className="mb-12 text-base text-gray-500 max-w-2xl">
+            Combined experience spanning McKinsey, EY-Parthenon, Spotify, U.S.
+            Navy, and private equity — with deep domain expertise in fitness,
+            strategy, and AI engineering.
           </p>
 
-          <div className="grid gap-8 md:gap-12">
+          <div className="grid gap-8 md:gap-10">
             {team.map((member) => (
               <div
                 key={member.name}
@@ -95,9 +105,21 @@ export default function AboutPage() {
                     {member.name}
                   </h2>
                   <p className="text-sm font-semibold text-[#1B81FF] mb-3">
-                    {member.role}
+                    {member.role} | {member.focus}
                   </p>
-                  <p className="text-gray-600 leading-relaxed">{member.bio}</p>
+                  <p className="text-gray-600 leading-relaxed mb-4">
+                    {member.bio}
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {member.credentials.map((cred) => (
+                      <span
+                        key={cred}
+                        className="inline-block text-xs font-medium text-gray-500 bg-white border border-gray-200 rounded-full px-3 py-1"
+                      >
+                        {cred}
+                      </span>
+                    ))}
+                  </div>
                 </div>
               </div>
             ))}
