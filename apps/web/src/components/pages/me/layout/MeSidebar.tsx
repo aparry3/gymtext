@@ -37,16 +37,8 @@ interface MeSidebarProps {
 }
 
 const getNavItems = (basePath: string) => [
-  { href: basePath, label: 'Dashboard', icon: Home },
-  { href: `${basePath}/program`, label: 'Program', icon: BookOpen },
-  { href: `${basePath}/profile`, label: 'Profile', icon: User },
+  { href: basePath, label: 'Profile', icon: User },
 ];
-
-const getBottomNavItem = (basePath: string) => ({
-  href: `${basePath}/account`,
-  label: 'Account',
-  icon: Settings,
-});
 
 function NavItem({
   href,
@@ -96,7 +88,6 @@ function SidebarContent({
   adminBackUrl?: string;
 }) {
   const navItems = getNavItems(basePath);
-  const accountItem = getBottomNavItem(basePath);
   const initials = user.name
     ?.split(' ')
     .map((n) => n[0])
@@ -156,15 +147,6 @@ function SidebarContent({
 
       {/* User section */}
       <div className="p-4 border-t border-[hsl(var(--sidebar-border))]">
-        <div className="mb-3">
-          <NavItem
-            href={accountItem.href}
-            label={accountItem.label}
-            icon={accountItem.icon}
-            isActive={currentPath.startsWith(accountItem.href)}
-            onClick={onNavClick}
-          />
-        </div>
         <div className="flex items-center gap-3 mb-3">
           <Avatar size="sm">
             <AvatarFallback className="bg-[hsl(var(--sidebar-muted))] text-[hsl(var(--sidebar-foreground))] text-xs">
@@ -224,12 +206,10 @@ export function MeSidebar({ user, basePath = '/me', isAdminView = false, adminBa
     }
   };
 
-  const isFullscreen = pathname.startsWith('/me/workouts/');
-
   return (
     <>
-      {/* Mobile hamburger button - fixed at top (hidden on fullscreen routes) */}
-      {!isFullscreen && <div className="fixed top-0 left-0 right-0 z-40 flex items-center gap-3 p-4 bg-[hsl(var(--sidebar-bg))] md:hidden">
+      {/* Mobile hamburger button - fixed at top */}
+      <div className="fixed top-0 left-0 right-0 z-40 flex items-center gap-3 p-4 bg-[hsl(var(--sidebar-bg))] md:hidden">
         <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
           <SheetTrigger asChild>
             <Button

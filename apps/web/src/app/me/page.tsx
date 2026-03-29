@@ -1,10 +1,18 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { decryptUserId } from '@/server/utils/sessionCrypto';
-import { MeDashboard } from '@/components/pages/me/MeDashboard';
+import { getServices } from '@/lib/context';
+import { SimpleProfileView } from '@/components/pages/me/SimpleProfileView';
+
+function normalizePreferredMessagingProvider(value: string | null | undefined): 'twilio' | 'whatsapp' | null {
+  if (value === 'twilio' || value === 'whatsapp') {
+    return value;
+  }
+
+  return null;
+}
 
 export default async function MePage() {
-  // Get user ID from session cookie
   const cookieStore = await cookies();
   const sessionCookie = cookieStore.get('gt_user_session');
 
@@ -18,5 +26,28 @@ export default async function MePage() {
     redirect('/me/login');
   }
 
-  return <MeDashboard userId={userId} />;
+  const services = getServices();
+  const [user, signupData, subscriptionStatus] = await Promise.all([
+    services.user.getUserById(userId),
+    services.onboardingData.getSignupData(userId),
+    services.subscription.getSubscriptionStatus(userId),
+  ]);
+
+  if (!user) {
+    redirect('/api/auth/logout?redirect=/start');
+  }
+
+  const initialData = {
+    id: user.id,
+    name: user.name || '',
+    phoneNumber: user.phoneNumber,
+    gender: user.gender,
+    timezone: user.timezone || 'America/New_York',
+    preferredSendHour: user.preferredSendHour ?? 9,
+    preferredMessagingProvider: normalizePreferredMessagingProvider(user.preferredMessagingProvider),
+    smsConsent: signupData?.smsConsent ?? false,
+    smsConsentedAt: signupData?.smsConsentedAt ?? null,
+  };
+
+  return <SimpleProfileView userId={userId} initialData={initialData} subscriptionStatus={subscriptionStatus} />;
 }
