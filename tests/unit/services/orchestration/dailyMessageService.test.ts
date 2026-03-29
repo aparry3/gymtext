@@ -615,7 +615,7 @@ describe('DailyMessageService', () => {
     it('should report failures when inngest.send rejects', async () => {
       const user1 = makeUser({ id: 'user-1' });
 
-      (inngest.send as ReturnType<typeof vi.fn>).mockRejectedValueOnce(new Error('Inngest unavailable'));
+      (inngest.send as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('Inngest unavailable'));
 
       deps = makeDeps({
         user: {
