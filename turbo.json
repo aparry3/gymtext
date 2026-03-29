@@ -3,12 +3,12 @@
   "globalDependencies": [".env*"],
   "tasks": {
     "//#test": {
-      "dependsOn": ["@gymtext/shared#build"],
+      "dependsOn": [],
       "cache": false,
       "passThroughEnv": ["DATABASE_URL"]
     },
     "build": {
-      "dependsOn": ["^build", "//#test"],
+      "dependsOn": ["^build"],
       "outputs": [".next/**", "!.next/cache/**", "dist/**"],
       "passThroughEnv": ["DATABASE_URL"]
     },
@@ -87,7 +87,7 @@
       ]
     },
     "web#build": {
-      "dependsOn": ["@gymtext/shared#build"],
+      "dependsOn": ["@gymtext/shared#build", "//#test"],
       "outputs": [".next/**", "!.next/cache/**"],
       "env": [
         "DATABASE_URL",
@@ -134,7 +134,7 @@
       ]
     },
     "admin#build": {
-      "dependsOn": ["@gymtext/shared#build"],
+      "dependsOn": ["@gymtext/shared#build", "//#test"],
       "outputs": [".next/**", "!.next/cache/**"],
       "env": [
         "DATABASE_URL",
@@ -162,7 +162,7 @@
       ]
     },
     "programs#build": {
-      "dependsOn": ["@gymtext/shared#build"],
+      "dependsOn": ["@gymtext/shared#build", "//#test"],
       "outputs": [".next/**", "!.next/cache/**"],
       "env": [
         "DATABASE_URL",
