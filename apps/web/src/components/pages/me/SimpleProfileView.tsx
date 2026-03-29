@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState, useCallback } from 'react';
-import { Loader2, RefreshCw, CheckCircle2, AlertTriangle, Copy, Check } from 'lucide-react';
+import { Loader2, CheckCircle2, AlertTriangle, Copy, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { TimeSelector } from '@/components/ui/TimeSelector';

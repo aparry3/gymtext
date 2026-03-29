@@ -12,10 +12,7 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet';
 import {
-  Home,
-  BookOpen,
   User,
-  Settings,
   LogOut,
   Menu,
   ArrowLeft,
@@ -244,7 +241,7 @@ export function MeSidebar({ user, basePath = '/me', isAdminView = false, adminBa
           height={24}
           className="h-5 w-auto"
         />
-      </div>}
+      </div>
 
       {/* Desktop sidebar - fixed */}
       <aside className="hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0 bg-[hsl(var(--sidebar-bg))]">

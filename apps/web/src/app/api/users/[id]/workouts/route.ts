@@ -41,7 +41,6 @@ export async function GET(
       id: r.id,
       date: r.date,
       message: r.message,
-      details: r.details,
     }));
 
     return NextResponse.json({

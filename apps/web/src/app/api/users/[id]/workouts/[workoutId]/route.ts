@@ -57,7 +57,6 @@ export async function GET(
         id: workout.id,
         date: workout.date,
         message: workout.message,
-        details: workout.details,
       },
     });
   } catch (error) {
