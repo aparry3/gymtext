@@ -1,10 +1,6 @@
-import type { WorkoutDetails } from '@/server/models/workout';
 import type { UserWithProfile } from '@/server/models/user';
 import type { ExperienceLevel } from '@/server/models/profile';
 import type { WorkoutData } from '../../orchestration/trainingService';
-
-// Re-export for convenience
-export type { WorkoutDetails };
 
 // =============================================================================
 // Base Types
@@ -38,7 +34,6 @@ export interface WorkoutGenerateInput {
 export interface WorkoutGenerateOutput {
   response: string;
   message: string;
-  details?: WorkoutDetails;
 }
 
 // Alias for result type
@@ -68,7 +63,6 @@ export interface ModifyWorkoutOutput {
     modifications: string;
   };
   message: string;
-  details?: WorkoutDetails;
 }
 
 // Alias for result type

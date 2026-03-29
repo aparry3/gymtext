@@ -1,5 +1,4 @@
 import type { FitnessPlans } from './_types';
-import type { PlanDetails } from '@/shared/types/plan';
 import { Insertable, Selectable, Updateable } from 'kysely';
 
 // Re-export schema types from shared (used by downstream consumers)
@@ -14,7 +13,6 @@ export interface FitnessPlan {
   clientId: string;
   content?: string | null;
   description: string;
-  details?: PlanDetails | null;
   startDate: Date;
   createdAt?: Date;
 }
@@ -32,7 +30,6 @@ export class FitnessPlanModel {
       clientId,
       content: dbRow.content ?? null,
       description: row.description || '',
-      details: dbRow.details ?? null,
       startDate: new Date(row.startDate as unknown as string | number | Date),
       createdAt: new Date(row.createdAt as unknown as string | number | Date),
     };

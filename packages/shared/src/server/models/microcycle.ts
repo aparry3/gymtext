@@ -9,7 +9,6 @@ export interface Microcycle {
   planId?: string | null;
   content?: string | null;
   message?: string | null;
-  details?: Record<string, unknown> | null;
   startDate: Date;
   createdAt: Date;
 }
@@ -24,7 +23,6 @@ export class MicrocycleModel {
       planId: dbRow.planId ?? null,
       content: dbRow.content ?? null,
       message: dbRow.message ?? null,
-      details: dbRow.details ?? null,
       startDate: new Date(row.startDate as unknown as string | number | Date),
       createdAt: new Date(row.createdAt as unknown as string | number | Date),
     };
