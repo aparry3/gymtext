@@ -12,7 +12,6 @@ interface FitnessPlan {
   id: string
   description: string | null
   message: string | null
-  structured: unknown | null
   startDate: Date
   createdAt: Date
 }
@@ -23,7 +22,6 @@ interface Microcycle {
   days: string[]
   description: string | null
   message: string | null
-  structured: unknown | null
   startDate: Date
   endDate: Date
 }
@@ -35,7 +33,6 @@ interface WorkoutInstance {
   goal: string | null
   description: string | null
   message: string | null
-  structured: unknown | null
 }
 
 interface ChainToolsTabProps {
@@ -328,7 +325,6 @@ export function ChainToolsTab({ userId }: ChainToolsTabProps) {
             <div className="flex flex-wrap gap-2">
               <StatusBadge label="Description" hasValue={!!fitnessPlan.description} />
               <StatusBadge label="Message" hasValue={!!fitnessPlan.message} />
-              <StatusBadge label="Structured" hasValue={!!fitnessPlan.structured} />
             </div>
             <div className="flex items-center gap-2">
               <ChainRunButton
@@ -374,7 +370,6 @@ export function ChainToolsTab({ userId }: ChainToolsTabProps) {
                   <StatusBadge label="Days" hasValue={microcycle.days?.length === 7} />
                   <StatusBadge label="Description" hasValue={!!microcycle.description} />
                   <StatusBadge label="Message" hasValue={!!microcycle.message} />
-                  <StatusBadge label="Structured" hasValue={!!microcycle.structured} />
                 </div>
                 <div className="flex items-center gap-2">
                   <ChainRunButton
@@ -424,7 +419,6 @@ export function ChainToolsTab({ userId }: ChainToolsTabProps) {
                 <div className="flex flex-wrap gap-2">
                   <StatusBadge label="Description" hasValue={!!workout.description} />
                   <StatusBadge label="Message" hasValue={!!workout.message} />
-                  <StatusBadge label="Structured" hasValue={!!workout.structured} />
                 </div>
                 <div className="flex items-center gap-2">
                   <ChainRunButton
