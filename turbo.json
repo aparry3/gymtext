@@ -4,8 +4,7 @@
   "tasks": {
     "//#test": {
       "dependsOn": [],
-      "cache": false,
-      "passThroughEnv": ["DATABASE_URL"]
+      "cache": false
     },
     "build": {
       "dependsOn": ["^build"],

@@ -42,10 +42,11 @@ let testDb: Kysely<DB> | null = null;
 let testPool: Pool | null = null;
 
 function getConnectionString(): string {
-  const url = process.env.DATABASE_URL;
+  // Prefer sandbox DB for test isolation, fall back to main DATABASE_URL
+  const url = process.env.SANDBOX_DATABASE_URL || process.env.DATABASE_URL;
   if (!url) {
     throw new Error(
-      'DATABASE_URL is required to run integration tests. ' +
+      'SANDBOX_DATABASE_URL or DATABASE_URL is required to run integration tests. ' +
       'Run: source .env.local && pnpm test',
     );
   }
