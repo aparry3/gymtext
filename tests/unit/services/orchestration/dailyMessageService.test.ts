@@ -613,6 +613,7 @@ describe('DailyMessageService', () => {
   // =========================================================================
   describe('scheduleMessagesForHour — inngest failure', () => {
     it('should report failures when inngest.send rejects', async () => {
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
       const user1 = makeUser({ id: 'user-1' });
 
       (inngest.send as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('Inngest unavailable'));
@@ -633,6 +634,7 @@ describe('DailyMessageService', () => {
       expect(result.failed).toBe(1);
       expect(result.errors).toHaveLength(1);
       expect(result.errors[0].error).toContain('Inngest unavailable');
+      consoleSpy.mockRestore();
     });
   });
 
