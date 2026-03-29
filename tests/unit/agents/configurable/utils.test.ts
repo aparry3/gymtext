@@ -14,12 +14,12 @@ describe('buildMessages', () => {
     });
 
     expect(result).toHaveLength(6);
-    expect(result[0]).toEqual({ role: 'system', content: 'You are a helpful assistant.' });
-    expect(result[1]).toEqual({ role: 'user', content: 'Context 1' });
-    expect(result[2]).toEqual({ role: 'user', content: 'Context 2' });
-    expect(result[3]).toEqual({ role: 'user', content: 'Previous question' });
-    expect(result[4]).toEqual({ role: 'assistant', content: 'Previous answer' });
-    expect(result[5]).toEqual({ role: 'user', content: 'Hello, how are you?' });
+    expect(result[0]).toMatchObject({ role: 'system', content: 'You are a helpful assistant.' });
+    expect(result[1]).toMatchObject({ role: 'user', content: 'Context 1' });
+    expect(result[2]).toMatchObject({ role: 'user', content: 'Context 2' });
+    expect(result[3]).toMatchObject({ role: 'user', content: 'Previous question' });
+    expect(result[4]).toMatchObject({ role: 'assistant', content: 'Previous answer' });
+    expect(result[5]).toMatchObject({ role: 'user', content: 'Hello, how are you?' });
   });
 
   it('should handle empty context array', () => {

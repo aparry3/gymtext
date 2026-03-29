@@ -2,8 +2,13 @@
   "$schema": "https://turbo.build/schema.json",
   "globalDependencies": [".env*"],
   "tasks": {
+    "//#test": {
+      "dependsOn": ["@gymtext/shared#build"],
+      "cache": false,
+      "passThroughEnv": ["DATABASE_URL"]
+    },
     "build": {
-      "dependsOn": ["^build"],
+      "dependsOn": ["^build", "//#test"],
       "outputs": [".next/**", "!.next/cache/**", "dist/**"],
       "passThroughEnv": ["DATABASE_URL"]
     },

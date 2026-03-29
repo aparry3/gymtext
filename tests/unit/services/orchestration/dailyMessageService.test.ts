@@ -56,6 +56,7 @@ function makeUser(overrides: Record<string, unknown> = {}): UserWithProfile {
     timezone: 'America/New_York',
     preferredSendHour: 8, // 8 AM local
     units: 'imperial',
+    messagingOptIn: true,
     referralCode: null,
     stripeCustomerId: null,
     preferredMessagingProvider: null,
@@ -480,6 +481,158 @@ describe('DailyMessageService', () => {
       expect(result.success).toBe(true);
       expect(result.scheduled).toBe(true);
       expect(result.reason).toContain('Force triggered');
+    });
+  });
+
+  // =========================================================================
+  // messagingOptIn gating
+  // =========================================================================
+  describe('sendDailyMessage — messagingOptIn gating', () => {
+    it('should skip SMS queuing when user.messagingOptIn is false', async () => {
+      const user = makeUser({ messagingOptIn: false });
+      const existingWorkout = {
+        id: 'wk-1',
+        message: 'Leg day workout',
+        date: new Date('2026-03-06'),
+      };
+
+      const queueMessages = vi.fn();
+
+      deps = makeDeps({
+        workoutInstance: {
+          getByUserAndDate: vi.fn().mockResolvedValue(existingWorkout),
+        },
+        messagingOrchestrator: { queueMessages },
+      });
+      service = createDailyMessageService(deps);
+
+      const result = await service.sendDailyMessage(user);
+
+      expect(result.success).toBe(true);
+      expect(queueMessages).not.toHaveBeenCalled();
+    });
+
+    it('should skip SMS queuing when user.messagingOptIn is null (unset)', async () => {
+      const user = makeUser({ messagingOptIn: null });
+      const existingWorkout = {
+        id: 'wk-1',
+        message: 'Leg day workout',
+        date: new Date('2026-03-06'),
+      };
+
+      const queueMessages = vi.fn();
+
+      deps = makeDeps({
+        workoutInstance: {
+          getByUserAndDate: vi.fn().mockResolvedValue(existingWorkout),
+        },
+        messagingOrchestrator: { queueMessages },
+      });
+      service = createDailyMessageService(deps);
+
+      const result = await service.sendDailyMessage(user);
+
+      expect(result.success).toBe(true);
+      expect(queueMessages).not.toHaveBeenCalled();
+    });
+
+    it('should queue SMS when user.messagingOptIn is true', async () => {
+      const user = makeUser({ messagingOptIn: true });
+      const existingWorkout = {
+        id: 'wk-1',
+        message: 'Leg day workout',
+        date: new Date('2026-03-06'),
+      };
+
+      const queueMessages = vi.fn().mockResolvedValue({
+        messageIds: ['msg-1'],
+        queueEntryIds: ['q-1'],
+      });
+
+      deps = makeDeps({
+        workoutInstance: {
+          getByUserAndDate: vi.fn().mockResolvedValue(existingWorkout),
+        },
+        messagingOrchestrator: { queueMessages },
+      });
+      service = createDailyMessageService(deps);
+
+      const result = await service.sendDailyMessage(user);
+
+      expect(result.success).toBe(true);
+      expect(queueMessages).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  // =========================================================================
+  // regenerateWorkoutMessage path
+  // =========================================================================
+  describe('sendDailyMessage — regenerateWorkoutMessage fallback', () => {
+    it('should call regenerateWorkoutMessage when generated workout has null message', async () => {
+      const user = makeUser({ messagingOptIn: true });
+      const generatedWorkout = {
+        id: 'wk-gen-1',
+        message: null as string | null,
+        date: new Date('2026-03-06'),
+      };
+
+      const regenerateWorkoutMessage = vi.fn().mockResolvedValue('Regenerated message');
+      const queueMessages = vi.fn().mockResolvedValue({
+        messageIds: ['msg-1'],
+        queueEntryIds: ['q-1'],
+      });
+
+      deps = makeDeps({
+        workoutInstance: {
+          getByUserAndDate: vi.fn().mockResolvedValue(null),
+        },
+        training: {
+          prepareWorkoutForDate: vi.fn().mockResolvedValue(generatedWorkout),
+          regenerateWorkoutMessage,
+        },
+        messagingOrchestrator: { queueMessages },
+      });
+      service = createDailyMessageService(deps);
+
+      const result = await service.sendDailyMessage(user);
+
+      expect(result.success).toBe(true);
+      expect(regenerateWorkoutMessage).toHaveBeenCalledWith(user, generatedWorkout);
+      expect(queueMessages).toHaveBeenCalledWith(
+        user,
+        expect.arrayContaining([
+          expect.objectContaining({ content: 'Regenerated message' }),
+        ]),
+        'daily',
+      );
+    });
+  });
+
+  // =========================================================================
+  // Inngest failure in scheduleMessagesForHour
+  // =========================================================================
+  describe('scheduleMessagesForHour — inngest failure', () => {
+    it('should report failures when inngest.send rejects', async () => {
+      const user1 = makeUser({ id: 'user-1' });
+
+      (inngest.send as ReturnType<typeof vi.fn>).mockRejectedValueOnce(new Error('Inngest unavailable'));
+
+      deps = makeDeps({
+        user: {
+          getUsersForHour: vi.fn().mockResolvedValue([user1]),
+        },
+        message: {
+          findUserIdsWithOutboundMessagesForDates: vi.fn().mockResolvedValue(new Set<string>()),
+        },
+      });
+      service = createDailyMessageService(deps);
+
+      const result = await service.scheduleMessagesForHour(13);
+
+      expect(result.scheduled).toBe(0);
+      expect(result.failed).toBe(1);
+      expect(result.errors).toHaveLength(1);
+      expect(result.errors[0].error).toContain('Inngest unavailable');
     });
   });
 
