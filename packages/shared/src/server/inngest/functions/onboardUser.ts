@@ -42,6 +42,9 @@ export const onboardUserFunction = inngest.createFunction(
     id: 'onboard-user',
     name: 'Onboard New User',
     retries: 2,
+    concurrency: {
+      limit: 10, // Heavy function (multiple AI calls), limit concurrency
+    },
   },
   { event: 'user/onboarding.requested' },
   async ({ event, step }) => {

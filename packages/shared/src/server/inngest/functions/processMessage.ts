@@ -27,7 +27,10 @@ export const processMessageFunction = inngest.createFunction(
   {
     id: 'process-message',
     name: 'Process Inbound Message',
-    retries: 3, // Retry up to 3 times on failure
+    retries: 3,
+    concurrency: {
+      limit: 50, // Chat needs fast response, allow more concurrency
+    },
     debounce: {
       period: '10s',
       key: 'event.data.userId',

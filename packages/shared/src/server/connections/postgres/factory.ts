@@ -30,7 +30,9 @@ export function createDatabase(connectionString: string): Kysely<DB> {
   if (!pool) {
     pool = new Pool({
       connectionString,
-      max: 10, // Maximum number of clients in the pool
+      max: 25, // Increased from 10 for 10k user scale
+      idleTimeoutMillis: 30000, // Close idle connections after 30s
+      connectionTimeoutMillis: 5000, // Fail fast if can't connect in 5s
     });
     poolCache.set(connectionString, pool);
   }

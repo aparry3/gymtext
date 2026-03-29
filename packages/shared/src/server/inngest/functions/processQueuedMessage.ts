@@ -30,6 +30,9 @@ export const processNextQueuedMessageFunction = inngest.createFunction(
     id: 'process-next-queued-message',
     name: 'Process Next Queued Message',
     retries: 2,
+    concurrency: {
+      limit: 10, // Bounded by Twilio throughput
+    },
   },
   { event: 'message-queue/process-next' },
   async ({ event, step }) => {
@@ -56,6 +59,9 @@ export const sendQueuedMessageFunction = inngest.createFunction(
     id: 'send-queued-message',
     name: 'Send Queued Message',
     retries: 3,
+    concurrency: {
+      limit: 10, // Bounded by Twilio 1 msg/sec per number
+    },
   },
   { event: 'message-queue/send-message' },
   async ({ event, step }) => {

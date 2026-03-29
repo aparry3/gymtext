@@ -22,7 +22,9 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
-    "db:codegen": "kysely-codegen --dialect postgres --camel-case --out-file ./src/server/models/_types/index.ts --exclude-pattern '^kysely_' --log-level info --type-only-imports"
+    "db:codegen": "kysely-codegen --dialect postgres --camel-case --out-file ./src/server/models/_types/index.ts --exclude-pattern '^kysely_' --log-level info --type-only-imports",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@dqbd/tiktoken": "^1.0.21",
@@ -56,7 +58,8 @@
     "@types/pg": "^8.10.9",
     "@types/uuid": "^10.0.0",
     "kysely-codegen": "^0.18.5",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^4.1.0"
   },
   "peerDependencies": {
     "next": ">=14.0.0"

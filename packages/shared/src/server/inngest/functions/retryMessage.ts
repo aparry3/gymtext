@@ -35,6 +35,9 @@ export const retryMessageFunction = inngest.createFunction(
     id: 'retry-failed-message',
     name: 'Retry Failed Message Delivery',
     retries: 0, // We handle retries manually
+    concurrency: {
+      limit: 10, // Bounded by Twilio throughput
+    },
   },
   { event: 'message/delivery-failed' },
   async ({ event, step }) => {
