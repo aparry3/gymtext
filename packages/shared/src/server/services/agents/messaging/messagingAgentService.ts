@@ -3,7 +3,6 @@ import type { FitnessPlan } from '@/server/models/fitnessPlan';
 import type { Message } from '@/server/models/conversation';
 import type { DayOfWeek } from '@/shared/utils/date';
 import type { SimpleAgentRunnerInstance } from '@/server/agents/runner';
-import type { SignupWeekContext } from '@/shared/utils/signupWeek';
 
 // =============================================================================
 // Factory Pattern
@@ -15,7 +14,7 @@ import type { SignupWeekContext } from '@/shared/utils/signupWeek';
 export interface MessagingAgentServiceInstance {
   generateWelcomeMessage(user: UserWithProfile): Promise<string>;
   generatePlanSummary(user: UserWithProfile, plan: FitnessPlan, previousMessages?: Message[]): Promise<string[]>;
-  generatePlanMicrocycleCombinedMessage(fitnessPlan: string, weekOne: string, currentWeekday: DayOfWeek, signupContext?: SignupWeekContext | null): Promise<string>;
+  generatePlanMicrocycleCombinedMessage(fitnessPlan: string, weekOne: string, currentWeekday: DayOfWeek): Promise<string>;
 }
 
 /**
@@ -96,35 +95,13 @@ Text me anytime with questions about your workouts, your plan, or if you just ne
     async generatePlanMicrocycleCombinedMessage(
       fitnessPlan: string,
       weekOne: string,
-      currentWeekday: DayOfWeek,
-      signupContext?: SignupWeekContext | null
+      currentWeekday: DayOfWeek
     ): Promise<string> {
       const contextParts: string[] = [
         `<Fitness Plan>\n${fitnessPlan}\n</Fitness Plan>`,
+        `<Week 1>\n${weekOne}\n</Week 1>`,
+        `<Today>${currentWeekday}</Today>`,
       ];
-
-      // Add signup-aware context
-      if (signupContext?.strategy === 'intro') {
-        contextParts.push(`<Intro Week>\n${weekOne}\n</Intro Week>`);
-        contextParts.push(
-          `<SignupContext>This user just signed up on ${currentWeekday}. ` +
-          `They're getting a short intro week (${signupContext.remainingDays} days) to ease in. ` +
-          `Their full Week 1 starts next Monday. ` +
-          `Frame the message accordingly — welcome them, explain they're getting a quick intro this week, ` +
-          `and their full program kicks off Monday.</SignupContext>`
-        );
-      } else if (signupContext?.strategy === 'full') {
-        contextParts.push(`<Week 1>\n${weekOne}\n</Week 1>`);
-        contextParts.push(
-          `<SignupContext>This user just signed up on ${currentWeekday}. ` +
-          `They're starting their full Week 1 with ${signupContext.remainingDays} days remaining this week. ` +
-          `Frame the message to welcome them and get them excited about starting.</SignupContext>`
-        );
-      } else {
-        contextParts.push(`<Week 1>\n${weekOne}\n</Week 1>`);
-      }
-
-      contextParts.push(`<Today>${currentWeekday}</Today>`);
 
       const result = await agentRunner.invoke('messaging:plan-ready', {
         input: contextParts.join('\n\n'),

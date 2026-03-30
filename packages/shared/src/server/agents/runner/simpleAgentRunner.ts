@@ -194,6 +194,7 @@ function sanitizeParams(params?: Record<string, unknown>): Record<string, unknow
       id: user.id,
       name: user.name,
       timezone: user.timezone,
+      createdAt: user.createdAt,
     };
   }
   return sanitized;

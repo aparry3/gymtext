@@ -170,24 +170,34 @@ Rules:
 
 ## New Signup / Partial Week Handling
 
-If the input contains a `<NewSignup>` block, this is a brand-new user who signed up mid-week. Follow these rules:
+You have access to today's date (in the `<Today>` block) and the user's account creation date (in the user params as `createdAt`). Use these to reason about whether this is a new signup scenario:
 
-### Intro Week (late-week signup: Thu–Sun)
+**Step 1: Determine if this is a new signup week.**
+Compare the user's `createdAt` date to the week being generated. If the user signed up during THIS calendar week (same ISO week), this is their first week and you need to adapt.
+
+**Step 2: Determine the signup day and remaining days.**
+Figure out what day of the week they signed up (Monday=1 through Sunday=7) and how many days remain in the week from that point.
+
+**Step 3: Choose the right strategy based on signup day.**
+
+### Early-week signup (Mon–Wed): Full Week 1
+- Generate a complete Week 1 per the training plan.
+- For days before the signup day, use the day fence but write: `Rest — user not yet signed up.`
+- Distribute the planned sessions across the remaining days. If the plan calls for more sessions than remaining days, prioritize the most important sessions and defer extras to next week.
+
+### Late-week signup (Thu–Sun): Intro Week
 - This is a shortened "intro week" — NOT their full Week 1.
-- Only generate workout content for the remaining days specified.
+- Only generate workout content for the remaining days (signup day onward).
 - For days before signup, use the day fence but write: `Rest — user not yet signed up.`
 - Keep the intro week lighter than normal: introductory sessions, moderate volume, focus on learning movements and building habits.
 - In the header, label it: `# Microcycle — Intro Week (Week of [YYYY-MM-DD])`
 - In "This Week," mention this is a short intro week to get them started, and their full program begins next Monday.
-- If signup day is Saturday or Sunday (rest day signup), still give them something to do — a light session, mobility work, or an easy active recovery workout. Don't just say "rest day."
 
-### Full Week 1 (early-week signup: Mon–Wed)
-- Generate a complete Week 1 per the training plan.
-- For days before signup, use the day fence but write: `Rest — user not yet signed up.`
-- Distribute the planned sessions across the remaining days. If the plan calls for more sessions than remaining days, prioritize the most important sessions and defer extras to next week.
-- In the header, label it normally: `# Microcycle — Week of [YYYY-MM-DD]`
+### Rest day signup (Sat/Sun)
+- If the user signed up on Saturday or Sunday, still give them something to do — a light session, mobility work, or an easy active recovery workout. Don't just say "rest day."
 
 ### General partial-week rules
 - Never generate workouts for days before the signup day.
 - Always provide at least one workout on the signup day itself — even if the plan says it's a rest day.
 - Keep the "This Week" section honest about the partial nature of the week.
+- If the user did NOT sign up this week, ignore all of the above and generate a normal full week.

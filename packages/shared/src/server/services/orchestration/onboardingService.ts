@@ -1,6 +1,6 @@
 import { UserWithProfile } from '../../models/user';
 import { now, getDayOfWeek } from '@/shared/utils/date';
-import { buildSignupWeekContext } from '@/shared/utils/signupWeek';
+
 import type { MarkdownServiceInstance } from '../domain/markdown/markdownService';
 import type { TrainingServiceInstance } from './trainingService';
 import type { MessagingOrchestratorInstance, QueuedMessageContent } from './messagingOrchestrator';
@@ -56,9 +56,8 @@ export function createOnboardingService(
     if (!microcycle.content) throw new Error(`No microcycle content found for user ${user.id}`);
 
     const currentWeekday = getDayOfWeek(undefined, user.timezone);
-    const signupContext = buildSignupWeekContext(user.createdAt, currentDate, user.timezone);
-    const message = await messagingAgentService.generatePlanMicrocycleCombinedMessage(plan.content, microcycle.content, currentWeekday, signupContext);
-    console.log(`[Onboarding] Prepared combined plan+microcycle message for ${user.id}${signupContext ? ` (${signupContext.strategy} strategy)` : ''}`);
+    const message = await messagingAgentService.generatePlanMicrocycleCombinedMessage(plan.content, microcycle.content, currentWeekday);
+    console.log(`[Onboarding] Prepared combined plan+microcycle message for ${user.id}`);
     return message;
   };
 
