@@ -9,6 +9,7 @@
  */
 import { DateTime } from 'luxon';
 import { getDayOfWeekName, now, parseDate, toISODate } from '@/shared/utils/date';
+import { buildSignupWeekContext, type SignupWeekContext } from '@/shared/utils/signupWeek';
 import { normalizeWhitespace, stripCodeFences } from '@/server/utils/formatters';
 import type { UserWithProfile } from '@/server/models/user';
 import type { FitnessPlan } from '@/server/models/fitnessPlan';
@@ -153,8 +154,17 @@ export function createTrainingService(deps: TrainingServiceDeps): TrainingServic
 
       // Generate week dossier via AI agent
       const weekStart = DateTime.fromJSDate(targetDate, { zone: timezone }).startOf('week');
+
+      // Detect if this is a new signup partial week
+      const signupWeekContext = buildSignupWeekContext(user.createdAt, targetDate, timezone);
+      let agentInput = `Week starting ${weekStart.toISODate()}.`;
+      if (signupWeekContext) {
+        agentInput = buildPartialWeekInput(signupWeekContext, weekStart);
+        console.log(`[TrainingService] New signup detected for user ${userId}: ${signupWeekContext.strategy} strategy, ${signupWeekContext.remainingDays} days remaining`);
+      }
+
       const result = await simpleAgentRunner.invoke('week:generate', {
-        input: `Week starting ${weekStart.toISODate()}.`,
+        input: agentInput,
         context,
         params: { user },
       });
@@ -352,4 +362,44 @@ export function createTrainingService(deps: TrainingServiceDeps): TrainingServic
       return regeneratedMessage;
     },
   };
+}
+
+// =============================================================================
+// Helpers
+// =============================================================================
+
+/**
+ * Build the agent input string for a partial-week new signup
+ */
+function buildPartialWeekInput(ctx: SignupWeekContext, weekStart: DateTime): string {
+  const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+  const signupDayName = dayNames[ctx.signupWeekday - 1]; // Luxon weekday 1=Mon
+
+  if (ctx.strategy === 'intro') {
+    return [
+      `Week starting ${weekStart.toISODate()}.`,
+      '',
+      `<NewSignup>`,
+      `This is an INTRO WEEK for a brand-new user who signed up on ${signupDayName}.`,
+      `Only ${ctx.remainingDays} day(s) remain in this week (${ctx.remainingDayNames.join(', ')}).`,
+      `Create a shorter intro week covering ONLY ${ctx.remainingDayNames.join(', ')}.`,
+      `Mark earlier days (before ${signupDayName}) as "N/A - user not yet signed up."`,
+      `This intro week should ease them in — lighter volume, introductory sessions.`,
+      `Their full Week 1 program starts next Monday.`,
+      `</NewSignup>`,
+    ].join('\n');
+  } else {
+    // 'full' strategy — early week signup
+    return [
+      `Week starting ${weekStart.toISODate()}.`,
+      '',
+      `<NewSignup>`,
+      `This is Week 1 for a brand-new user who signed up on ${signupDayName}.`,
+      `They have ${ctx.remainingDays} day(s) remaining this week (${ctx.remainingDayNames.join(', ')}).`,
+      `Generate a full Week 1, but note that days before ${signupDayName} won't be used.`,
+      `Mark earlier days (before ${signupDayName}) as "N/A - user not yet signed up."`,
+      `Distribute the key sessions across the remaining ${ctx.remainingDays} days.`,
+      `</NewSignup>`,
+    ].join('\n');
+  }
 }

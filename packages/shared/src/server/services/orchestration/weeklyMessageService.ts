@@ -1,6 +1,7 @@
 import { UserWithProfile } from '@/server/models/user';
 import { inngest } from '@/server/connections/inngest/client';
 import { now, getNextWeekStart } from '@/shared/utils/date';
+import { isUserInFirstWeek } from '@/shared/utils/signupWeek';
 import { getUrlsConfig } from '@/shared/config';
 import type { UserServiceInstance } from '../domain/user/userService';
 import type { MarkdownServiceInstance } from '../domain/markdown/markdownService';
@@ -125,6 +126,15 @@ export function createWeeklyMessageService(
       try {
         console.log(`[WeeklyMessageService] Processing weekly message for user ${user.id}`);
 
+        // Guard: Skip users who signed up this week — they already received
+        // onboarding messages and their first week/intro week is in progress.
+        // Sending a "next week" message would be confusing.
+        const currentDate = now(user.timezone).toJSDate();
+        if (isUserInFirstWeek(user.createdAt, currentDate, user.timezone)) {
+          console.log(`[WeeklyMessageService] Skipping user ${user.id} — signed up this week, still in first week`);
+          return { success: true, userId: user.id };
+        }
+
         // Get fitness plan via markdown service
         const plan = await markdownService.getPlan(user.id);
         if (!plan) {
@@ -132,7 +142,6 @@ export function createWeeklyMessageService(
           return { success: false, userId: user.id, error: 'No fitness plan found' };
         }
 
-        const currentDate = now(user.timezone).toJSDate();
         const nextSundayDate = getNextWeekStart(currentDate, user.timezone);
 
         console.log(`[WeeklyMessageService] Getting next week's plan for ${nextSundayDate.toISOString()} for user ${user.id}`);
