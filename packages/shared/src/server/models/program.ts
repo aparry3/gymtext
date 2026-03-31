@@ -26,6 +26,10 @@ export interface Program {
   publishedVersionId: string | null;
   /** ID of the cover image for this program */
   coverImageId: string | null;
+  /** URL of the program logo (for signup page branding) */
+  logoUrl: string | null;
+  /** Subheader text for program branding */
+  subheader: string | null;
   isActive: boolean;
   isPublic: boolean;
   createdAt: Date;
@@ -47,6 +51,8 @@ export class ProgramModel {
       revenueSplitPercent: row.revenueSplitPercent,
       publishedVersionId: row.publishedVersionId,
       coverImageId: row.coverImageId ?? null,
+      logoUrl: (row as any).logoUrl ?? null,
+      subheader: (row as any).subheader ?? null,
       isActive: row.isActive,
       isPublic: row.isPublic,
       createdAt: new Date(row.createdAt as unknown as string | number | Date),

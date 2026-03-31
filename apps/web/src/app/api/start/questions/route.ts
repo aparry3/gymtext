@@ -41,6 +41,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       questions: mergedQuestions,
       programName: program?.name || programId,
+      programLogoUrl: program?.logoUrl || null,
+      programSubheader: program?.subheader || null,
       ownerWordmarkUrl: owner?.wordmarkUrl || null,
       ownerDisplayName: owner?.displayName || null,
     });
