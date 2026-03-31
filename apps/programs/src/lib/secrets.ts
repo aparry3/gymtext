@@ -19,6 +19,7 @@ const SecretsSchema = z.object({
   TWILIO_ACCOUNT_SID: z.string().min(1, 'TWILIO_ACCOUNT_SID is required'),
   TWILIO_AUTH_TOKEN: z.string().min(1, 'TWILIO_AUTH_TOKEN is required'),
   TWILIO_NUMBER: z.string().min(1, 'TWILIO_NUMBER is required'),
+  TWILIO_MESSAGING_SERVICE_SID: z.string().min(1, 'TWILIO_MESSAGING_SERVICE_SID is required'),
 
   // AI Services (for program parsing)
   OPENAI_API_KEY: z.string().min(1, 'OPENAI_API_KEY is required'),
@@ -42,6 +43,7 @@ export interface SecretsConfig {
     accountSid: string;
     authToken: string;
     phoneNumber: string;
+    messagingServiceSid: string;
   };
   ai: {
     openaiApiKey: string;
@@ -89,6 +91,7 @@ export function getSecrets(): SecretsConfig {
       accountSid: env.TWILIO_ACCOUNT_SID,
       authToken: env.TWILIO_AUTH_TOKEN,
       phoneNumber: env.TWILIO_NUMBER,
+      messagingServiceSid: env.TWILIO_MESSAGING_SERVICE_SID,
     },
     ai: {
       openaiApiKey: env.OPENAI_API_KEY,

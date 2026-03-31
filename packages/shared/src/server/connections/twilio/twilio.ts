@@ -22,6 +22,7 @@ export const twilioClient: ITwilioClient = createTwilioClient(
     accountSid: credentials.accountSid,
     authToken: credentials.authToken,
     phoneNumber: credentials.phoneNumber,
+    messagingServiceSid: credentials.messagingServiceSid,
   },
   statusCallbackUrl
 );

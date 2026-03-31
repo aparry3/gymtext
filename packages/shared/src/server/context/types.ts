@@ -29,6 +29,7 @@ export interface TwilioSecrets {
   accountSid: string;
   authToken: string;
   phoneNumber: string;
+  messagingServiceSid: string;
 }
 
 /**

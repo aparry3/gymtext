@@ -25,6 +25,7 @@ const SecretsSchema = z.object({
   TWILIO_ACCOUNT_SID: z.string().min(1, 'TWILIO_ACCOUNT_SID is required'),
   TWILIO_AUTH_TOKEN: z.string().min(1, 'TWILIO_AUTH_TOKEN is required'),
   TWILIO_NUMBER: z.string().min(1, 'TWILIO_NUMBER is required'),
+  TWILIO_MESSAGING_SERVICE_SID: z.string().min(1, 'TWILIO_MESSAGING_SERVICE_SID is required'),
 
   // Production - Stripe
   STRIPE_SECRET_KEY: z.string().min(1, 'STRIPE_SECRET_KEY is required'),
@@ -74,6 +75,7 @@ export interface SecretsConfig {
     accountSid: string;
     authToken: string;
     phoneNumber: string;
+    messagingServiceSid: string;
   };
   stripe: {
     secretKey: string;
@@ -135,6 +137,7 @@ export function getProductionSecrets(): SecretsConfig {
       accountSid: env.TWILIO_ACCOUNT_SID,
       authToken: env.TWILIO_AUTH_TOKEN,
       phoneNumber: env.TWILIO_NUMBER,
+      messagingServiceSid: env.TWILIO_MESSAGING_SERVICE_SID,
     },
     stripe: {
       secretKey: env.STRIPE_SECRET_KEY,
@@ -173,6 +176,7 @@ export function getSandboxSecrets(): SecretsConfig {
       accountSid: env.SANDBOX_TWILIO_ACCOUNT_SID || prod.twilio.accountSid,
       authToken: env.SANDBOX_TWILIO_AUTH_TOKEN || prod.twilio.authToken,
       phoneNumber: env.SANDBOX_TWILIO_NUMBER || prod.twilio.phoneNumber,
+      messagingServiceSid: prod.twilio.messagingServiceSid,
     },
     stripe: {
       secretKey: env.SANDBOX_STRIPE_SECRET_KEY || prod.stripe.secretKey,
