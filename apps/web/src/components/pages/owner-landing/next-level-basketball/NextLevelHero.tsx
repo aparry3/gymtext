@@ -23,10 +23,20 @@ export function NextLevelHero({ startUrl = '/start' }: NextLevelHeroProps) {
       </div>
 
       <div className="relative z-10 container mx-auto px-4 text-center pt-16 lg:pt-0">
-        <div className="hidden lg:inline-block mb-4 px-4 py-1 border border-white/20 rounded-full bg-white/10 backdrop-blur-md">
-          <span className="text-white/90 text-sm font-semibold tracking-wider uppercase">
-            GymText Presents
-          </span>
+        {/* Next Level Basketball Logo */}
+        <div className="flex flex-col items-center mb-6 md:mb-8">
+          <Image
+            src="/logos/next-level-basketball-progression.svg"
+            alt="Next Level Basketball"
+            width={120}
+            height={144}
+            className="mb-4 w-20 md:w-28 h-auto"
+          />
+          <div className="hidden lg:inline-block px-4 py-1 border border-white/20 rounded-full bg-white/10 backdrop-blur-md">
+            <span className="text-white/90 text-sm font-semibold tracking-wider uppercase">
+              GymText Presents
+            </span>
+          </div>
         </div>
 
         <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-8xl font-display font-bold text-white mb-4 md:mb-6 tracking-tight leading-tight">
