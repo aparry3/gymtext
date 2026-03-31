@@ -33,11 +33,13 @@ import { TimeSelectorQuestion } from './questions/TimeSelectorQuestion';
 interface QuestionnaireProps {
   programId?: string;
   programName?: string;
+  programLogoUrl?: string;
+  programSubheader?: string;
   ownerWordmarkUrl?: string;
   questions: QuestionnaireQuestion[];
 }
 
-export function Questionnaire({ programId, programName, ownerWordmarkUrl, questions }: QuestionnaireProps) {
+export function Questionnaire({ programId, programName, programLogoUrl, programSubheader, ownerWordmarkUrl, questions }: QuestionnaireProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   // Track consent separately from questionnaire answers
@@ -369,14 +371,39 @@ export function Questionnaire({ programId, programName, ownerWordmarkUrl, questi
 
       {/* Branding header */}
       <div className="flex flex-col items-center gap-1 py-4">
-        {ownerWordmarkUrl ? (
-          <img src={ownerWordmarkUrl} alt="" className="h-8 object-contain" />
+        {programLogoUrl ? (
+          <>
+            <img src={programLogoUrl} alt={programName || ''} className="h-16 object-contain mb-1" />
+            {programName && (
+              <h2 className="text-lg font-bold text-[hsl(var(--questionnaire-foreground))]">
+                {programName}
+              </h2>
+            )}
+            {programSubheader && (
+              <p className="text-sm text-[hsl(var(--questionnaire-muted-foreground))]">
+                {programSubheader}
+              </p>
+            )}
+            <div className="flex items-center gap-1.5 mt-2 text-xs text-[hsl(var(--questionnaire-muted-foreground))]">
+              <span>Powered by</span>
+              <img src="/Wordmark.png" alt="GymText" className="h-4 object-contain" />
+            </div>
+          </>
+        ) : ownerWordmarkUrl ? (
+          <>
+            <img src={ownerWordmarkUrl} alt="" className="h-8 object-contain" />
+            <span className="text-sm text-[hsl(var(--questionnaire-muted-foreground))]">
+              {programName || 'Sign Up'}
+            </span>
+          </>
         ) : (
-          <img src="/Wordmark.png" alt="GymText" className="h-8 object-contain" />
+          <>
+            <img src="/Wordmark.png" alt="GymText" className="h-8 object-contain" />
+            <span className="text-sm text-[hsl(var(--questionnaire-muted-foreground))]">
+              {programName || 'Sign Up'}
+            </span>
+          </>
         )}
-        <span className="text-sm text-[hsl(var(--questionnaire-muted-foreground))]">
-          {programName || 'Sign Up'}
-        </span>
       </div>
 
       {/* Header with progress */}

@@ -30,6 +30,8 @@ function StartPageContent() {
 
   const [questions, setQuestions] = useState<QuestionnaireQuestion[] | null>(null);
   const [programName, setProgramName] = useState<string | undefined>(undefined);
+  const [programLogoUrl, setProgramLogoUrl] = useState<string | undefined>(undefined);
+  const [programSubheader, setProgramSubheader] = useState<string | undefined>(undefined);
   const [ownerWordmarkUrl, setOwnerWordmarkUrl] = useState<string | undefined>(undefined);
   const [error, setError] = useState<string | null>(null);
 
@@ -55,6 +57,8 @@ function StartPageContent() {
         const data = await response.json();
         setQuestions(data.questions);
         setProgramName(data.programName);
+        setProgramLogoUrl(data.programLogoUrl);
+        setProgramSubheader(data.programSubheader);
         setOwnerWordmarkUrl(data.ownerWordmarkUrl);
       } catch (err) {
         console.error('Error loading questions:', err);
@@ -90,6 +94,8 @@ function StartPageContent() {
     <Questionnaire
       programId={programId}
       programName={programName}
+      programLogoUrl={programLogoUrl}
+      programSubheader={programSubheader}
       ownerWordmarkUrl={ownerWordmarkUrl}
       questions={questions}
     />
