@@ -38,6 +38,7 @@ const SecretsSchema = z.object({
   SANDBOX_TWILIO_ACCOUNT_SID: z.string().optional(),
   SANDBOX_TWILIO_AUTH_TOKEN: z.string().optional(),
   SANDBOX_TWILIO_NUMBER: z.string().optional(),
+  SANDBOX_TWILIO_MESSAGING_SERVICE_SID: z.string().optional(),
 
   // Sandbox - Stripe (optional, falls back to production)
   SANDBOX_STRIPE_SECRET_KEY: z.string().optional(),
@@ -176,7 +177,7 @@ export function getSandboxSecrets(): SecretsConfig {
       accountSid: env.SANDBOX_TWILIO_ACCOUNT_SID || prod.twilio.accountSid,
       authToken: env.SANDBOX_TWILIO_AUTH_TOKEN || prod.twilio.authToken,
       phoneNumber: env.SANDBOX_TWILIO_NUMBER || prod.twilio.phoneNumber,
-      messagingServiceSid: prod.twilio.messagingServiceSid,
+      messagingServiceSid: env.SANDBOX_TWILIO_MESSAGING_SERVICE_SID || '',
     },
     stripe: {
       secretKey: env.SANDBOX_STRIPE_SECRET_KEY || prod.stripe.secretKey,
