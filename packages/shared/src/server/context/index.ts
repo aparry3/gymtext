@@ -7,7 +7,6 @@
 
 // Types
 export type {
-  EnvironmentMode,
   EnvironmentContext,
   EnvironmentSecrets,
   DatabaseSecrets,
@@ -22,4 +21,3 @@ export type {
 
 // Context creation
 export { createEnvContext, clearContextCache } from './createEnvContext';
-export type { CreateEnvContextOptions } from './createEnvContext';

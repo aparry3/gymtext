@@ -3,13 +3,9 @@ import { NextRequest, NextResponse } from 'next/server';
 /**
  * Admin app proxy
  * - Protects admin routes with admin auth
- * - Injects X-Gymtext-Env header for environment switching
  */
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
-
-  // Get environment from cookie (default to production)
-  const envMode = request.cookies.get('gt_env')?.value || 'production';
 
   // Admin auth check for all routes except login and auth API
   const isLoginPath = pathname === '/login' || pathname === '/login/';
@@ -27,21 +23,12 @@ export function proxy(request: NextRequest) {
     }
   }
 
-  // Clone request headers and add environment header
-  const requestHeaders = new Headers(request.headers);
-  requestHeaders.set('x-gymtext-env', envMode);
-
-  // Pass modified request headers to the next handler
-  return NextResponse.next({
-    request: {
-      headers: requestHeaders,
-    },
-  });
+  return NextResponse.next();
 }
 
 export const config = {
   matcher: [
-    // Explicit routes that need proxy (auth + env header injection)
+    // Explicit routes that need proxy (auth check)
     '/',
     '/login',
     '/calendar/:path*',

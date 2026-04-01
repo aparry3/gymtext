@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useCallback, useEffect } from 'react'
-import { useEnvironment } from '@/context/EnvironmentContext'
 import { AdminHeader } from '@/components/admin/AdminHeader'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -109,7 +108,6 @@ function formatPhone(phone: string | null): string {
 // ─── Promo Codes Tab ────────────────────────────────────────────────────────
 
 function PromoCodesTab() {
-  const { mode } = useEnvironment()
   const [codes, setCodes] = useState<PromoCode[]>([])
   const [stats, setStats] = useState<PromoStats>({ total: 0, active: 0, totalRedemptions: 0 })
   const [isLoading, setIsLoading] = useState(true)
@@ -133,7 +131,7 @@ function PromoCodesTab() {
     }
   }, [])
 
-  useEffect(() => { fetchCodes() }, [fetchCodes, mode])
+  useEffect(() => { fetchCodes() }, [fetchCodes])
 
   const handleDeactivate = async (id: string) => {
     setDeactivatingId(id)
@@ -436,7 +434,6 @@ function CreatePromoDialog({
 // ─── Referrals Tab ──────────────────────────────────────────────────────────
 
 function ReferralsTab() {
-  const { mode } = useEnvironment()
   const [referrals, setReferrals] = useState<Referral[]>([])
   const [stats, setStats] = useState<ReferralStats>({ total: 0, credited: 0, pending: 0, totalCreditsCents: 0 })
   const [isLoading, setIsLoading] = useState(true)
@@ -458,7 +455,7 @@ function ReferralsTab() {
     }
   }, [])
 
-  useEffect(() => { fetchReferrals() }, [fetchReferrals, mode])
+  useEffect(() => { fetchReferrals() }, [fetchReferrals])
 
   return (
     <div className="space-y-6">

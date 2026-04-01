@@ -80,8 +80,7 @@ gymtext/
 │   └── admin/                    # Admin portal (admin.gymtext.com)
 │       ├── src/
 │       │   ├── app/             # Admin pages and API routes
-│       │   ├── components/      # Admin-specific components
-│       │   └── context/         # EnvironmentContext for env switching
+│       │   └── components/      # Admin-specific components
 │       └── vercel.json          # Vercel config
 │
 ├── packages/
@@ -96,7 +95,6 @@ gymtext/
 │           │   │   ├── tools/          # Tool registry & definitions
 │           │   │   └── declarative/    # Input mapping, templates, validation
 │           │   ├── connections/ # External service factories
-│           │   ├── context/     # EnvironmentContext system
 │           │   ├── models/      # Database schema and types
 │           │   ├── repositories/# Data access layer
 │           │   ├── services/    # Business logic layer
@@ -143,7 +141,6 @@ The application follows a clean architecture pattern with clear separation of co
 5. **Supporting Layers**:
    - **Models** (`packages/shared/src/server/models/`) - TypeScript type definitions and database schema
    - **Connections** (`packages/shared/src/server/connections/`) - External service factories (DB, Twilio, Stripe)
-   - **Context** (`packages/shared/src/server/context/`) - Environment context for multi-environment support
    - **Utils** (`packages/shared/src/server/utils/`) - Shared utilities and helper functions
 
 ### Key Architectural Patterns
@@ -152,87 +149,10 @@ The application follows a clean architecture pattern with clear separation of co
 - **Database-Driven Agents**: Agent definitions (prompts, model config, tools, context, sub-agents, validation) live in the `agent_definitions` table with append-only versioning
 - **Registries in Code**: Tool Registry and Context Registry map string IDs from DB config to runtime implementations
 - **AgentRunner**: Services call `agentRunner.invoke(agentId, params)` - never instantiate LLMs directly
-- **Factory Pattern**: Connections use factories for environment switching
-- **Environment Context**: Request-scoped context carries environment-specific connections
+- **Factory Pattern**: Connections use factories for external services
 - **Type Safety**: Full TypeScript with Kysely codegen for database types
 - **Lazy Service Injection**: AgentRunner receives `getServices()` lambda to break circular dependencies between services and tools
 - **Clean Architecture**: See `_claude_docs/AGENT_ARCHITECTURE.md` for full agent pattern details
-
-## Environment Context System
-
-The admin app supports switching between production and sandbox environments (like Stripe's dashboard). This is implemented through the Environment Context System.
-
-### How It Works
-
-1. **Cookie Storage**: User's environment preference stored in `gt_env` cookie
-2. **Middleware Injection**: Admin middleware reads cookie, sets `X-Gymtext-Env` header
-3. **Context Creation**: `createEnvContext()` reads header, returns appropriate connections
-4. **Service Binding**: Services receive context with env-specific db/twilio/stripe clients
-
-### Key Files
-
-- **`packages/shared/src/server/context/createEnvContext.ts`** - Factory for environment contexts
-  ```typescript
-  // In API routes:
-  const ctx = await createEnvContext();  // Reads X-Gymtext-Env header
-  const { db, twilioClient, stripeClient } = ctx;
-
-  // Force production (for web app):
-  const ctx = await createProductionContext();
-  ```
-
-- **`packages/shared/src/server/connections/*/factory.ts`** - Connection factories with caching
-  - `postgres/factory.ts` - `createDatabase(connectionString)`
-  - `twilio/factory.ts` - `createTwilioClient(credentials)`
-  - `stripe/factory.ts` - `createStripeClient(credentials)`
-
-- **`packages/shared/src/server/repositories/factory.ts`** - Repository container factory
-  ```typescript
-  const repos = createRepositories(ctx.db);
-  const user = await repos.user.findById(userId);
-  ```
-
-- **`packages/shared/src/server/services/factory.ts`** - Service container factory (multi-phase bootstrap with AgentRunner setup)
-  ```typescript
-  const services = getServices(ctx);
-  // Access repos, ctx, services, and agentRunner
-  ```
-
-- **`apps/admin/src/context/EnvironmentContext.tsx`** - React context for UI toggle
-- **`apps/admin/src/middleware.ts`** - Injects X-Gymtext-Env header for API routes
-
-### What's Affected by Environment Toggle
-
-| Service | Affected | Notes |
-|---------|----------|-------|
-| Database | Yes | Sandbox uses `SANDBOX_DATABASE_URL` |
-| Twilio | Yes | Sandbox uses `SANDBOX_TWILIO_*` credentials |
-| Stripe | Yes | Sandbox uses `SANDBOX_STRIPE_*` credentials |
-| OpenAI | No | Always uses production |
-| Pinecone | No | Always uses production |
-
-### Usage in API Routes
-
-**Admin app** (supports environment switching):
-```typescript
-import { createEnvContext } from '@gymtext/shared/server';
-
-export async function GET() {
-  const ctx = await createEnvContext();  // Respects X-Gymtext-Env header
-  const users = await ctx.db.selectFrom('users').selectAll().execute();
-  return Response.json(users);
-}
-```
-
-**Web app** (always production):
-```typescript
-import { createProductionContext } from '@gymtext/shared/server';
-
-export async function GET() {
-  const ctx = await createProductionContext();  // Always production
-  // ...
-}
-```
 
 ## Database Schema
 
@@ -352,23 +272,6 @@ PINECONE_INDEX=...
 ADMIN_PHONE_NUMBERS=+1234567890,+0987654321
 ```
 
-### Sandbox (Optional - Admin App Only)
-```bash
-# Database
-SANDBOX_DATABASE_URL=postgresql://...
-
-# Twilio
-SANDBOX_TWILIO_ACCOUNT_SID=...
-SANDBOX_TWILIO_AUTH_TOKEN=...
-SANDBOX_TWILIO_NUMBER=...
-
-# Stripe
-SANDBOX_STRIPE_SECRET_KEY=...
-SANDBOX_STRIPE_WEBHOOK_SECRET=...
-```
-
-If sandbox variables are not set, sandbox mode falls back to production credentials.
-
 ### Migration Testing (Optional)
 ```bash
 # Read-only connection to production (used by pnpm test:migration)
@@ -459,7 +362,6 @@ The admin panel uses phone-based SMS verification with a whitelist system:
 
 ### Environment Variable Management
 - **ALWAYS run `source .env.local` before running `pnpm build` or `pnpm lint`** - these commands require DATABASE_URL for db:codegen
-- Sandbox variables only needed for admin app environment switching
 
 ### Code Quality and Validation
 - **ALWAYS run `pnpm build` to verify changes** - TypeScript compilation (`tsc`) alone is NOT sufficient

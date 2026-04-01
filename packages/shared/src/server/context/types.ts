@@ -2,18 +2,12 @@
  * Environment Context Types
  *
  * These types define the context object that carries environment-specific
- * configuration through the request lifecycle. This enables the admin
- * dashboard to switch between sandbox and production environments.
+ * configuration through the request lifecycle.
  */
 import type { Kysely } from 'kysely';
 import type Stripe from 'stripe';
 import type { DB } from '@/server/models/_types';
 import type { ITwilioClient } from '../connections/twilio/factory';
-
-/**
- * Environment mode - sandbox or production
- */
-export type EnvironmentMode = 'production' | 'sandbox';
 
 /**
  * Database credentials for a specific environment
@@ -82,7 +76,7 @@ export interface EnvironmentSecrets {
 /**
  * Environment-agnostic secrets configuration.
  * Apps load their own env vars and pass this to the shared package.
- * The shared package doesn't know about SANDBOX_* vs production naming.
+ * The shared package doesn't know about app-level naming conventions.
  */
 export interface SecretsConfig {
   database: DatabaseSecrets;
@@ -107,9 +101,6 @@ export interface EnvConfig {
  * through the request lifecycle
  */
 export interface EnvironmentContext {
-  /** Current environment mode */
-  mode: EnvironmentMode;
-
   /** All secrets for this environment */
   secrets: EnvironmentSecrets;
 

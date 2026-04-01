@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { useEnvironment } from '@/context/EnvironmentContext';
 import {
   Dialog,
   DialogContent,
@@ -30,7 +29,6 @@ interface BroadcastResult {
 type Step = 'compose' | 'confirm' | 'sending' | 'result';
 
 export function BroadcastMessageDialog({ open, onOpenChange, onSuccess }: BroadcastMessageDialogProps) {
-  const { mode } = useEnvironment();
   const [step, setStep] = useState<Step>('compose');
   const [message, setMessage] = useState('');
   const [users, setUsers] = useState<AdminUser[]>([]);
@@ -244,12 +242,6 @@ export function BroadcastMessageDialog({ open, onOpenChange, onSuccess }: Broadc
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-gray-700">Environment:</span>
-              <Badge variant={mode === 'production' ? 'destructive' : 'secondary'}>
-                {mode}
-              </Badge>
-            </div>
           </div>
         )}
 

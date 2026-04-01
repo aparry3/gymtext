@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { useEnvironment } from '@/context/EnvironmentContext'
 import Link from 'next/link'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -38,7 +37,6 @@ interface Microcycle {
 export default function MicrocyclesPage() {
   const { id: userId } = useParams()
   const router = useRouter()
-  const { mode } = useEnvironment()
   const [microcycles, setMicrocycles] = useState<Microcycle[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -73,7 +71,7 @@ export default function MicrocyclesPage() {
     if (userId) {
       fetchMicrocycles()
     }
-  }, [userId, fetchMicrocycles, mode])
+  }, [userId, fetchMicrocycles])
 
   const handleDelete = async (e: React.MouseEvent, microcycleId: string) => {
     e.stopPropagation()

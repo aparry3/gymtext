@@ -155,7 +155,7 @@ async function upsertProgramVersion(db: Kysely<any>, params: {
 export async function seedSportPrograms(): Promise<void> {
   console.log('Seeding sport-specific programs...');
 
-  const databaseUrl = process.env.DATABASE_URL || process.env.SANDBOX_DATABASE_URL;
+  const databaseUrl = process.env.DATABASE_URL;
   if (!databaseUrl) {
     throw new Error('DATABASE_URL not set');
   }

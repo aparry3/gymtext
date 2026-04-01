@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import type { TextareaHTMLAttributes } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
-import { useEnvironment } from '@/context/EnvironmentContext'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -294,7 +293,6 @@ function MultiSelectCheckbox({ label, options, selected, onChange }: MultiSelect
 }
 
 export default function AgentsPage() {
-  const { mode } = useEnvironment()
   const [agents, setAgents] = useState<Agent[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -629,7 +627,7 @@ export default function AgentsPage() {
             </div>
             <div>
               <h1 className="text-xl md:text-2xl font-semibold tracking-tight text-slate-900">Agent Prompt Studio</h1>
-              <p className="text-sm text-slate-500">Inspect latest prompt versions by category · {mode}</p>
+              <p className="text-sm text-slate-500">Inspect latest prompt versions by category</p>
             </div>
           </div>
 

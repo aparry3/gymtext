@@ -18,7 +18,6 @@
       "passThroughEnv": [
         "APP_ENV",
         "DATABASE_URL",
-        "SANDBOX_DATABASE_URL",
         "SESSION_ENCRYPTION_KEY",
         "TWILIO_ACCOUNT_SID",
         "TWILIO_AUTH_TOKEN",
@@ -33,8 +32,7 @@
         "PINECONE_API_KEY",
         "PINECONE_INDEX",
         "ADMIN_PHONE_NUMBERS",
-        "PROD_WEB_API_URL",
-        "SANDBOX_WEB_API_URL",
+        "WEB_API_URL",
         "INNGEST_EVENT_KEY",
         "INNGEST_SIGNING_KEY",
         "BASE_URL",
@@ -137,9 +135,7 @@
       "outputs": [".next/**", "!.next/cache/**"],
       "env": [
         "DATABASE_URL",
-        "SANDBOX_DATABASE_URL",
-        "PROD_WEB_API_URL",
-        "SANDBOX_WEB_API_URL",
+        "WEB_API_URL",
         "ADMIN_PHONE_NUMBERS",
         "NEXT_PUBLIC_WEB_APP_URL",
         "SESSION_ENCRYPTION_KEY",

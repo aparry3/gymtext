@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { useEnvironment } from '@/context/EnvironmentContext'
 import Link from 'next/link'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -29,7 +28,6 @@ interface WorkoutInstance {
 export default function AllWorkoutsPage() {
   const { id: userId } = useParams()
   const router = useRouter()
-  const { mode } = useEnvironment()
   const [workouts, setWorkouts] = useState<WorkoutInstance[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -67,7 +65,7 @@ export default function AllWorkoutsPage() {
     if (userId) {
       fetchWorkouts()
     }
-  }, [userId, fetchWorkouts, mode])
+  }, [userId, fetchWorkouts])
 
   const handleDelete = async (e: React.MouseEvent, workoutId: string) => {
     e.stopPropagation()

@@ -462,7 +462,7 @@ export interface SeedAgentsOptions {
 export async function seedAgents(options?: SeedAgentsOptions): Promise<void> {
   const { overwrite = false } = options || {};
   const pool = new Pool({
-    connectionString: process.env.DATABASE_URL || process.env.SANDBOX_DATABASE_URL,
+    connectionString: process.env.DATABASE_URL,
   });
 
   try {

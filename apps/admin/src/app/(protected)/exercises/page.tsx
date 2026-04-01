@@ -2,7 +2,6 @@
 
 import { useState, useCallback, useEffect, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
-import { useEnvironment } from '@/context/EnvironmentContext'
 import { AdminHeader } from '@/components/admin/AdminHeader'
 import { ExercisesFilters } from '@/components/admin/ExercisesFilters'
 import { ExercisesTable } from '@/components/admin/ExercisesTable'
@@ -20,7 +19,6 @@ import {
 function ExercisesPageContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
-  const { mode } = useEnvironment()
   const [exercises, setExercises] = useState<AdminExercise[]>([])
   const [types, setTypes] = useState<string[]>([])
   const [movements, setMovements] = useState<{ slug: string; name: string }[]>([])
@@ -108,7 +106,7 @@ function ExercisesPageContent() {
   // Fetch data when filters, page, sort, or environment mode changes
   useEffect(() => {
     fetchExercises(filters, currentPage, sort)
-  }, [fetchExercises, filters, currentPage, sort, mode])
+  }, [fetchExercises, filters, currentPage, sort])
 
   const handleFiltersChange = useCallback((newFilters: ExerciseFilters) => {
     setFilters(newFilters)

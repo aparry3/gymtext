@@ -9,7 +9,7 @@
  *   pnpm agent:get <agent-id>
  *   pnpm agent:list
  *
- * Requires DATABASE_URL (or SANDBOX_DATABASE_URL) to be set.
+ * Requires DATABASE_URL to be set.
  * Run: source .env.local before using.
  */
 

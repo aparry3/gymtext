@@ -2,7 +2,6 @@
 
 import { useState, useCallback, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { useEnvironment } from '@/context/EnvironmentContext';
 import { AdminHeader } from '@/components/admin/AdminHeader';
 import { MessagesFilters } from '@/components/admin/MessagesFilters';
 import { MessagesTable } from '@/components/admin/MessagesTable';
@@ -20,7 +19,6 @@ import type {
 
 function AdminMessagesPageContent() {
   const searchParams = useSearchParams();
-  const { mode } = useEnvironment();
   const [broadcastOpen, setBroadcastOpen] = useState(false);
   const [messages, setMessages] = useState<AdminMessageItem[]>([]);
   const [stats, setStats] = useState<MessageStats>({
@@ -92,7 +90,7 @@ function AdminMessagesPageContent() {
   // Fetch data when filters, page, or environment mode changes
   useEffect(() => {
     fetchMessages(filters, currentPage);
-  }, [fetchMessages, filters, currentPage, mode]);
+  }, [fetchMessages, filters, currentPage]);
 
   const handleFiltersChange = useCallback((newFilters: MessageFilters) => {
     setFilters(newFilters);
