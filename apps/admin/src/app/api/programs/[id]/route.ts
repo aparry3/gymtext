@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getAdminContext } from '@/lib/context';
-import type { SchedulingMode, ProgramCadence, BillingModel, LateJoinerPolicy } from '@/components/admin/types';
+import type { SchedulingMode, ProgramCadence, BillingModel, LateJoinerPolicy, SchedulingType } from '@/components/admin/types';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -88,7 +88,13 @@ export async function PATCH(request: Request, { params }: RouteParams) {
     const { id } = await params;
     const body = await request.json();
 
-    const { name, description, schedulingMode, cadence, lateJoinerPolicy, billingModel, isActive, isPublic } = body;
+    const {
+      name, description, schedulingMode, cadence, lateJoinerPolicy, billingModel, isActive, isPublic,
+      // Pricing fields
+      stripeProductId, stripePriceId, priceAmountCents, priceCurrency,
+      // Coach scheduling fields
+      schedulingEnabled, schedulingType, schedulingUrl, schedulingNotes,
+    } = body;
 
     // Validate schedulingMode if provided
     if (schedulingMode) {
@@ -145,6 +151,17 @@ export async function PATCH(request: Request, { params }: RouteParams) {
       );
     }
 
+    // Validate schedulingType if provided
+    if (schedulingType) {
+      const validTypes: SchedulingType[] = ['calendly', 'cal_com', 'custom_url'];
+      if (!validTypes.includes(schedulingType)) {
+        return NextResponse.json(
+          { success: false, message: 'schedulingType must be calendly, cal_com, or custom_url' },
+          { status: 400 }
+        );
+      }
+    }
+
     // Build update object with only provided fields
     const updates: Record<string, unknown> = {};
     if (name !== undefined) updates.name = name;
@@ -155,6 +172,16 @@ export async function PATCH(request: Request, { params }: RouteParams) {
     if (billingModel !== undefined) updates.billingModel = billingModel;
     if (isActive !== undefined) updates.isActive = isActive;
     if (isPublic !== undefined) updates.isPublic = isPublic;
+    // Pricing
+    if (stripeProductId !== undefined) updates.stripeProductId = stripeProductId;
+    if (stripePriceId !== undefined) updates.stripePriceId = stripePriceId;
+    if (priceAmountCents !== undefined) updates.priceAmountCents = priceAmountCents;
+    if (priceCurrency !== undefined) updates.priceCurrency = priceCurrency;
+    // Coach scheduling
+    if (schedulingEnabled !== undefined) updates.schedulingEnabled = schedulingEnabled;
+    if (schedulingType !== undefined) updates.schedulingType = schedulingType;
+    if (schedulingUrl !== undefined) updates.schedulingUrl = schedulingUrl;
+    if (schedulingNotes !== undefined) updates.schedulingNotes = schedulingNotes;
 
     const program = await services.program.update(id, updates);
 

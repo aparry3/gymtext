@@ -12,6 +12,7 @@ import {
   ProgramCadence,
   BillingModel,
   LateJoinerPolicy,
+  SchedulingType,
 } from '@/components/admin/types'
 import { EnrollmentsTable } from '@/components/admin/EnrollmentsTable'
 import { Card } from '@/components/ui/card'
@@ -73,6 +74,26 @@ export default function ProgramDetailPage() {
     lateJoinerPolicy: '' as LateJoinerPolicy | '',
   })
 
+  // Pricing editing state
+  const [isEditingPricing, setIsEditingPricing] = useState(false)
+  const [isSavingPricing, setIsSavingPricing] = useState(false)
+  const [pricingForm, setPricingForm] = useState({
+    priceAmountDollars: '',
+    stripePriceId: '',
+    stripeProductId: '',
+    priceCurrency: 'usd',
+  })
+
+  // Coach scheduling editing state
+  const [isEditingScheduling, setIsEditingScheduling] = useState(false)
+  const [isSavingScheduling, setIsSavingScheduling] = useState(false)
+  const [schedulingForm, setSchedulingForm] = useState({
+    schedulingEnabled: false,
+    schedulingType: '' as SchedulingType | '',
+    schedulingUrl: '',
+    schedulingNotes: '',
+  })
+
   // Version creation state
   const [isCreatingVersion, setIsCreatingVersion] = useState(false)
 
@@ -104,6 +125,18 @@ export default function ProgramDetailPage() {
         cadence: data.program.cadence,
         billingModel: data.program.billingModel || '',
         lateJoinerPolicy: data.program.lateJoinerPolicy || '',
+      })
+      setPricingForm({
+        priceAmountDollars: data.program.priceAmountCents ? (data.program.priceAmountCents / 100).toFixed(2) : '',
+        stripePriceId: data.program.stripePriceId || '',
+        stripeProductId: data.program.stripeProductId || '',
+        priceCurrency: data.program.priceCurrency || 'usd',
+      })
+      setSchedulingForm({
+        schedulingEnabled: data.program.schedulingEnabled || false,
+        schedulingType: data.program.schedulingType || '',
+        schedulingUrl: data.program.schedulingUrl || '',
+        schedulingNotes: data.program.schedulingNotes || '',
       })
     } catch (err) {
       setError('Failed to load program')
@@ -203,6 +236,100 @@ export default function ProgramDetailPage() {
       })
     }
     setIsEditingSettings(false)
+  }
+
+  const handleSavePricing = async () => {
+    if (!program) return
+
+    setIsSavingPricing(true)
+    setError(null)
+
+    try {
+      const amountCents = pricingForm.priceAmountDollars
+        ? Math.round(parseFloat(pricingForm.priceAmountDollars) * 100)
+        : null
+
+      const response = await fetch(`/api/programs/${program.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          priceAmountCents: amountCents,
+          stripePriceId: pricingForm.stripePriceId || null,
+          stripeProductId: pricingForm.stripeProductId || null,
+          priceCurrency: pricingForm.priceCurrency || 'usd',
+        }),
+      })
+
+      const result = await response.json()
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.message || 'Failed to update pricing')
+      }
+
+      await fetchProgram(program.id)
+      setIsEditingPricing(false)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to save pricing')
+    } finally {
+      setIsSavingPricing(false)
+    }
+  }
+
+  const handleCancelPricing = () => {
+    if (program) {
+      setPricingForm({
+        priceAmountDollars: program.priceAmountCents ? (program.priceAmountCents / 100).toFixed(2) : '',
+        stripePriceId: program.stripePriceId || '',
+        stripeProductId: program.stripeProductId || '',
+        priceCurrency: program.priceCurrency || 'usd',
+      })
+    }
+    setIsEditingPricing(false)
+  }
+
+  const handleSaveScheduling = async () => {
+    if (!program) return
+
+    setIsSavingScheduling(true)
+    setError(null)
+
+    try {
+      const response = await fetch(`/api/programs/${program.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          schedulingEnabled: schedulingForm.schedulingEnabled,
+          schedulingType: schedulingForm.schedulingType || null,
+          schedulingUrl: schedulingForm.schedulingUrl || null,
+          schedulingNotes: schedulingForm.schedulingNotes || null,
+        }),
+      })
+
+      const result = await response.json()
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.message || 'Failed to update scheduling')
+      }
+
+      await fetchProgram(program.id)
+      setIsEditingScheduling(false)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to save scheduling')
+    } finally {
+      setIsSavingScheduling(false)
+    }
+  }
+
+  const handleCancelScheduling = () => {
+    if (program) {
+      setSchedulingForm({
+        schedulingEnabled: program.schedulingEnabled || false,
+        schedulingType: program.schedulingType || '',
+        schedulingUrl: program.schedulingUrl || '',
+        schedulingNotes: program.schedulingNotes || '',
+      })
+    }
+    setIsEditingScheduling(false)
   }
 
   const handleCreateDraft = async () => {
@@ -309,6 +436,18 @@ export default function ProgramDetailPage() {
   const lateJoinerLabels: Record<string, string> = {
     start_from_beginning: 'Start From Beginning',
     join_current_week: 'Join Current Week',
+  }
+
+  const schedulingTypeLabels: Record<string, string> = {
+    calendly: 'Calendly',
+    cal_com: 'Cal.com',
+    custom_url: 'Custom URL',
+  }
+
+  const formatPrice = (cents: number | null, currency: string | null) => {
+    if (cents === null) return 'Not Set'
+    const dollars = (cents / 100).toFixed(2)
+    return `$${dollars} ${(currency || 'usd').toUpperCase()}`
   }
 
   const versionStatusColors: Record<string, string> = {
@@ -552,100 +691,318 @@ export default function ProgramDetailPage() {
 
           {/* Settings Tab */}
           <TabsContent value="settings" className="mt-4">
-            <Card className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="font-semibold">Program Settings</h3>
-                {!isEditingSettings ? (
-                  <Button variant="outline" size="sm" onClick={() => setIsEditingSettings(true)}>
-                    Edit Settings
-                  </Button>
+            <div className="space-y-6">
+              {/* Program Settings Card */}
+              <Card className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-semibold">Program Settings</h3>
+                  {!isEditingSettings ? (
+                    <Button variant="outline" size="sm" onClick={() => setIsEditingSettings(true)}>
+                      Edit Settings
+                    </Button>
+                  ) : (
+                    <div className="flex gap-2">
+                      <Button size="sm" onClick={handleSaveSettings} disabled={isSavingSettings}>
+                        {isSavingSettings ? 'Saving...' : 'Save'}
+                      </Button>
+                      <Button variant="outline" size="sm" onClick={handleCancelSettings} disabled={isSavingSettings}>
+                        Cancel
+                      </Button>
+                    </div>
+                  )}
+                </div>
+
+                {isEditingSettings ? (
+                  <div className="space-y-4">
+                    <div>
+                      <label className="text-sm font-medium text-gray-700 block mb-1">Scheduling Mode</label>
+                      <select
+                        value={settingsForm.schedulingMode}
+                        onChange={(e) => setSettingsForm(prev => ({ ...prev, schedulingMode: e.target.value as SchedulingMode }))}
+                        className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                      >
+                        <option value="rolling_start">Rolling Start</option>
+                        <option value="cohort">Cohort</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-700 block mb-1">Cadence</label>
+                      <select
+                        value={settingsForm.cadence}
+                        onChange={(e) => setSettingsForm(prev => ({ ...prev, cadence: e.target.value as ProgramCadence }))}
+                        className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                      >
+                        <option value="calendar_days">Calendar Days</option>
+                        <option value="training_days_only">Training Days Only</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-700 block mb-1">Billing Model</label>
+                      <select
+                        value={settingsForm.billingModel}
+                        onChange={(e) => setSettingsForm(prev => ({ ...prev, billingModel: e.target.value as BillingModel | '' }))}
+                        className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                      >
+                        <option value="">Not Set</option>
+                        <option value="subscription">Subscription</option>
+                        <option value="one_time">One Time</option>
+                        <option value="free">Free</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-700 block mb-1">Late Joiner Policy</label>
+                      <select
+                        value={settingsForm.lateJoinerPolicy}
+                        onChange={(e) => setSettingsForm(prev => ({ ...prev, lateJoinerPolicy: e.target.value as LateJoinerPolicy | '' }))}
+                        className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                      >
+                        <option value="">Not Set</option>
+                        <option value="start_from_beginning">Start From Beginning</option>
+                        <option value="join_current_week">Join Current Week</option>
+                      </select>
+                    </div>
+                  </div>
                 ) : (
-                  <div className="flex gap-2">
-                    <Button size="sm" onClick={handleSaveSettings} disabled={isSavingSettings}>
-                      {isSavingSettings ? 'Saving...' : 'Save'}
-                    </Button>
-                    <Button variant="outline" size="sm" onClick={handleCancelSettings} disabled={isSavingSettings}>
-                      Cancel
-                    </Button>
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center py-2 border-b">
+                      <span className="text-muted-foreground">Scheduling Mode</span>
+                      <span className="font-medium">{modeLabels[program.schedulingMode]}</span>
+                    </div>
+                    <div className="flex justify-between items-center py-2 border-b">
+                      <span className="text-muted-foreground">Cadence</span>
+                      <span className="font-medium">{cadenceLabels[program.cadence]}</span>
+                    </div>
+                    <div className="flex justify-between items-center py-2 border-b">
+                      <span className="text-muted-foreground">Billing Model</span>
+                      <span className="font-medium">
+                        {program.billingModel ? billingLabels[program.billingModel] : 'Not Set'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center py-2 border-b">
+                      <span className="text-muted-foreground">Late Joiner Policy</span>
+                      <span className="font-medium">
+                        {program.lateJoinerPolicy ? lateJoinerLabels[program.lateJoinerPolicy] : 'Not Set'}
+                      </span>
+                    </div>
                   </div>
                 )}
-              </div>
+              </Card>
 
-              {isEditingSettings ? (
-                <div className="space-y-4">
+              {/* Pricing Card */}
+              <Card className="p-6">
+                <div className="flex items-center justify-between mb-4">
                   <div>
-                    <label className="text-sm font-medium text-gray-700 block mb-1">Scheduling Mode</label>
-                    <select
-                      value={settingsForm.schedulingMode}
-                      onChange={(e) => setSettingsForm(prev => ({ ...prev, schedulingMode: e.target.value as SchedulingMode }))}
-                      className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                    >
-                      <option value="rolling_start">Rolling Start</option>
-                      <option value="cohort">Cohort</option>
-                    </select>
+                    <h3 className="font-semibold">Pricing</h3>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Set a program-specific price. Each program gets its own Stripe Product and Price.
+                    </p>
                   </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-700 block mb-1">Cadence</label>
-                    <select
-                      value={settingsForm.cadence}
-                      onChange={(e) => setSettingsForm(prev => ({ ...prev, cadence: e.target.value as ProgramCadence }))}
-                      className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                    >
-                      <option value="calendar_days">Calendar Days</option>
-                      <option value="training_days_only">Training Days Only</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-700 block mb-1">Billing Model</label>
-                    <select
-                      value={settingsForm.billingModel}
-                      onChange={(e) => setSettingsForm(prev => ({ ...prev, billingModel: e.target.value as BillingModel | '' }))}
-                      className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                    >
-                      <option value="">Not Set</option>
-                      <option value="subscription">Subscription</option>
-                      <option value="one_time">One Time</option>
-                      <option value="free">Free</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-700 block mb-1">Late Joiner Policy</label>
-                    <select
-                      value={settingsForm.lateJoinerPolicy}
-                      onChange={(e) => setSettingsForm(prev => ({ ...prev, lateJoinerPolicy: e.target.value as LateJoinerPolicy | '' }))}
-                      className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                    >
-                      <option value="">Not Set</option>
-                      <option value="start_from_beginning">Start From Beginning</option>
-                      <option value="join_current_week">Join Current Week</option>
-                    </select>
-                  </div>
+                  {!isEditingPricing ? (
+                    <Button variant="outline" size="sm" onClick={() => setIsEditingPricing(true)}>
+                      Edit Pricing
+                    </Button>
+                  ) : (
+                    <div className="flex gap-2">
+                      <Button size="sm" onClick={handleSavePricing} disabled={isSavingPricing}>
+                        {isSavingPricing ? 'Saving...' : 'Save'}
+                      </Button>
+                      <Button variant="outline" size="sm" onClick={handleCancelPricing} disabled={isSavingPricing}>
+                        Cancel
+                      </Button>
+                    </div>
+                  )}
                 </div>
-              ) : (
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center py-2 border-b">
-                    <span className="text-muted-foreground">Scheduling Mode</span>
-                    <span className="font-medium">{modeLabels[program.schedulingMode]}</span>
+
+                {isEditingPricing ? (
+                  <div className="space-y-4">
+                    <div>
+                      <label className="text-sm font-medium text-gray-700 block mb-1">Price (USD)</label>
+                      <div className="relative">
+                        <span className="absolute left-3 top-2 text-muted-foreground">$</span>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          placeholder="29.99"
+                          value={pricingForm.priceAmountDollars}
+                          onChange={(e) => setPricingForm(prev => ({ ...prev, priceAmountDollars: e.target.value }))}
+                          className="pl-7"
+                        />
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Display price shown in the admin UI. The actual charge comes from the Stripe Price ID.
+                      </p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-700 block mb-1">Stripe Product ID</label>
+                      <Input
+                        placeholder="prod_..."
+                        value={pricingForm.stripeProductId}
+                        onChange={(e) => setPricingForm(prev => ({ ...prev, stripeProductId: e.target.value }))}
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">
+                        The Stripe Product for this program. Create one in the Stripe Dashboard.
+                      </p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-700 block mb-1">Stripe Price ID</label>
+                      <Input
+                        placeholder="price_..."
+                        value={pricingForm.stripePriceId}
+                        onChange={(e) => setPricingForm(prev => ({ ...prev, stripePriceId: e.target.value }))}
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">
+                        The Stripe Price used in checkout sessions. This is what users are actually charged.
+                      </p>
+                    </div>
                   </div>
-                  <div className="flex justify-between items-center py-2 border-b">
-                    <span className="text-muted-foreground">Cadence</span>
-                    <span className="font-medium">{cadenceLabels[program.cadence]}</span>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center py-2 border-b">
+                      <span className="text-muted-foreground">Price</span>
+                      <span className="font-medium">
+                        {formatPrice(program.priceAmountCents, program.priceCurrency)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center py-2 border-b">
+                      <span className="text-muted-foreground">Stripe Product ID</span>
+                      <span className="font-medium font-mono text-sm">
+                        {program.stripeProductId || <span className="text-muted-foreground font-normal">Not Set</span>}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center py-2 border-b">
+                      <span className="text-muted-foreground">Stripe Price ID</span>
+                      <span className="font-medium font-mono text-sm">
+                        {program.stripePriceId || <span className="text-muted-foreground font-normal">Not Set</span>}
+                      </span>
+                    </div>
+                    {!program.stripePriceId && (
+                      <p className="text-sm text-amber-600">
+                        No Stripe Price set — this program will use the global default price at checkout.
+                      </p>
+                    )}
                   </div>
-                  <div className="flex justify-between items-center py-2 border-b">
-                    <span className="text-muted-foreground">Billing Model</span>
-                    <span className="font-medium">
-                      {program.billingModel ? billingLabels[program.billingModel] : 'Not Set'}
-                    </span>
+                )}
+              </Card>
+
+              {/* Coach Scheduling Card */}
+              <Card className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h3 className="font-semibold">Coach Scheduling</h3>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Let users book calls with their coach via Calendly, Cal.com, or a custom link.
+                    </p>
                   </div>
-                  <div className="flex justify-between items-center py-2 border-b">
-                    <span className="text-muted-foreground">Late Joiner Policy</span>
-                    <span className="font-medium">
-                      {program.lateJoinerPolicy ? lateJoinerLabels[program.lateJoinerPolicy] : 'Not Set'}
-                    </span>
-                  </div>
+                  {!isEditingScheduling ? (
+                    <Button variant="outline" size="sm" onClick={() => setIsEditingScheduling(true)}>
+                      Edit Scheduling
+                    </Button>
+                  ) : (
+                    <div className="flex gap-2">
+                      <Button size="sm" onClick={handleSaveScheduling} disabled={isSavingScheduling}>
+                        {isSavingScheduling ? 'Saving...' : 'Save'}
+                      </Button>
+                      <Button variant="outline" size="sm" onClick={handleCancelScheduling} disabled={isSavingScheduling}>
+                        Cancel
+                      </Button>
+                    </div>
+                  )}
                 </div>
-              )}
-            </Card>
+
+                {isEditingScheduling ? (
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        id="schedulingEnabled"
+                        checked={schedulingForm.schedulingEnabled}
+                        onChange={(e) => setSchedulingForm(prev => ({ ...prev, schedulingEnabled: e.target.checked }))}
+                        className="rounded"
+                      />
+                      <label htmlFor="schedulingEnabled" className="text-sm font-medium text-gray-700">
+                        Enable scheduling for this program
+                      </label>
+                    </div>
+                    {schedulingForm.schedulingEnabled && (
+                      <>
+                        <div>
+                          <label className="text-sm font-medium text-gray-700 block mb-1">Platform</label>
+                          <select
+                            value={schedulingForm.schedulingType}
+                            onChange={(e) => setSchedulingForm(prev => ({ ...prev, schedulingType: e.target.value as SchedulingType | '' }))}
+                            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                          >
+                            <option value="">Select a platform...</option>
+                            <option value="calendly">Calendly</option>
+                            <option value="cal_com">Cal.com</option>
+                            <option value="custom_url">Custom URL</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium text-gray-700 block mb-1">Booking URL</label>
+                          <Input
+                            type="url"
+                            placeholder="https://calendly.com/coach/30min"
+                            value={schedulingForm.schedulingUrl}
+                            onChange={(e) => setSchedulingForm(prev => ({ ...prev, schedulingUrl: e.target.value }))}
+                          />
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium text-gray-700 block mb-1">Notes (shown to users)</label>
+                          <textarea
+                            placeholder="Book a 30-minute intro call with your coach..."
+                            value={schedulingForm.schedulingNotes}
+                            onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setSchedulingForm(prev => ({ ...prev, schedulingNotes: e.target.value }))}
+                            className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                            rows={2}
+                          />
+                        </div>
+                      </>
+                    )}
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center py-2 border-b">
+                      <span className="text-muted-foreground">Enabled</span>
+                      <Badge variant={program.schedulingEnabled ? 'default' : 'secondary'}>
+                        {program.schedulingEnabled ? 'Yes' : 'No'}
+                      </Badge>
+                    </div>
+                    {program.schedulingEnabled && (
+                      <>
+                        <div className="flex justify-between items-center py-2 border-b">
+                          <span className="text-muted-foreground">Platform</span>
+                          <span className="font-medium">
+                            {program.schedulingType ? schedulingTypeLabels[program.schedulingType] : 'Not Set'}
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center py-2 border-b">
+                          <span className="text-muted-foreground">Booking URL</span>
+                          <span className="font-medium text-sm truncate max-w-[300px]">
+                            {program.schedulingUrl ? (
+                              <a href={program.schedulingUrl} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                                {program.schedulingUrl}
+                              </a>
+                            ) : (
+                              <span className="text-muted-foreground font-normal">Not Set</span>
+                            )}
+                          </span>
+                        </div>
+                        {program.schedulingNotes && (
+                          <div className="flex justify-between items-center py-2 border-b">
+                            <span className="text-muted-foreground">Notes</span>
+                            <span className="font-medium text-sm max-w-[300px] text-right">
+                              {program.schedulingNotes}
+                            </span>
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
+                )}
+              </Card>
+            </div>
           </TabsContent>
         </Tabs>
       </div>

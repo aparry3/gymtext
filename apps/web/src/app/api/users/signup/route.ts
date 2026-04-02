@@ -356,7 +356,30 @@ async function completeSignupFlow(
   console.log('[Signup] Creating Stripe checkout session');
   const { publicBaseUrl, baseUrl } = getUrlsConfig();
   const resolvedBaseUrl = publicBaseUrl || baseUrl;
-  const { priceId } = getStripeConfig();
+  const { priceId: globalPriceId } = getStripeConfig();
+
+  // Use program-specific price if available, otherwise fall back to global default
+  const programId = formData.programId as string | undefined;
+  let priceId = globalPriceId;
+  let checkoutMode: Stripe.Checkout.SessionCreateParams['mode'] = 'subscription';
+
+  if (programId) {
+    try {
+      const repos = getRepositories();
+      const program = await repos.program.findById(programId);
+      if (program?.stripePriceId) {
+        priceId = program.stripePriceId;
+        console.log(`[Signup] Using program-specific price: ${priceId} (program: ${program.name})`);
+      }
+      // Switch to one-time payment mode if billing model is one_time
+      if (program?.billingModel === 'one_time') {
+        checkoutMode = 'payment';
+        console.log(`[Signup] Using one-time payment mode for program: ${program.name}`);
+      }
+    } catch (err) {
+      console.error(`[Signup] Error fetching program ${programId} for pricing, using global default:`, err);
+    }
+  }
 
   // Handle referral code if present
   const referralCode = formData.referralCode as string | undefined;
@@ -401,7 +424,7 @@ async function completeSignupFlow(
   // Build checkout session options
   const checkoutOptions: Stripe.Checkout.SessionCreateParams = {
     customer: stripeCustomerId,
-    mode: 'subscription',
+    mode: checkoutMode,
     payment_method_types: ['card'],
     line_items: [
       {
@@ -414,6 +437,7 @@ async function completeSignupFlow(
     metadata: {
       userId,
       referralCode: validReferralCode || '',
+      programId: programId || '',
     },
     client_reference_id: userId,
   };

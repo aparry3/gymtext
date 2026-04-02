@@ -10,6 +10,8 @@ export type Cadence = 'calendar_days' | 'training_days_only';
 export type LateJoinerPolicy = 'start_from_beginning' | 'join_current_week';
 export type BillingModel = 'subscription' | 'one_time' | 'free';
 
+export type SchedulingType = 'calendly' | 'cal_com' | 'custom_url';
+
 export interface Program {
   id: string;
   ownerId: string;
@@ -28,6 +30,16 @@ export interface Program {
   coverImageId: string | null;
   isActive: boolean;
   isPublic: boolean;
+  // Pricing
+  stripeProductId: string | null;
+  stripePriceId: string | null;
+  priceAmountCents: number | null;
+  priceCurrency: string | null;
+  // Coach scheduling
+  schedulingEnabled: boolean;
+  schedulingType: SchedulingType | null;
+  schedulingUrl: string | null;
+  schedulingNotes: string | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -49,6 +61,16 @@ export class ProgramModel {
       coverImageId: row.coverImageId ?? null,
       isActive: row.isActive,
       isPublic: row.isPublic,
+      // Pricing
+      stripeProductId: row.stripeProductId ?? null,
+      stripePriceId: row.stripePriceId ?? null,
+      priceAmountCents: row.priceAmountCents ?? null,
+      priceCurrency: row.priceCurrency ?? null,
+      // Coach scheduling
+      schedulingEnabled: row.schedulingEnabled,
+      schedulingType: row.schedulingType as SchedulingType | null,
+      schedulingUrl: row.schedulingUrl ?? null,
+      schedulingNotes: row.schedulingNotes ?? null,
       createdAt: new Date(row.createdAt as unknown as string | number | Date),
       updatedAt: new Date(row.updatedAt as unknown as string | number | Date),
     };
