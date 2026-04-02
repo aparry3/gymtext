@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getAdminContext } from '@/lib/context';
-import type { SchedulingMode, ProgramCadence } from '@/components/admin/types';
+import type { SchedulingMode, ProgramCadence, BillingModel, LateJoinerPolicy } from '@/components/admin/types';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -28,9 +28,10 @@ export async function GET(request: Request, { params }: RouteParams) {
       );
     }
 
-    // Get enrollment stats
+    // Get enrollment stats and versions
     const enrollmentCount = await services.enrollment.countActiveEnrollments(program.id);
     const versionCount = await services.programVersion.countByProgramId(program.id);
+    const versions = await services.programVersion.getByProgramId(program.id);
 
     // Get enrollments with client info
     const enrollments = await services.enrollment.listByProgram(program.id);
@@ -64,6 +65,7 @@ export async function GET(request: Request, { params }: RouteParams) {
           ownerType: owner.ownerType,
           avatarUrl: owner.avatarUrl,
         },
+        versions,
         enrollments: enrichedEnrollments,
       }
     });
@@ -86,7 +88,7 @@ export async function PATCH(request: Request, { params }: RouteParams) {
     const { id } = await params;
     const body = await request.json();
 
-    const { name, description, schedulingMode, cadence, isActive, isPublic } = body;
+    const { name, description, schedulingMode, cadence, lateJoinerPolicy, billingModel, isActive, isPublic } = body;
 
     // Validate schedulingMode if provided
     if (schedulingMode) {
@@ -110,6 +112,28 @@ export async function PATCH(request: Request, { params }: RouteParams) {
       }
     }
 
+    // Validate lateJoinerPolicy if provided
+    if (lateJoinerPolicy) {
+      const validPolicies: LateJoinerPolicy[] = ['start_from_beginning', 'join_current_week'];
+      if (!validPolicies.includes(lateJoinerPolicy)) {
+        return NextResponse.json(
+          { success: false, message: 'lateJoinerPolicy must be start_from_beginning or join_current_week' },
+          { status: 400 }
+        );
+      }
+    }
+
+    // Validate billingModel if provided
+    if (billingModel) {
+      const validModels: BillingModel[] = ['subscription', 'one_time', 'free'];
+      if (!validModels.includes(billingModel)) {
+        return NextResponse.json(
+          { success: false, message: 'billingModel must be subscription, one_time, or free' },
+          { status: 400 }
+        );
+      }
+    }
+
     const { services } = await getAdminContext();
 
     // Verify program exists
@@ -127,6 +151,8 @@ export async function PATCH(request: Request, { params }: RouteParams) {
     if (description !== undefined) updates.description = description;
     if (schedulingMode !== undefined) updates.schedulingMode = schedulingMode;
     if (cadence !== undefined) updates.cadence = cadence;
+    if (lateJoinerPolicy !== undefined) updates.lateJoinerPolicy = lateJoinerPolicy;
+    if (billingModel !== undefined) updates.billingModel = billingModel;
     if (isActive !== undefined) updates.isActive = isActive;
     if (isPublic !== undefined) updates.isPublic = isPublic;
 

@@ -2,7 +2,17 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { AdminProgram, AdminEnrollment, OwnerType, EnrollmentSort } from '@/components/admin/types'
+import {
+  AdminProgram,
+  AdminEnrollment,
+  AdminProgramVersion,
+  OwnerType,
+  EnrollmentSort,
+  SchedulingMode,
+  ProgramCadence,
+  BillingModel,
+  LateJoinerPolicy,
+} from '@/components/admin/types'
 import { EnrollmentsTable } from '@/components/admin/EnrollmentsTable'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -39,6 +49,7 @@ export default function ProgramDetailPage() {
   const { id } = useParams()
   const router = useRouter()
   const [program, setProgram] = useState<ProgramDetail | null>(null)
+  const [versions, setVersions] = useState<AdminProgramVersion[]>([])
   const [enrollments, setEnrollments] = useState<AdminEnrollment[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -51,6 +62,19 @@ export default function ProgramDetailPage() {
     isActive: true,
     isPublic: false,
   })
+
+  // Settings editing state
+  const [isEditingSettings, setIsEditingSettings] = useState(false)
+  const [isSavingSettings, setIsSavingSettings] = useState(false)
+  const [settingsForm, setSettingsForm] = useState({
+    schedulingMode: 'rolling_start' as SchedulingMode,
+    cadence: 'calendar_days' as ProgramCadence,
+    billingModel: '' as BillingModel | '',
+    lateJoinerPolicy: '' as LateJoinerPolicy | '',
+  })
+
+  // Version creation state
+  const [isCreatingVersion, setIsCreatingVersion] = useState(false)
 
   // Fetch program data
   const fetchProgram = useCallback(async (programId: string) => {
@@ -67,12 +91,19 @@ export default function ProgramDetailPage() {
 
       const data = result.data
       setProgram({ ...data.program, owner: data.owner })
+      setVersions(data.versions || [])
       setEnrollments(data.enrollments)
       setEditForm({
         name: data.program.name,
         description: data.program.description || '',
         isActive: data.program.isActive,
         isPublic: data.program.isPublic,
+      })
+      setSettingsForm({
+        schedulingMode: data.program.schedulingMode,
+        cadence: data.program.cadence,
+        billingModel: data.program.billingModel || '',
+        lateJoinerPolicy: data.program.lateJoinerPolicy || '',
       })
     } catch (err) {
       setError('Failed to load program')
@@ -127,6 +158,78 @@ export default function ProgramDetailPage() {
       })
     }
     setIsEditing(false)
+  }
+
+  const handleSaveSettings = async () => {
+    if (!program) return
+
+    setIsSavingSettings(true)
+    setError(null)
+
+    try {
+      const response = await fetch(`/api/programs/${program.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          schedulingMode: settingsForm.schedulingMode,
+          cadence: settingsForm.cadence,
+          billingModel: settingsForm.billingModel || null,
+          lateJoinerPolicy: settingsForm.lateJoinerPolicy || null,
+        }),
+      })
+
+      const result = await response.json()
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.message || 'Failed to update settings')
+      }
+
+      await fetchProgram(program.id)
+      setIsEditingSettings(false)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to save settings')
+    } finally {
+      setIsSavingSettings(false)
+    }
+  }
+
+  const handleCancelSettings = () => {
+    if (program) {
+      setSettingsForm({
+        schedulingMode: program.schedulingMode,
+        cadence: program.cadence,
+        billingModel: program.billingModel || '',
+        lateJoinerPolicy: program.lateJoinerPolicy || '',
+      })
+    }
+    setIsEditingSettings(false)
+  }
+
+  const handleCreateDraft = async () => {
+    if (!program) return
+
+    setIsCreatingVersion(true)
+    setError(null)
+
+    try {
+      const response = await fetch(`/api/programs/${program.id}/versions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),
+      })
+
+      const result = await response.json()
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.message || 'Failed to create draft')
+      }
+
+      await fetchProgram(program.id)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to create draft')
+    } finally {
+      setIsCreatingVersion(false)
+    }
   }
 
   const handleEnrollmentAction = async (enrollmentId: string, action: 'pause' | 'resume' | 'cancel' | 'complete') => {
@@ -195,6 +298,23 @@ export default function ProgramDetailPage() {
   const cadenceLabels: Record<string, string> = {
     calendar_days: 'Calendar Days',
     training_days_only: 'Training Days Only',
+  }
+
+  const billingLabels: Record<string, string> = {
+    subscription: 'Subscription',
+    one_time: 'One Time',
+    free: 'Free',
+  }
+
+  const lateJoinerLabels: Record<string, string> = {
+    start_from_beginning: 'Start From Beginning',
+    join_current_week: 'Join Current Week',
+  }
+
+  const versionStatusColors: Record<string, string> = {
+    draft: 'bg-yellow-100 text-yellow-800',
+    published: 'bg-green-100 text-green-800',
+    archived: 'bg-gray-100 text-gray-800',
   }
 
   return (
@@ -279,6 +399,11 @@ export default function ProgramDetailPage() {
                   {program.isPublic && (
                     <Badge variant="outline">Public</Badge>
                   )}
+                  {!program.publishedVersionId && (
+                    <Badge variant="outline" className="border-amber-500 text-amber-600">
+                      Unpublished
+                    </Badge>
+                  )}
                 </div>
                 {program.description && (
                   <p className="text-muted-foreground">{program.description}</p>
@@ -355,10 +480,67 @@ export default function ProgramDetailPage() {
         </div>
 
         {/* Tabs */}
-        <Tabs defaultValue="enrollments">
+        <Tabs defaultValue="versions">
           <TabsList>
+            <TabsTrigger value="versions">Versions ({versions.length})</TabsTrigger>
             <TabsTrigger value="enrollments">Enrollments ({enrollments.length})</TabsTrigger>
+            <TabsTrigger value="settings">Settings</TabsTrigger>
           </TabsList>
+
+          {/* Versions Tab */}
+          <TabsContent value="versions" className="mt-4">
+            <div className="space-y-4">
+              <div className="flex justify-end">
+                <Button
+                  onClick={handleCreateDraft}
+                  disabled={isCreatingVersion}
+                >
+                  {isCreatingVersion ? 'Creating...' : 'Create Draft'}
+                </Button>
+              </div>
+
+              {versions.length === 0 ? (
+                <Card className="p-8 text-center">
+                  <p className="text-muted-foreground">No versions yet. Create a draft to get started.</p>
+                </Card>
+              ) : (
+                <div className="space-y-2">
+                  {versions.map((version) => (
+                    <Card
+                      key={version.id}
+                      className="p-4 cursor-pointer hover:bg-muted/50 transition-colors"
+                      onClick={() => router.push(`/programs/${program.id}/versions/${version.id}`)}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <span className="font-medium">v{version.versionNumber}</span>
+                          <Badge className={`${versionStatusColors[version.status]} border-0 text-xs`}>
+                            {version.status}
+                          </Badge>
+                          {version.id === program.publishedVersionId && (
+                            <Badge variant="outline" className="border-green-500 text-green-600 text-xs">
+                              Current
+                            </Badge>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                          {version.publishedAt && (
+                            <span>Published {formatRelative(version.publishedAt)}</span>
+                          )}
+                          <span>Created {formatRelative(version.createdAt)}</span>
+                          <Button variant="ghost" size="sm">
+                            View
+                          </Button>
+                        </div>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </div>
+          </TabsContent>
+
+          {/* Enrollments Tab */}
           <TabsContent value="enrollments" className="mt-4">
             <EnrollmentsTable
               enrollments={enrollments}
@@ -366,6 +548,104 @@ export default function ProgramDetailPage() {
               onSortChange={setEnrollmentSort}
               onAction={handleEnrollmentAction}
             />
+          </TabsContent>
+
+          {/* Settings Tab */}
+          <TabsContent value="settings" className="mt-4">
+            <Card className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-semibold">Program Settings</h3>
+                {!isEditingSettings ? (
+                  <Button variant="outline" size="sm" onClick={() => setIsEditingSettings(true)}>
+                    Edit Settings
+                  </Button>
+                ) : (
+                  <div className="flex gap-2">
+                    <Button size="sm" onClick={handleSaveSettings} disabled={isSavingSettings}>
+                      {isSavingSettings ? 'Saving...' : 'Save'}
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={handleCancelSettings} disabled={isSavingSettings}>
+                      Cancel
+                    </Button>
+                  </div>
+                )}
+              </div>
+
+              {isEditingSettings ? (
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 block mb-1">Scheduling Mode</label>
+                    <select
+                      value={settingsForm.schedulingMode}
+                      onChange={(e) => setSettingsForm(prev => ({ ...prev, schedulingMode: e.target.value as SchedulingMode }))}
+                      className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    >
+                      <option value="rolling_start">Rolling Start</option>
+                      <option value="cohort">Cohort</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 block mb-1">Cadence</label>
+                    <select
+                      value={settingsForm.cadence}
+                      onChange={(e) => setSettingsForm(prev => ({ ...prev, cadence: e.target.value as ProgramCadence }))}
+                      className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    >
+                      <option value="calendar_days">Calendar Days</option>
+                      <option value="training_days_only">Training Days Only</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 block mb-1">Billing Model</label>
+                    <select
+                      value={settingsForm.billingModel}
+                      onChange={(e) => setSettingsForm(prev => ({ ...prev, billingModel: e.target.value as BillingModel | '' }))}
+                      className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    >
+                      <option value="">Not Set</option>
+                      <option value="subscription">Subscription</option>
+                      <option value="one_time">One Time</option>
+                      <option value="free">Free</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 block mb-1">Late Joiner Policy</label>
+                    <select
+                      value={settingsForm.lateJoinerPolicy}
+                      onChange={(e) => setSettingsForm(prev => ({ ...prev, lateJoinerPolicy: e.target.value as LateJoinerPolicy | '' }))}
+                      className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    >
+                      <option value="">Not Set</option>
+                      <option value="start_from_beginning">Start From Beginning</option>
+                      <option value="join_current_week">Join Current Week</option>
+                    </select>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center py-2 border-b">
+                    <span className="text-muted-foreground">Scheduling Mode</span>
+                    <span className="font-medium">{modeLabels[program.schedulingMode]}</span>
+                  </div>
+                  <div className="flex justify-between items-center py-2 border-b">
+                    <span className="text-muted-foreground">Cadence</span>
+                    <span className="font-medium">{cadenceLabels[program.cadence]}</span>
+                  </div>
+                  <div className="flex justify-between items-center py-2 border-b">
+                    <span className="text-muted-foreground">Billing Model</span>
+                    <span className="font-medium">
+                      {program.billingModel ? billingLabels[program.billingModel] : 'Not Set'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center py-2 border-b">
+                    <span className="text-muted-foreground">Late Joiner Policy</span>
+                    <span className="font-medium">
+                      {program.lateJoinerPolicy ? lateJoinerLabels[program.lateJoinerPolicy] : 'Not Set'}
+                    </span>
+                  </div>
+                </div>
+              )}
+            </Card>
           </TabsContent>
         </Tabs>
       </div>
