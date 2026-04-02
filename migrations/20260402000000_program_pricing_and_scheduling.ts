@@ -4,9 +4,8 @@ import { Migration, sql } from 'kysely';
  * PROGRAM PRICING & SCHEDULING
  *
  * Adds Stripe pricing columns to programs table so each program can have
- * its own Stripe Product and Price. Also wires up the existing scheduling
- * columns (added in 20260323) to the domain model — no schema changes
- * needed for scheduling since the columns already exist.
+ * its own Stripe Product and Price. Also drops the scheduling_type column
+ * (simplified to just URL + notes).
  *
  * Pricing columns:
  * - stripe_product_id: The Stripe Product ID for this program
@@ -30,16 +29,21 @@ export const up: Migration = async (db) => {
   await sql`ALTER TABLE programs ADD COLUMN IF NOT EXISTS price_currency TEXT DEFAULT 'usd'`.execute(db);
   console.log('  ✓ programs.price_currency added');
 
-  console.log('Done — pricing columns added to programs.');
+  // Drop scheduling_type — simplified to just URL + notes
+  await sql`ALTER TABLE programs DROP COLUMN IF EXISTS scheduling_type`.execute(db);
+  console.log('  ✓ programs.scheduling_type dropped');
+
+  console.log('Done — pricing columns added, scheduling_type dropped.');
 };
 
 export const down: Migration = async (db) => {
-  console.log('Removing pricing columns from programs table...');
+  console.log('Reverting program pricing & scheduling changes...');
 
   await sql`ALTER TABLE programs DROP COLUMN IF EXISTS stripe_product_id`.execute(db);
   await sql`ALTER TABLE programs DROP COLUMN IF EXISTS stripe_price_id`.execute(db);
   await sql`ALTER TABLE programs DROP COLUMN IF EXISTS price_amount_cents`.execute(db);
   await sql`ALTER TABLE programs DROP COLUMN IF EXISTS price_currency`.execute(db);
+  await sql`ALTER TABLE programs ADD COLUMN scheduling_type TEXT`.execute(db);
 
-  console.log('Done — pricing columns removed from programs.');
+  console.log('Done — pricing columns removed, scheduling_type restored.');
 };
