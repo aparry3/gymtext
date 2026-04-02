@@ -20,21 +20,106 @@ import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Input } from '@/components/ui/input'
+import { Switch } from '@/components/ui/switch'
 import { formatRelative } from '@/shared/utils/date'
-import {
-  Breadcrumb,
-  BreadcrumbList,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbSeparator,
-  BreadcrumbPage
-} from '@/components/ui/breadcrumb'
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
 } from '@/components/ui/tabs'
+
+// ─── Icons (inline SVGs to avoid extra deps) ────────────────────────────
+
+function TrendingUpIcon({ className = '' }: { className?: string }) {
+  return (
+    <svg className={className} width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" /><polyline points="17 6 23 6 23 12" />
+    </svg>
+  )
+}
+
+function UsersIcon({ className = '' }: { className?: string }) {
+  return (
+    <svg className={className} width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" />
+    </svg>
+  )
+}
+
+function SettingsIcon({ className = '' }: { className?: string }) {
+  return (
+    <svg className={className} width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+    </svg>
+  )
+}
+
+function DollarIcon({ className = '' }: { className?: string }) {
+  return (
+    <svg className={className} width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="1" y="4" width="22" height="16" rx="2" ry="2" /><line x1="1" y1="10" x2="23" y2="10" />
+    </svg>
+  )
+}
+
+function CalendarIcon({ className = '' }: { className?: string }) {
+  return (
+    <svg className={className} width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" />
+    </svg>
+  )
+}
+
+function LinkIcon({ className = '' }: { className?: string }) {
+  return (
+    <svg className={className} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" /><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+    </svg>
+  )
+}
+
+function CheckCircleIcon({ className = '' }: { className?: string }) {
+  return (
+    <svg className={className} width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
+    </svg>
+  )
+}
+
+function ExternalLinkIcon({ className = '' }: { className?: string }) {
+  return (
+    <svg className={className} width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" /><polyline points="15 3 21 3 21 9" /><line x1="10" y1="14" x2="21" y2="3" />
+    </svg>
+  )
+}
+
+function SaveIcon({ className = '' }: { className?: string }) {
+  return (
+    <svg className={className} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" /><polyline points="17 21 17 13 7 13 7 21" /><polyline points="7 3 7 8 15 8" />
+    </svg>
+  )
+}
+
+function EyeIcon({ className = '' }: { className?: string }) {
+  return (
+    <svg className={className} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" />
+    </svg>
+  )
+}
+
+function GripVerticalIcon({ className = '' }: { className?: string }) {
+  return (
+    <svg className={className} width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+      <circle cx="9" cy="6" r="1.5" /><circle cx="15" cy="6" r="1.5" /><circle cx="9" cy="12" r="1.5" /><circle cx="15" cy="12" r="1.5" /><circle cx="9" cy="18" r="1.5" /><circle cx="15" cy="18" r="1.5" />
+    </svg>
+  )
+}
+
+// ─── Types ────────────────────────────────────────────────────────────
 
 interface ProgramDetail extends AdminProgram {
   owner: {
@@ -45,6 +130,8 @@ interface ProgramDetail extends AdminProgram {
   }
 }
 
+// ─── Main Component ──────────────────────────────────────────────────
+
 export default function ProgramDetailPage() {
   const { id } = useParams()
   const router = useRouter()
@@ -53,9 +140,11 @@ export default function ProgramDetailPage() {
   const [enrollments, setEnrollments] = useState<AdminEnrollment[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [isEditing, setIsEditing] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [enrollmentSort, setEnrollmentSort] = useState<EnrollmentSort>({ field: 'enrolledAt', direction: 'desc' })
+  const [activeTab, setActiveTab] = useState('overview')
+
+  // Unified form state
   const [editForm, setEditForm] = useState({
     name: '',
     description: '',
@@ -63,9 +152,6 @@ export default function ProgramDetailPage() {
     isPublic: false,
   })
 
-  // Settings editing state
-  const [isEditingSettings, setIsEditingSettings] = useState(false)
-  const [isSavingSettings, setIsSavingSettings] = useState(false)
   const [settingsForm, setSettingsForm] = useState({
     schedulingMode: 'rolling_start' as SchedulingMode,
     cadence: 'calendar_days' as ProgramCadence,
@@ -73,27 +159,21 @@ export default function ProgramDetailPage() {
     lateJoinerPolicy: '' as LateJoinerPolicy | '',
   })
 
-  // Pricing editing state
-  const [isEditingPricing, setIsEditingPricing] = useState(false)
-  const [isSavingPricing, setIsSavingPricing] = useState(false)
   const [pricingForm, setPricingForm] = useState({
     priceAmountDollars: '',
     priceCurrency: 'usd',
   })
 
-  // Coach scheduling editing state
-  const [isEditingScheduling, setIsEditingScheduling] = useState(false)
-  const [isSavingScheduling, setIsSavingScheduling] = useState(false)
   const [schedulingForm, setSchedulingForm] = useState({
     schedulingEnabled: false,
     schedulingUrl: '',
     schedulingNotes: '',
   })
 
-  // Version creation state
   const [isCreatingVersion, setIsCreatingVersion] = useState(false)
 
-  // Fetch program data
+  // ─── Data fetching ──────────────────────────────────────────────
+
   const fetchProgram = useCallback(async (programId: string) => {
     setIsLoading(true)
     setError(null)
@@ -123,7 +203,7 @@ export default function ProgramDetailPage() {
         lateJoinerPolicy: data.program.lateJoinerPolicy || '',
       })
       setPricingForm({
-        priceAmountDollars: data.program.priceAmountCents ? (data.program.priceAmountCents / 100).toFixed(2) : '',
+        priceAmountDollars: data.program.priceAmountCents ? (data.program.priceAmountCents / 100).toFixed(0) : '',
         priceCurrency: data.program.priceCurrency || 'usd',
       })
       setSchedulingForm({
@@ -145,96 +225,11 @@ export default function ProgramDetailPage() {
     }
   }, [id, fetchProgram])
 
-  const handleSave = async () => {
-    if (!program) return
+  // ─── Save handlers ──────────────────────────────────────────────
 
+  const handleUpdateProgram = async () => {
+    if (!program) return
     setIsSaving(true)
-    setError(null)
-
-    try {
-      const response = await fetch(`/api/programs/${program.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(editForm),
-      })
-
-      const result = await response.json()
-
-      if (!response.ok || !result.success) {
-        throw new Error(result.message || 'Failed to update program')
-      }
-
-      // Refresh data
-      await fetchProgram(program.id)
-      setIsEditing(false)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to save changes')
-    } finally {
-      setIsSaving(false)
-    }
-  }
-
-  const handleCancel = () => {
-    if (program) {
-      setEditForm({
-        name: program.name,
-        description: program.description || '',
-        isActive: program.isActive,
-        isPublic: program.isPublic,
-      })
-    }
-    setIsEditing(false)
-  }
-
-  const handleSaveSettings = async () => {
-    if (!program) return
-
-    setIsSavingSettings(true)
-    setError(null)
-
-    try {
-      const response = await fetch(`/api/programs/${program.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          schedulingMode: settingsForm.schedulingMode,
-          cadence: settingsForm.cadence,
-          billingModel: settingsForm.billingModel || null,
-          lateJoinerPolicy: settingsForm.lateJoinerPolicy || null,
-        }),
-      })
-
-      const result = await response.json()
-
-      if (!response.ok || !result.success) {
-        throw new Error(result.message || 'Failed to update settings')
-      }
-
-      await fetchProgram(program.id)
-      setIsEditingSettings(false)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to save settings')
-    } finally {
-      setIsSavingSettings(false)
-    }
-  }
-
-  const handleCancelSettings = () => {
-    if (program) {
-      setSettingsForm({
-        schedulingMode: program.schedulingMode,
-        cadence: program.cadence,
-        billingModel: program.billingModel || '',
-        lateJoinerPolicy: program.lateJoinerPolicy || '',
-      })
-    }
-    setIsEditingSettings(false)
-  }
-
-  const handleSavePricing = async () => {
-    if (!program) return
-
-    setIsSavingPricing(true)
     setError(null)
 
     try {
@@ -246,47 +241,13 @@ export default function ProgramDetailPage() {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          ...editForm,
+          schedulingMode: settingsForm.schedulingMode,
+          cadence: settingsForm.cadence,
+          billingModel: settingsForm.billingModel || null,
+          lateJoinerPolicy: settingsForm.lateJoinerPolicy || null,
           priceAmountCents: amountCents,
           priceCurrency: pricingForm.priceCurrency || 'usd',
-        }),
-      })
-
-      const result = await response.json()
-
-      if (!response.ok || !result.success) {
-        throw new Error(result.message || 'Failed to update pricing')
-      }
-
-      await fetchProgram(program.id)
-      setIsEditingPricing(false)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to save pricing')
-    } finally {
-      setIsSavingPricing(false)
-    }
-  }
-
-  const handleCancelPricing = () => {
-    if (program) {
-      setPricingForm({
-        priceAmountDollars: program.priceAmountCents ? (program.priceAmountCents / 100).toFixed(2) : '',
-        priceCurrency: program.priceCurrency || 'usd',
-      })
-    }
-    setIsEditingPricing(false)
-  }
-
-  const handleSaveScheduling = async () => {
-    if (!program) return
-
-    setIsSavingScheduling(true)
-    setError(null)
-
-    try {
-      const response = await fetch(`/api/programs/${program.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
           schedulingEnabled: schedulingForm.schedulingEnabled,
           schedulingUrl: schedulingForm.schedulingUrl || null,
           schedulingNotes: schedulingForm.schedulingNotes || null,
@@ -296,32 +257,19 @@ export default function ProgramDetailPage() {
       const result = await response.json()
 
       if (!response.ok || !result.success) {
-        throw new Error(result.message || 'Failed to update scheduling')
+        throw new Error(result.message || 'Failed to update program')
       }
 
       await fetchProgram(program.id)
-      setIsEditingScheduling(false)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to save scheduling')
+      setError(err instanceof Error ? err.message : 'Failed to save changes')
     } finally {
-      setIsSavingScheduling(false)
+      setIsSaving(false)
     }
-  }
-
-  const handleCancelScheduling = () => {
-    if (program) {
-      setSchedulingForm({
-        schedulingEnabled: program.schedulingEnabled || false,
-        schedulingUrl: program.schedulingUrl || '',
-        schedulingNotes: program.schedulingNotes || '',
-      })
-    }
-    setIsEditingScheduling(false)
   }
 
   const handleCreateDraft = async () => {
     if (!program) return
-
     setIsCreatingVersion(true)
     setError(null)
 
@@ -360,7 +308,6 @@ export default function ProgramDetailPage() {
         throw new Error(result.message || `Failed to ${action} enrollment`)
       }
 
-      // Refresh program data to get updated enrollments
       if (program) {
         await fetchProgram(program.id)
       }
@@ -369,14 +316,38 @@ export default function ProgramDetailPage() {
     }
   }
 
-  if (isLoading) {
-    return <LoadingSkeleton />
+  // ─── Labels ─────────────────────────────────────────────────────
+
+  const modeLabels: Record<string, string> = {
+    rolling_start: 'Rolling Start',
+    cohort: 'Cohort',
   }
+
+  const cadenceLabels: Record<string, string> = {
+    calendar_days: 'Calendar Days',
+    training_days_only: 'Training Days Only',
+  }
+
+  const billingLabels: Record<string, string> = {
+    subscription: 'Subscription-based',
+    one_time: 'One Time',
+    free: 'Free',
+  }
+
+  const versionStatusColors: Record<string, string> = {
+    draft: 'bg-yellow-100 text-yellow-800',
+    published: 'bg-green-100 text-green-800',
+    archived: 'bg-gray-100 text-gray-800',
+  }
+
+  // ─── Render ─────────────────────────────────────────────────────
+
+  if (isLoading) return <LoadingSkeleton />
 
   if (error && !program) {
     return (
-      <div className="container mx-auto px-4 py-6 max-w-4xl">
-        <Card className="border-destructive/20 bg-destructive/5 p-6">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
+        <Card className="border-destructive/20 bg-destructive/5 p-6 max-w-md w-full">
           <div className="text-center space-y-4">
             <p className="text-destructive">{error}</p>
             <Button variant="outline" onClick={() => router.push('/programs')}>
@@ -397,230 +368,317 @@ export default function ProgramDetailPage() {
     .toUpperCase()
     .slice(0, 2)
 
-  const ownerTypeColors: Record<OwnerType, string> = {
-    coach: 'bg-blue-100 text-blue-800',
-    trainer: 'bg-green-100 text-green-800',
-    influencer: 'bg-orange-100 text-orange-800',
-    admin: 'bg-purple-100 text-purple-800',
-  }
+  const priceDisplay = program.priceAmountCents
+    ? `$${(program.priceAmountCents / 100).toFixed(0)}`
+    : '$0'
 
-  const modeLabels: Record<string, string> = {
-    rolling_start: 'Rolling Start',
-    cohort: 'Cohort',
-  }
-
-  const cadenceLabels: Record<string, string> = {
-    calendar_days: 'Calendar Days',
-    training_days_only: 'Training Days Only',
-  }
-
-  const billingLabels: Record<string, string> = {
-    subscription: 'Subscription',
-    one_time: 'One Time',
-    free: 'Free',
-  }
-
-  const lateJoinerLabels: Record<string, string> = {
-    start_from_beginning: 'Start From Beginning',
-    join_current_week: 'Join Current Week',
-  }
-
-  const formatPrice = (cents: number | null, currency: string | null) => {
-    if (cents === null) return 'Not Set'
-    const dollars = (cents / 100).toFixed(2)
-    return `$${dollars} ${(currency || 'usd').toUpperCase()}`
-  }
-
-  const versionStatusColors: Record<string, string> = {
-    draft: 'bg-yellow-100 text-yellow-800',
-    published: 'bg-green-100 text-green-800',
-    archived: 'bg-gray-100 text-gray-800',
-  }
+  const hasStripe = !!(program.stripeProductId && program.stripePriceId)
 
   return (
-    <div className="container mx-auto px-4 py-6 max-w-4xl">
-      <div className="space-y-6">
-        {/* Breadcrumb */}
-        <Breadcrumb>
-          <BreadcrumbList>
-            <BreadcrumbItem>
-              <BreadcrumbLink href="/programs">Programs</BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbPage>{program.name}</BreadcrumbPage>
-            </BreadcrumbItem>
-          </BreadcrumbList>
-        </Breadcrumb>
+    <div className="min-h-screen bg-gray-50">
+      {/* ── Page Header ─────────────────────────────────────────── */}
+      <div className="px-8 pt-8 pb-0">
+        {/* Title Row */}
+        <div className="flex items-center justify-between mb-1">
+          <div className="flex items-center gap-3">
+            <h1 className="text-3xl font-bold text-gray-900">{program.name}</h1>
+            <Badge className="bg-green-100 text-green-700 border-0 text-[11px] font-semibold uppercase tracking-wide px-2.5 py-0.5 rounded-full">
+              <span className="inline-block w-1.5 h-1.5 bg-green-500 rounded-full mr-1.5" />
+              {program.isActive ? 'Active' : 'Inactive'}
+            </Badge>
+            {program.isPublic && (
+              <Badge className="bg-blue-100 text-blue-700 border-0 text-[11px] font-semibold uppercase tracking-wide px-2.5 py-0.5 rounded-full">
+                Public
+              </Badge>
+            )}
+          </div>
+          <div className="flex items-center gap-3">
+            <Button
+              variant="outline"
+              className="border-gray-300 text-gray-700 bg-white hover:bg-gray-50"
+              onClick={() => {/* preview */}}
+            >
+              <EyeIcon className="mr-2" />
+              Preview Page
+            </Button>
+            <Button
+              className="bg-gray-900 hover:bg-gray-800 text-white"
+              onClick={handleUpdateProgram}
+              disabled={isSaving}
+            >
+              <SaveIcon className="mr-2" />
+              {isSaving ? 'Saving...' : 'Update Program'}
+            </Button>
+          </div>
+        </div>
+        <p className="text-sm text-gray-500 mb-6">
+          Manage program curriculum, logistics, and enrollments.
+        </p>
 
         {/* Error Banner */}
         {error && (
-          <Card className="border-destructive/20 bg-destructive/5 p-4">
-            <p className="text-sm text-destructive">{error}</p>
-          </Card>
+          <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3">
+            <p className="text-sm text-red-600">{error}</p>
+          </div>
         )}
 
-        {/* Program Header Card */}
-        <Card className="p-6">
-          <div className="space-y-4">
-            {isEditing ? (
-              <div className="space-y-4">
-                <div>
-                  <label className="text-sm font-medium text-gray-700">Program Name</label>
-                  <Input
-                    value={editForm.name}
-                    onChange={(e) => setEditForm(prev => ({ ...prev, name: e.target.value }))}
-                    className="mt-1"
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-700">Description</label>
-                  <textarea
-                    value={editForm.description}
-                    onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setEditForm(prev => ({ ...prev, description: e.target.value }))}
-                    className="mt-1 flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                    rows={3}
-                  />
-                </div>
-                <div className="flex items-center gap-4">
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      id="isActive"
-                      checked={editForm.isActive}
-                      onChange={(e) => setEditForm(prev => ({ ...prev, isActive: e.target.checked }))}
-                      className="rounded"
-                    />
-                    <label htmlFor="isActive" className="text-sm font-medium text-gray-700">
-                      Active
-                    </label>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      id="isPublic"
-                      checked={editForm.isPublic}
-                      onChange={(e) => setEditForm(prev => ({ ...prev, isPublic: e.target.checked }))}
-                      className="rounded"
-                    />
-                    <label htmlFor="isPublic" className="text-sm font-medium text-gray-700">
-                      Public
-                    </label>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <>
-                <div className="flex items-center gap-3">
-                  <h1 className="text-2xl font-bold">{program.name}</h1>
-                  <Badge variant={program.isActive ? 'default' : 'secondary'}>
-                    {program.isActive ? 'Active' : 'Inactive'}
-                  </Badge>
-                  {program.isPublic && (
-                    <Badge variant="outline">Public</Badge>
-                  )}
-                  {!program.publishedVersionId && (
-                    <Badge variant="outline" className="border-amber-500 text-amber-600">
-                      Unpublished
-                    </Badge>
-                  )}
-                </div>
-                {program.description && (
-                  <p className="text-muted-foreground">{program.description}</p>
-                )}
-                <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
-                  <span>Mode: <strong>{modeLabels[program.schedulingMode]}</strong></span>
-                  <span>Cadence: <strong>{cadenceLabels[program.cadence]}</strong></span>
-                  <span>Created {formatRelative(program.createdAt)}</span>
-                </div>
-              </>
-            )}
-
-            {/* Actions */}
-            <div className="flex gap-2 pt-4">
-              {isEditing ? (
-                <>
-                  <Button onClick={handleSave} disabled={isSaving}>
-                    {isSaving ? 'Saving...' : 'Save Changes'}
-                  </Button>
-                  <Button variant="outline" onClick={handleCancel} disabled={isSaving}>
-                    Cancel
-                  </Button>
-                </>
-              ) : (
-                <Button variant="outline" onClick={() => setIsEditing(true)}>
-                  Edit
-                </Button>
-              )}
+        {/* ── Stats Row ──────────────────────────────────────────── */}
+        <div className="grid grid-cols-3 gap-4 mb-8">
+          {/* Total Enrollments */}
+          <Card className="p-5 bg-white border border-gray-200 rounded-xl shadow-sm">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs font-semibold uppercase tracking-wider text-gray-400">
+                Total Enrollments
+              </span>
+              <TrendingUpIcon className="text-green-500" />
             </div>
-          </div>
-        </Card>
-
-        {/* Owner Card */}
-        <Card className="p-4">
-          <div className="flex items-center gap-4">
-            <Avatar className="h-12 w-12">
-              {program.owner.avatarUrl ? (
-                <AvatarImage src={program.owner.avatarUrl} alt={program.owner.displayName} />
-              ) : null}
-              <AvatarFallback className="bg-primary/10 text-primary font-medium">
-                {ownerInitials}
-              </AvatarFallback>
-            </Avatar>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="font-medium">{program.owner.displayName}</span>
-                <Badge className={`${ownerTypeColors[program.owner.ownerType]} border-0 text-xs`}>
-                  {program.owner.ownerType}
-                </Badge>
-              </div>
-              <div className="text-sm text-muted-foreground">Program Owner</div>
-            </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="ml-auto"
-              onClick={() => router.push(`/program-owners/${program.owner.id}`)}
-            >
-              View Owner
-            </Button>
-          </div>
-        </Card>
-
-        {/* Stats */}
-        <div className="grid grid-cols-2 gap-4">
-          <Card className="p-6 text-center">
-            <div className="text-3xl font-bold text-primary">{program.enrollmentCount}</div>
-            <div className="text-sm text-muted-foreground">Active Enrollments</div>
+            <div className="text-4xl font-bold text-gray-900">{program.enrollmentCount}</div>
+            <div className="text-xs text-green-500 mt-1">+12% from last month</div>
           </Card>
-          <Card className="p-6 text-center">
-            <div className="text-3xl font-bold text-green-600">{program.versionCount}</div>
-            <div className="text-sm text-muted-foreground">Plan Versions</div>
+
+          {/* Active Members */}
+          <Card className="p-5 bg-white border border-gray-200 rounded-xl shadow-sm">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs font-semibold uppercase tracking-wider text-gray-400">
+                Active Members
+              </span>
+              <UsersIcon className="text-blue-400" />
+            </div>
+            <div className="text-4xl font-bold text-gray-900">{program.enrollmentCount}</div>
+            <div className="text-xs text-gray-400 mt-1">
+              {program.enrollmentCount > 0 ? '90% retention rate' : 'No enrollments yet'}
+            </div>
+          </Card>
+
+          {/* Head Coach */}
+          <Card className="p-5 bg-white border border-gray-200 rounded-xl shadow-sm">
+            <div className="flex items-center gap-3">
+              <Avatar className="h-14 w-14">
+                {program.owner.avatarUrl ? (
+                  <AvatarImage src={program.owner.avatarUrl} alt={program.owner.displayName} />
+                ) : null}
+                <AvatarFallback className="bg-gray-200 text-gray-600 font-medium text-lg">
+                  {ownerInitials}
+                </AvatarFallback>
+              </Avatar>
+              <div>
+                <span className="text-[10px] font-semibold uppercase tracking-widest text-blue-500">
+                  Head Coach
+                </span>
+                <div className="text-base font-semibold text-gray-900">{program.owner.displayName}</div>
+                <button
+                  onClick={() => router.push(`/program-owners/${program.owner.id}`)}
+                  className="text-xs text-blue-500 hover:text-blue-600 flex items-center gap-1 mt-0.5"
+                >
+                  View Profile <ExternalLinkIcon />
+                </button>
+              </div>
+            </div>
           </Card>
         </div>
+      </div>
 
-        {/* Tabs */}
-        <Tabs defaultValue="versions">
-          <TabsList>
+      {/* ── Tabs ─────────────────────────────────────────────────── */}
+      <div className="px-8 pb-8">
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="mb-6">
+            <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="versions">Versions ({versions.length})</TabsTrigger>
             <TabsTrigger value="enrollments">Enrollments ({enrollments.length})</TabsTrigger>
-            <TabsTrigger value="settings">Settings</TabsTrigger>
           </TabsList>
 
-          {/* Versions Tab */}
-          <TabsContent value="versions" className="mt-4">
+          {/* ── Overview Tab ─────────────────────────────────────── */}
+          <TabsContent value="overview">
+            <div className="grid grid-cols-[340px_1fr] gap-6">
+              {/* ── Left Column: Program Logistics ────────────────── */}
+              <div className="space-y-4">
+                <h2 className="text-lg font-semibold text-gray-900">Program Logistics</h2>
+
+                {/* Operation Mode Card */}
+                <Card className="p-5 bg-white border border-gray-200 rounded-xl shadow-sm">
+                  <div className="flex items-center gap-2 mb-5">
+                    <SettingsIcon className="text-gray-500" />
+                    <h3 className="text-[15px] font-semibold text-gray-900">Operation Mode</h3>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div>
+                      <div className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 mb-0.5">
+                        Scheduling Mode
+                      </div>
+                      <div className="text-sm font-semibold text-gray-900">
+                        {modeLabels[program.schedulingMode]}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 mb-0.5">
+                        Cadence
+                      </div>
+                      <div className="text-sm font-semibold text-gray-900">
+                        {cadenceLabels[program.cadence]}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 mb-0.5">
+                        Billing Model
+                      </div>
+                      <div className="text-sm font-semibold text-gray-900">
+                        {program.billingModel ? billingLabels[program.billingModel] : 'Not Set'}
+                      </div>
+                    </div>
+                  </div>
+                </Card>
+
+                {/* Pricing & Stripe Card */}
+                <Card className="p-5 bg-white border border-gray-200 rounded-xl shadow-sm">
+                  <div className="flex items-center gap-2 mb-5">
+                    <DollarIcon className="text-gray-500" />
+                    <h3 className="text-[15px] font-semibold text-gray-900">Pricing &amp; Stripe</h3>
+                  </div>
+
+                  <div className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 mb-1">
+                    Monthly Cost
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-baseline gap-0.5">
+                      <span className="text-3xl font-bold text-gray-900">{priceDisplay}</span>
+                      <span className="text-sm text-gray-400 font-normal">/mo</span>
+                    </div>
+                    {hasStripe && (
+                      <div className="flex items-center gap-1 text-emerald-600">
+                        <CheckCircleIcon className="text-blue-500" />
+                        <span className="text-xs font-medium text-emerald-600">Stripe Connected</span>
+                      </div>
+                    )}
+                  </div>
+                </Card>
+
+                {/* Coach Scheduling Card */}
+                <Card className="p-5 bg-white border border-gray-200 rounded-xl shadow-sm">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-2">
+                      <CalendarIcon className="text-gray-500" />
+                      <h3 className="text-[15px] font-semibold text-gray-900">Coach Scheduling</h3>
+                    </div>
+                    <Switch
+                      checked={schedulingForm.schedulingEnabled}
+                      onCheckedChange={(checked) =>
+                        setSchedulingForm(prev => ({ ...prev, schedulingEnabled: checked }))
+                      }
+                    />
+                  </div>
+
+                  {schedulingForm.schedulingEnabled && (
+                    <div>
+                      <div className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 mb-2">
+                        Calendar Link
+                      </div>
+                      <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2">
+                        <LinkIcon className="text-gray-400 flex-shrink-0" />
+                        <input
+                          type="text"
+                          value={schedulingForm.schedulingUrl}
+                          onChange={(e) =>
+                            setSchedulingForm(prev => ({ ...prev, schedulingUrl: e.target.value }))
+                          }
+                          placeholder="calendly.com/coach/session"
+                          className="bg-transparent text-sm text-gray-600 flex-1 outline-none min-w-0"
+                        />
+                      </div>
+                    </div>
+                  )}
+                </Card>
+
+                {/* Sign-up Questions Card */}
+                <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-[15px] font-semibold text-gray-900">Sign-up Questions</h3>
+                    <button className="text-sm font-medium text-blue-500 hover:text-blue-600">
+                      Manage
+                    </button>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 bg-gray-100 rounded-lg px-3 py-2.5">
+                      <GripVerticalIcon className="text-gray-400 flex-shrink-0" />
+                      <span className="text-sm text-gray-600">Age of Participant?</span>
+                    </div>
+                    <div className="flex items-center gap-2 bg-gray-100 rounded-lg px-3 py-2.5">
+                      <GripVerticalIcon className="text-gray-400 flex-shrink-0" />
+                      <span className="text-sm text-gray-600">Current Skill Level (1-10)?</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* ── Right Column: Program Curriculum ───────────────── */}
+              <div className="space-y-4">
+                <h2 className="text-lg font-semibold text-gray-900">Program Curriculum</h2>
+
+                <Card className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+                  {/* Editor Toolbar */}
+                  <div className="flex items-center justify-between border-b border-gray-200 px-4 py-2">
+                    <div className="flex items-center gap-1">
+                      <ToolbarButton><strong>B</strong></ToolbarButton>
+                      <ToolbarButton><em>I</em></ToolbarButton>
+                      <ToolbarButton>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="8" y1="6" x2="21" y2="6" /><line x1="8" y1="12" x2="21" y2="12" /><line x1="8" y1="18" x2="21" y2="18" /><line x1="3" y1="6" x2="3.01" y2="6" /><line x1="3" y1="12" x2="3.01" y2="12" /><line x1="3" y1="18" x2="3.01" y2="18" /></svg>
+                      </ToolbarButton>
+                      <div className="w-px h-5 bg-gray-200 mx-1" />
+                      <ToolbarButton>
+                        <span className="font-semibold text-sm">T</span>
+                      </ToolbarButton>
+                      <ToolbarButton>
+                        <LinkIcon className="text-gray-500" />
+                      </ToolbarButton>
+                      <ToolbarButton>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" /></svg>
+                      </ToolbarButton>
+                    </div>
+                    <span className="text-[11px] font-medium uppercase tracking-wider text-gray-400">
+                      Markdown Mode
+                    </span>
+                  </div>
+
+                  {/* Editor Content Area */}
+                  <div className="p-6 min-h-[500px]">
+                    <textarea
+                      value={editForm.description}
+                      onChange={(e) =>
+                        setEditForm(prev => ({ ...prev, description: e.target.value }))
+                      }
+                      placeholder="Write your program curriculum here..."
+                      className="w-full min-h-[480px] text-[15px] leading-relaxed text-gray-700 bg-transparent outline-none resize-none"
+                    />
+                  </div>
+
+                  {/* Editor Footer */}
+                  <div className="flex items-center justify-between border-t border-gray-200 px-6 py-3">
+                    <span className="text-[11px] font-medium uppercase tracking-wider text-gray-400">
+                      Editor Active
+                    </span>
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-3 h-3 rounded-full bg-green-500" />
+                      <span className="text-[11px] font-medium uppercase tracking-wider text-gray-400">
+                        Last saved at {new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}
+                      </span>
+                    </div>
+                  </div>
+                </Card>
+              </div>
+            </div>
+          </TabsContent>
+
+          {/* ── Versions Tab ──────────────────────────────────────── */}
+          <TabsContent value="versions">
             <div className="space-y-4">
               <div className="flex justify-end">
-                <Button
-                  onClick={handleCreateDraft}
-                  disabled={isCreatingVersion}
-                >
+                <Button onClick={handleCreateDraft} disabled={isCreatingVersion}>
                   {isCreatingVersion ? 'Creating...' : 'Create Draft'}
                 </Button>
               </div>
 
               {versions.length === 0 ? (
-                <Card className="p-8 text-center">
+                <Card className="p-8 text-center bg-white">
                   <p className="text-muted-foreground">No versions yet. Create a draft to get started.</p>
                 </Card>
               ) : (
@@ -628,7 +686,7 @@ export default function ProgramDetailPage() {
                   {versions.map((version) => (
                     <Card
                       key={version.id}
-                      className="p-4 cursor-pointer hover:bg-muted/50 transition-colors"
+                      className="p-4 cursor-pointer hover:bg-muted/50 transition-colors bg-white"
                       onClick={() => router.push(`/programs/${program.id}/versions/${version.id}`)}
                     >
                       <div className="flex items-center justify-between">
@@ -648,9 +706,7 @@ export default function ProgramDetailPage() {
                             <span>Published {formatRelative(version.publishedAt)}</span>
                           )}
                           <span>Created {formatRelative(version.createdAt)}</span>
-                          <Button variant="ghost" size="sm">
-                            View
-                          </Button>
+                          <Button variant="ghost" size="sm">View</Button>
                         </div>
                       </div>
                     </Card>
@@ -660,8 +716,8 @@ export default function ProgramDetailPage() {
             </div>
           </TabsContent>
 
-          {/* Enrollments Tab */}
-          <TabsContent value="enrollments" className="mt-4">
+          {/* ── Enrollments Tab ────────────────────────────────────── */}
+          <TabsContent value="enrollments">
             <EnrollmentsTable
               enrollments={enrollments}
               sort={enrollmentSort}
@@ -669,315 +725,75 @@ export default function ProgramDetailPage() {
               onAction={handleEnrollmentAction}
             />
           </TabsContent>
-
-          {/* Settings Tab */}
-          <TabsContent value="settings" className="mt-4">
-            <div className="space-y-6">
-              {/* Program Settings Card */}
-              <Card className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-semibold">Program Settings</h3>
-                  {!isEditingSettings ? (
-                    <Button variant="outline" size="sm" onClick={() => setIsEditingSettings(true)}>
-                      Edit Settings
-                    </Button>
-                  ) : (
-                    <div className="flex gap-2">
-                      <Button size="sm" onClick={handleSaveSettings} disabled={isSavingSettings}>
-                        {isSavingSettings ? 'Saving...' : 'Save'}
-                      </Button>
-                      <Button variant="outline" size="sm" onClick={handleCancelSettings} disabled={isSavingSettings}>
-                        Cancel
-                      </Button>
-                    </div>
-                  )}
-                </div>
-
-                {isEditingSettings ? (
-                  <div className="space-y-4">
-                    <div>
-                      <label className="text-sm font-medium text-gray-700 block mb-1">Scheduling Mode</label>
-                      <select
-                        value={settingsForm.schedulingMode}
-                        onChange={(e) => setSettingsForm(prev => ({ ...prev, schedulingMode: e.target.value as SchedulingMode }))}
-                        className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                      >
-                        <option value="rolling_start">Rolling Start</option>
-                        <option value="cohort">Cohort</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-700 block mb-1">Cadence</label>
-                      <select
-                        value={settingsForm.cadence}
-                        onChange={(e) => setSettingsForm(prev => ({ ...prev, cadence: e.target.value as ProgramCadence }))}
-                        className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                      >
-                        <option value="calendar_days">Calendar Days</option>
-                        <option value="training_days_only">Training Days Only</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-700 block mb-1">Billing Model</label>
-                      <select
-                        value={settingsForm.billingModel}
-                        onChange={(e) => setSettingsForm(prev => ({ ...prev, billingModel: e.target.value as BillingModel | '' }))}
-                        className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                      >
-                        <option value="">Not Set</option>
-                        <option value="subscription">Subscription</option>
-                        <option value="one_time">One Time</option>
-                        <option value="free">Free</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-700 block mb-1">Late Joiner Policy</label>
-                      <select
-                        value={settingsForm.lateJoinerPolicy}
-                        onChange={(e) => setSettingsForm(prev => ({ ...prev, lateJoinerPolicy: e.target.value as LateJoinerPolicy | '' }))}
-                        className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                      >
-                        <option value="">Not Set</option>
-                        <option value="start_from_beginning">Start From Beginning</option>
-                        <option value="join_current_week">Join Current Week</option>
-                      </select>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    <div className="flex justify-between items-center py-2 border-b">
-                      <span className="text-muted-foreground">Scheduling Mode</span>
-                      <span className="font-medium">{modeLabels[program.schedulingMode]}</span>
-                    </div>
-                    <div className="flex justify-between items-center py-2 border-b">
-                      <span className="text-muted-foreground">Cadence</span>
-                      <span className="font-medium">{cadenceLabels[program.cadence]}</span>
-                    </div>
-                    <div className="flex justify-between items-center py-2 border-b">
-                      <span className="text-muted-foreground">Billing Model</span>
-                      <span className="font-medium">
-                        {program.billingModel ? billingLabels[program.billingModel] : 'Not Set'}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center py-2 border-b">
-                      <span className="text-muted-foreground">Late Joiner Policy</span>
-                      <span className="font-medium">
-                        {program.lateJoinerPolicy ? lateJoinerLabels[program.lateJoinerPolicy] : 'Not Set'}
-                      </span>
-                    </div>
-                  </div>
-                )}
-              </Card>
-
-              {/* Pricing Card */}
-              <Card className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <h3 className="font-semibold">Pricing</h3>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Set the monthly subscription price. Stripe Product and Price are auto-managed.
-                    </p>
-                  </div>
-                  {!isEditingPricing ? (
-                    <Button variant="outline" size="sm" onClick={() => setIsEditingPricing(true)}>
-                      Edit Pricing
-                    </Button>
-                  ) : (
-                    <div className="flex gap-2">
-                      <Button size="sm" onClick={handleSavePricing} disabled={isSavingPricing}>
-                        {isSavingPricing ? 'Saving...' : 'Save'}
-                      </Button>
-                      <Button variant="outline" size="sm" onClick={handleCancelPricing} disabled={isSavingPricing}>
-                        Cancel
-                      </Button>
-                    </div>
-                  )}
-                </div>
-
-                {isEditingPricing ? (
-                  <div className="space-y-4">
-                    <div>
-                      <label className="text-sm font-medium text-gray-700 block mb-1">Monthly Price (USD)</label>
-                      <div className="relative">
-                        <span className="absolute left-3 top-2 text-muted-foreground">$</span>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          min="0"
-                          placeholder="29.99"
-                          value={pricingForm.priceAmountDollars}
-                          onChange={(e) => setPricingForm(prev => ({ ...prev, priceAmountDollars: e.target.value }))}
-                          className="pl-7"
-                        />
-                      </div>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        A Stripe Product and Price will be auto-created when you save.
-                      </p>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    <div className="flex justify-between items-center py-2 border-b">
-                      <span className="text-muted-foreground">Monthly Price</span>
-                      <span className="font-medium">
-                        {formatPrice(program.priceAmountCents, program.priceCurrency)}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center py-2 border-b">
-                      <span className="text-muted-foreground">Stripe Product</span>
-                      <span className="font-mono text-sm text-muted-foreground">
-                        {program.stripeProductId || 'Auto-created on save'}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center py-2 border-b">
-                      <span className="text-muted-foreground">Stripe Price</span>
-                      <span className="font-mono text-sm text-muted-foreground">
-                        {program.stripePriceId || 'Auto-created on save'}
-                      </span>
-                    </div>
-                    {!program.stripePriceId && (
-                      <p className="text-sm text-amber-600">
-                        No price set — this program will use the global default price at checkout.
-                      </p>
-                    )}
-                  </div>
-                )}
-              </Card>
-
-              {/* Coach Scheduling Card */}
-              <Card className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <h3 className="font-semibold">Coach Scheduling</h3>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Let users book calls with their coach via a scheduling link.
-                    </p>
-                  </div>
-                  {!isEditingScheduling ? (
-                    <Button variant="outline" size="sm" onClick={() => setIsEditingScheduling(true)}>
-                      Edit Scheduling
-                    </Button>
-                  ) : (
-                    <div className="flex gap-2">
-                      <Button size="sm" onClick={handleSaveScheduling} disabled={isSavingScheduling}>
-                        {isSavingScheduling ? 'Saving...' : 'Save'}
-                      </Button>
-                      <Button variant="outline" size="sm" onClick={handleCancelScheduling} disabled={isSavingScheduling}>
-                        Cancel
-                      </Button>
-                    </div>
-                  )}
-                </div>
-
-                {isEditingScheduling ? (
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        id="schedulingEnabled"
-                        checked={schedulingForm.schedulingEnabled}
-                        onChange={(e) => setSchedulingForm(prev => ({ ...prev, schedulingEnabled: e.target.checked }))}
-                        className="rounded"
-                      />
-                      <label htmlFor="schedulingEnabled" className="text-sm font-medium text-gray-700">
-                        Enable scheduling for this program
-                      </label>
-                    </div>
-                    {schedulingForm.schedulingEnabled && (
-                      <>
-                        <div>
-                          <label className="text-sm font-medium text-gray-700 block mb-1">Booking URL</label>
-                          <Input
-                            type="url"
-                            placeholder="https://calendly.com/coach/30min"
-                            value={schedulingForm.schedulingUrl}
-                            onChange={(e) => setSchedulingForm(prev => ({ ...prev, schedulingUrl: e.target.value }))}
-                          />
-                        </div>
-                        <div>
-                          <label className="text-sm font-medium text-gray-700 block mb-1">Notes (shown to users)</label>
-                          <textarea
-                            placeholder="Book a 30-minute intro call with your coach..."
-                            value={schedulingForm.schedulingNotes}
-                            onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setSchedulingForm(prev => ({ ...prev, schedulingNotes: e.target.value }))}
-                            className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                            rows={2}
-                          />
-                        </div>
-                      </>
-                    )}
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    <div className="flex justify-between items-center py-2 border-b">
-                      <span className="text-muted-foreground">Enabled</span>
-                      <Badge variant={program.schedulingEnabled ? 'default' : 'secondary'}>
-                        {program.schedulingEnabled ? 'Yes' : 'No'}
-                      </Badge>
-                    </div>
-                    {program.schedulingEnabled && (
-                      <>
-                        <div className="flex justify-between items-center py-2 border-b">
-                          <span className="text-muted-foreground">Booking URL</span>
-                          <span className="font-medium text-sm truncate max-w-[300px]">
-                            {program.schedulingUrl ? (
-                              <a href={program.schedulingUrl} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
-                                {program.schedulingUrl}
-                              </a>
-                            ) : (
-                              <span className="text-muted-foreground font-normal">Not Set</span>
-                            )}
-                          </span>
-                        </div>
-                        {program.schedulingNotes && (
-                          <div className="flex justify-between items-center py-2 border-b">
-                            <span className="text-muted-foreground">Notes</span>
-                            <span className="font-medium text-sm max-w-[300px] text-right">
-                              {program.schedulingNotes}
-                            </span>
-                          </div>
-                        )}
-                      </>
-                    )}
-                  </div>
-                )}
-              </Card>
-            </div>
-          </TabsContent>
         </Tabs>
       </div>
     </div>
   )
 }
 
+// ─── Small helper components ──────────────────────────────────────────
+
+function ToolbarButton({ children }: { children: React.ReactNode }) {
+  return (
+    <button
+      type="button"
+      className="w-8 h-8 flex items-center justify-center rounded text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition-colors"
+    >
+      {children}
+    </button>
+  )
+}
+
 function LoadingSkeleton() {
   return (
-    <div className="container mx-auto px-4 py-6 max-w-4xl">
+    <div className="min-h-screen bg-gray-50 p-8">
       <div className="space-y-6">
-        <Skeleton className="h-6 w-48" />
-        <Card className="p-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div className="space-y-2">
+            <Skeleton className="h-9 w-64" />
+            <Skeleton className="h-4 w-96" />
+          </div>
+          <div className="flex gap-3">
+            <Skeleton className="h-10 w-32" />
+            <Skeleton className="h-10 w-40" />
+          </div>
+        </div>
+
+        {/* Stats */}
+        <div className="grid grid-cols-3 gap-4">
+          {[1, 2, 3].map(i => (
+            <Card key={i} className="p-5 bg-white border border-gray-200 rounded-xl">
+              <Skeleton className="h-4 w-32 mb-3" />
+              <Skeleton className="h-10 w-20 mb-1" />
+              <Skeleton className="h-3 w-24" />
+            </Card>
+          ))}
+        </div>
+
+        {/* Two Column */}
+        <div className="grid grid-cols-[340px_1fr] gap-6">
           <div className="space-y-4">
-            <Skeleton className="h-8 w-64" />
-            <Skeleton className="h-4 w-full" />
-            <Skeleton className="h-4 w-32" />
+            <Skeleton className="h-6 w-40" />
+            {[1, 2, 3].map(i => (
+              <Card key={i} className="p-5 bg-white border border-gray-200 rounded-xl">
+                <Skeleton className="h-5 w-32 mb-4" />
+                <div className="space-y-3">
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-3/4" />
+                </div>
+              </Card>
+            ))}
           </div>
-        </Card>
-        <Card className="p-4">
-          <div className="flex items-center gap-4">
-            <Skeleton className="h-12 w-12 rounded-full" />
-            <div className="space-y-2">
-              <Skeleton className="h-5 w-32" />
-              <Skeleton className="h-4 w-24" />
-            </div>
+          <div className="space-y-4">
+            <Skeleton className="h-6 w-44" />
+            <Card className="bg-white border border-gray-200 rounded-xl">
+              <Skeleton className="h-12 w-full" />
+              <div className="p-6">
+                <Skeleton className="h-64 w-full" />
+              </div>
+            </Card>
           </div>
-        </Card>
-        <div className="grid grid-cols-2 gap-4">
-          <Card className="p-6">
-            <Skeleton className="h-12 w-full" />
-          </Card>
-          <Card className="p-6">
-            <Skeleton className="h-12 w-full" />
-          </Card>
         </div>
       </div>
     </div>
