@@ -23,6 +23,7 @@ import {
   identifyUser,
 } from '@/lib/analytics';
 import { QuestionnaireProgress } from './QuestionnaireProgress';
+import { ContinueButton } from './ContinueButton';
 import { QuestionCard } from './QuestionCard';
 import { SingleSelectQuestion } from './questions/SingleSelectQuestion';
 import { MultiSelectQuestion } from './questions/MultiSelectQuestion';
@@ -435,8 +436,8 @@ export function Questionnaire({ programId, programName, ownerWordmarkUrl, ownerD
         <QuestionnaireProgress currentIndex={currentIndex} totalQuestions={totalQuestions} />
       </header>
 
-      {/* Main content */}
-      <main className={`flex flex-1 flex-col px-6 overflow-y-auto ${ownerWordmarkUrl ? 'justify-start pt-4 pb-4' : 'justify-center pt-8 pb-safe-offset-12'}`}>
+      {/* Main content — question + options scroll, button stays below */}
+      <main className={`flex flex-1 flex-col px-6 overflow-y-auto ${ownerWordmarkUrl ? 'branded-questions justify-start pt-4 pb-4' : 'justify-center pt-8 pb-safe-offset-12'}`}>
         <div className="mx-auto w-full max-w-md">
           {error && (
             <div className="mb-6 rounded-xl bg-red-50 border border-red-200 p-4">
@@ -450,11 +451,21 @@ export function Questionnaire({ programId, programName, ownerWordmarkUrl, ownerD
         </div>
       </main>
 
-      {/* Powered by GymText — only shown when owner branding is active */}
+      {/* Fixed bottom section — only when owner branding is active */}
       {ownerWordmarkUrl && (
-        <div className="flex-shrink-0 flex items-center justify-center gap-1.5 pt-2 pb-safe-offset-8">
-          <span className="text-xs text-[hsl(var(--questionnaire-muted-foreground)/0.6)]">powered by</span>
-          <img src="/Wordmark.png" alt="GymText" className="h-4 object-contain opacity-60" />
+        <div className="flex-shrink-0 px-6 pt-4 pb-4">
+          <div className="mx-auto w-full max-w-md">
+            <ContinueButton
+              onClick={handleNext}
+              disabled={!hasValidAnswer}
+              isSubmit={isComplete}
+              isLoading={isSubmitting}
+            />
+          </div>
+          <div className="flex items-center justify-center gap-1.5 pt-4 pb-safe">
+            <span className="text-xs text-[hsl(var(--questionnaire-muted-foreground)/0.6)]">powered by</span>
+            <img src="/Wordmark.png" alt="GymText" className="h-4 object-contain opacity-60" />
+          </div>
         </div>
       )}
     </div>

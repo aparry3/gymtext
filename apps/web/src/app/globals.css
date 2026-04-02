@@ -127,6 +127,11 @@ body {
   padding-top: env(safe-area-inset-top);
 }
 
+/* Hide inline ContinueButton when it's rendered externally in branded layout */
+.branded-questions [data-continue-btn] {
+  display: none;
+}
+
 /* Drawer animation utilities */
 .drawer-backdrop-enter {
   opacity: 0;
