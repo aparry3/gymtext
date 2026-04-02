@@ -78,8 +78,6 @@ export default function ProgramDetailPage() {
   const [isSavingPricing, setIsSavingPricing] = useState(false)
   const [pricingForm, setPricingForm] = useState({
     priceAmountDollars: '',
-    stripePriceId: '',
-    stripeProductId: '',
     priceCurrency: 'usd',
   })
 
@@ -126,8 +124,6 @@ export default function ProgramDetailPage() {
       })
       setPricingForm({
         priceAmountDollars: data.program.priceAmountCents ? (data.program.priceAmountCents / 100).toFixed(2) : '',
-        stripePriceId: data.program.stripePriceId || '',
-        stripeProductId: data.program.stripeProductId || '',
         priceCurrency: data.program.priceCurrency || 'usd',
       })
       setSchedulingForm({
@@ -251,8 +247,6 @@ export default function ProgramDetailPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           priceAmountCents: amountCents,
-          stripePriceId: pricingForm.stripePriceId || null,
-          stripeProductId: pricingForm.stripeProductId || null,
           priceCurrency: pricingForm.priceCurrency || 'usd',
         }),
       })
@@ -276,8 +270,6 @@ export default function ProgramDetailPage() {
     if (program) {
       setPricingForm({
         priceAmountDollars: program.priceAmountCents ? (program.priceAmountCents / 100).toFixed(2) : '',
-        stripePriceId: program.stripePriceId || '',
-        stripeProductId: program.stripeProductId || '',
         priceCurrency: program.priceCurrency || 'usd',
       })
     }
@@ -783,7 +775,7 @@ export default function ProgramDetailPage() {
                   <div>
                     <h3 className="font-semibold">Pricing</h3>
                     <p className="text-sm text-muted-foreground mt-1">
-                      Set a program-specific price. Each program gets its own Stripe Product and Price.
+                      Set the monthly subscription price. Stripe Product and Price are auto-managed.
                     </p>
                   </div>
                   {!isEditingPricing ? (
@@ -805,7 +797,7 @@ export default function ProgramDetailPage() {
                 {isEditingPricing ? (
                   <div className="space-y-4">
                     <div>
-                      <label className="text-sm font-medium text-gray-700 block mb-1">Price (USD)</label>
+                      <label className="text-sm font-medium text-gray-700 block mb-1">Monthly Price (USD)</label>
                       <div className="relative">
                         <span className="absolute left-3 top-2 text-muted-foreground">$</span>
                         <Input
@@ -819,55 +811,33 @@ export default function ProgramDetailPage() {
                         />
                       </div>
                       <p className="text-xs text-muted-foreground mt-1">
-                        Display price shown in the admin UI. The actual charge comes from the Stripe Price ID.
-                      </p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-700 block mb-1">Stripe Product ID</label>
-                      <Input
-                        placeholder="prod_..."
-                        value={pricingForm.stripeProductId}
-                        onChange={(e) => setPricingForm(prev => ({ ...prev, stripeProductId: e.target.value }))}
-                      />
-                      <p className="text-xs text-muted-foreground mt-1">
-                        The Stripe Product for this program. Create one in the Stripe Dashboard.
-                      </p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-700 block mb-1">Stripe Price ID</label>
-                      <Input
-                        placeholder="price_..."
-                        value={pricingForm.stripePriceId}
-                        onChange={(e) => setPricingForm(prev => ({ ...prev, stripePriceId: e.target.value }))}
-                      />
-                      <p className="text-xs text-muted-foreground mt-1">
-                        The Stripe Price used in checkout sessions. This is what users are actually charged.
+                        A Stripe Product and Price will be auto-created when you save.
                       </p>
                     </div>
                   </div>
                 ) : (
                   <div className="space-y-4">
                     <div className="flex justify-between items-center py-2 border-b">
-                      <span className="text-muted-foreground">Price</span>
+                      <span className="text-muted-foreground">Monthly Price</span>
                       <span className="font-medium">
                         {formatPrice(program.priceAmountCents, program.priceCurrency)}
                       </span>
                     </div>
                     <div className="flex justify-between items-center py-2 border-b">
-                      <span className="text-muted-foreground">Stripe Product ID</span>
-                      <span className="font-medium font-mono text-sm">
-                        {program.stripeProductId || <span className="text-muted-foreground font-normal">Not Set</span>}
+                      <span className="text-muted-foreground">Stripe Product</span>
+                      <span className="font-mono text-sm text-muted-foreground">
+                        {program.stripeProductId || 'Auto-created on save'}
                       </span>
                     </div>
                     <div className="flex justify-between items-center py-2 border-b">
-                      <span className="text-muted-foreground">Stripe Price ID</span>
-                      <span className="font-medium font-mono text-sm">
-                        {program.stripePriceId || <span className="text-muted-foreground font-normal">Not Set</span>}
+                      <span className="text-muted-foreground">Stripe Price</span>
+                      <span className="font-mono text-sm text-muted-foreground">
+                        {program.stripePriceId || 'Auto-created on save'}
                       </span>
                     </div>
                     {!program.stripePriceId && (
                       <p className="text-sm text-amber-600">
-                        No Stripe Price set — this program will use the global default price at checkout.
+                        No price set — this program will use the global default price at checkout.
                       </p>
                     )}
                   </div>

@@ -1,5 +1,6 @@
 import type { RepositoryContainer } from '../../../repositories/factory';
 import type { Program, NewProgram, ProgramUpdate } from '../../../models/program';
+import { stripeClient } from '@/server/connections/stripe';
 
 /**
  * Program Service Instance Interface
@@ -13,6 +14,7 @@ export interface ProgramServiceInstance {
   listActive(): Promise<Program[]>;
   listAll(): Promise<Program[]>;
   update(id: string, data: ProgramUpdate): Promise<Program | null>;
+  updatePricing(id: string, pricing: { priceAmountCents: number | null; priceCurrency: string }): Promise<Program | null>;
 }
 
 /**
@@ -82,6 +84,53 @@ export function createProgramService(
         cachedAiProgram = null;
       }
       return repos.program.update(id, data);
+    },
+
+    async updatePricing(id: string, pricing: { priceAmountCents: number | null; priceCurrency: string }): Promise<Program | null> {
+      const { priceAmountCents, priceCurrency } = pricing;
+
+      const existing = await repos.program.findById(id);
+      if (!existing) return null;
+
+      // Clearing the price
+      if (!priceAmountCents) {
+        return repos.program.update(id, {
+          priceAmountCents: null,
+          priceCurrency,
+          stripeProductId: null,
+          stripePriceId: null,
+        });
+      }
+
+      // Create Stripe Product if none exists
+      let productId = existing.stripeProductId;
+      if (!productId) {
+        const product = await stripeClient.products.create({
+          name: existing.name,
+          metadata: { programId: id, source: 'gymtext-admin' },
+        });
+        productId = product.id;
+      }
+
+      // Always create a new Price (Stripe Prices are immutable)
+      const price = await stripeClient.prices.create({
+        product: productId,
+        unit_amount: priceAmountCents,
+        currency: priceCurrency,
+        recurring: { interval: 'month' },
+      });
+
+      // Deactivate old Price
+      if (existing.stripePriceId && existing.stripePriceId !== price.id) {
+        await stripeClient.prices.update(existing.stripePriceId, { active: false });
+      }
+
+      return repos.program.update(id, {
+        priceAmountCents,
+        priceCurrency,
+        stripeProductId: productId,
+        stripePriceId: price.id,
+      });
     },
   };
 }
