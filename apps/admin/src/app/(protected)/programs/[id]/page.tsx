@@ -12,7 +12,6 @@ import {
   ProgramCadence,
   BillingModel,
   LateJoinerPolicy,
-  SchedulingType,
 } from '@/components/admin/types'
 import { EnrollmentsTable } from '@/components/admin/EnrollmentsTable'
 import { Card } from '@/components/ui/card'
@@ -89,7 +88,6 @@ export default function ProgramDetailPage() {
   const [isSavingScheduling, setIsSavingScheduling] = useState(false)
   const [schedulingForm, setSchedulingForm] = useState({
     schedulingEnabled: false,
-    schedulingType: '' as SchedulingType | '',
     schedulingUrl: '',
     schedulingNotes: '',
   })
@@ -134,7 +132,6 @@ export default function ProgramDetailPage() {
       })
       setSchedulingForm({
         schedulingEnabled: data.program.schedulingEnabled || false,
-        schedulingType: data.program.schedulingType || '',
         schedulingUrl: data.program.schedulingUrl || '',
         schedulingNotes: data.program.schedulingNotes || '',
       })
@@ -299,7 +296,6 @@ export default function ProgramDetailPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           schedulingEnabled: schedulingForm.schedulingEnabled,
-          schedulingType: schedulingForm.schedulingType || null,
           schedulingUrl: schedulingForm.schedulingUrl || null,
           schedulingNotes: schedulingForm.schedulingNotes || null,
         }),
@@ -324,7 +320,6 @@ export default function ProgramDetailPage() {
     if (program) {
       setSchedulingForm({
         schedulingEnabled: program.schedulingEnabled || false,
-        schedulingType: program.schedulingType || '',
         schedulingUrl: program.schedulingUrl || '',
         schedulingNotes: program.schedulingNotes || '',
       })
@@ -436,12 +431,6 @@ export default function ProgramDetailPage() {
   const lateJoinerLabels: Record<string, string> = {
     start_from_beginning: 'Start From Beginning',
     join_current_week: 'Join Current Week',
-  }
-
-  const schedulingTypeLabels: Record<string, string> = {
-    calendly: 'Calendly',
-    cal_com: 'Cal.com',
-    custom_url: 'Custom URL',
   }
 
   const formatPrice = (cents: number | null, currency: string | null) => {
@@ -891,7 +880,7 @@ export default function ProgramDetailPage() {
                   <div>
                     <h3 className="font-semibold">Coach Scheduling</h3>
                     <p className="text-sm text-muted-foreground mt-1">
-                      Let users book calls with their coach via Calendly, Cal.com, or a custom link.
+                      Let users book calls with their coach via a scheduling link.
                     </p>
                   </div>
                   {!isEditingScheduling ? (
@@ -927,19 +916,6 @@ export default function ProgramDetailPage() {
                     {schedulingForm.schedulingEnabled && (
                       <>
                         <div>
-                          <label className="text-sm font-medium text-gray-700 block mb-1">Platform</label>
-                          <select
-                            value={schedulingForm.schedulingType}
-                            onChange={(e) => setSchedulingForm(prev => ({ ...prev, schedulingType: e.target.value as SchedulingType | '' }))}
-                            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                          >
-                            <option value="">Select a platform...</option>
-                            <option value="calendly">Calendly</option>
-                            <option value="cal_com">Cal.com</option>
-                            <option value="custom_url">Custom URL</option>
-                          </select>
-                        </div>
-                        <div>
                           <label className="text-sm font-medium text-gray-700 block mb-1">Booking URL</label>
                           <Input
                             type="url"
@@ -971,12 +947,6 @@ export default function ProgramDetailPage() {
                     </div>
                     {program.schedulingEnabled && (
                       <>
-                        <div className="flex justify-between items-center py-2 border-b">
-                          <span className="text-muted-foreground">Platform</span>
-                          <span className="font-medium">
-                            {program.schedulingType ? schedulingTypeLabels[program.schedulingType] : 'Not Set'}
-                          </span>
-                        </div>
                         <div className="flex justify-between items-center py-2 border-b">
                           <span className="text-muted-foreground">Booking URL</span>
                           <span className="font-medium text-sm truncate max-w-[300px]">

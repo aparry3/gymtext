@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getAdminContext } from '@/lib/context';
-import type { SchedulingMode, ProgramCadence, BillingModel, LateJoinerPolicy, SchedulingType } from '@/components/admin/types';
+import type { SchedulingMode, ProgramCadence, BillingModel, LateJoinerPolicy } from '@/components/admin/types';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -93,7 +93,7 @@ export async function PATCH(request: Request, { params }: RouteParams) {
       // Pricing fields
       stripeProductId, stripePriceId, priceAmountCents, priceCurrency,
       // Coach scheduling fields
-      schedulingEnabled, schedulingType, schedulingUrl, schedulingNotes,
+      schedulingEnabled, schedulingUrl, schedulingNotes,
     } = body;
 
     // Validate schedulingMode if provided
@@ -151,17 +151,6 @@ export async function PATCH(request: Request, { params }: RouteParams) {
       );
     }
 
-    // Validate schedulingType if provided
-    if (schedulingType) {
-      const validTypes: SchedulingType[] = ['calendly', 'cal_com', 'custom_url'];
-      if (!validTypes.includes(schedulingType)) {
-        return NextResponse.json(
-          { success: false, message: 'schedulingType must be calendly, cal_com, or custom_url' },
-          { status: 400 }
-        );
-      }
-    }
-
     // Build update object with only provided fields
     const updates: Record<string, unknown> = {};
     if (name !== undefined) updates.name = name;
@@ -179,7 +168,6 @@ export async function PATCH(request: Request, { params }: RouteParams) {
     if (priceCurrency !== undefined) updates.priceCurrency = priceCurrency;
     // Coach scheduling
     if (schedulingEnabled !== undefined) updates.schedulingEnabled = schedulingEnabled;
-    if (schedulingType !== undefined) updates.schedulingType = schedulingType;
     if (schedulingUrl !== undefined) updates.schedulingUrl = schedulingUrl;
     if (schedulingNotes !== undefined) updates.schedulingNotes = schedulingNotes;
 

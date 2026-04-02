@@ -298,9 +298,6 @@ export type BillingModel = 'subscription' | 'one_time' | 'free';
 // Late joiner policy for programs
 export type LateJoinerPolicy = 'start_from_beginning' | 'join_current_week';
 
-// Coach scheduling type
-export type SchedulingType = 'calendly' | 'cal_com' | 'custom_url';
-
 // Program version status
 export type ProgramVersionStatus = 'draft' | 'published' | 'archived';
 
@@ -356,7 +353,6 @@ export interface AdminProgram {
   priceCurrency: string | null;
   // Coach scheduling
   schedulingEnabled: boolean;
-  schedulingType: SchedulingType | null;
   schedulingUrl: string | null;
   schedulingNotes: string | null;
   createdAt: Date;
