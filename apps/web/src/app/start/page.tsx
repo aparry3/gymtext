@@ -31,6 +31,7 @@ function StartPageContent() {
   const [questions, setQuestions] = useState<QuestionnaireQuestion[] | null>(null);
   const [programName, setProgramName] = useState<string | undefined>(undefined);
   const [ownerWordmarkUrl, setOwnerWordmarkUrl] = useState<string | undefined>(undefined);
+  const [ownerDisplayName, setOwnerDisplayName] = useState<string | undefined>(undefined);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -56,6 +57,7 @@ function StartPageContent() {
         setQuestions(data.questions);
         setProgramName(data.programName);
         setOwnerWordmarkUrl(data.ownerWordmarkUrl);
+        setOwnerDisplayName(data.ownerDisplayName);
       } catch (err) {
         console.error('Error loading questions:', err);
         setError('Failed to load questionnaire');
@@ -91,6 +93,7 @@ function StartPageContent() {
       programId={programId}
       programName={programName}
       ownerWordmarkUrl={ownerWordmarkUrl}
+      ownerDisplayName={ownerDisplayName}
       questions={questions}
     />
   );

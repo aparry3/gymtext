@@ -34,10 +34,11 @@ interface QuestionnaireProps {
   programId?: string;
   programName?: string;
   ownerWordmarkUrl?: string;
+  ownerDisplayName?: string;
   questions: QuestionnaireQuestion[];
 }
 
-export function Questionnaire({ programId, programName, ownerWordmarkUrl, questions }: QuestionnaireProps) {
+export function Questionnaire({ programId, programName, ownerWordmarkUrl, ownerDisplayName, questions }: QuestionnaireProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   // Track consent separately from questionnaire answers
@@ -347,7 +348,7 @@ export function Questionnaire({ programId, programName, ownerWordmarkUrl, questi
   };
 
   return (
-    <div className="questionnaire-theme flex min-h-screen-safe flex-col bg-[hsl(var(--questionnaire-bg))]">
+    <div className={`questionnaire-theme flex flex-col bg-[hsl(var(--questionnaire-bg))] ${ownerWordmarkUrl ? 'h-screen-safe overflow-hidden' : 'min-h-screen-safe'}`}>
       {/* Close button - top left */}
       <div className="pt-safe mt-2 px-4">
         <Link
@@ -370,7 +371,7 @@ export function Questionnaire({ programId, programName, ownerWordmarkUrl, questi
       {/* Branding header */}
       <div className="flex flex-col items-center gap-1 py-4">
         {ownerWordmarkUrl ? (
-          <img src={ownerWordmarkUrl} alt="" className="h-8 object-contain" />
+          <img src={ownerWordmarkUrl} alt={ownerDisplayName || ''} className="h-14 object-contain" />
         ) : (
           <img src="/Wordmark.png" alt="GymText" className="h-8 object-contain" />
         )}
@@ -435,7 +436,7 @@ export function Questionnaire({ programId, programName, ownerWordmarkUrl, questi
       </header>
 
       {/* Main content */}
-      <main className="flex flex-1 flex-col justify-center px-6 pt-8 pb-safe-offset-12">
+      <main className={`flex flex-1 flex-col justify-center px-6 pt-8 ${ownerWordmarkUrl ? 'pb-4' : 'pb-safe-offset-12'}`}>
         <div className="mx-auto w-full max-w-md">
           {error && (
             <div className="mb-6 rounded-xl bg-red-50 border border-red-200 p-4">
@@ -448,6 +449,14 @@ export function Questionnaire({ programId, programName, ownerWordmarkUrl, questi
           </QuestionCard>
         </div>
       </main>
+
+      {/* Powered by GymText — only shown when owner branding is active */}
+      {ownerWordmarkUrl && (
+        <div className="flex-shrink-0 flex items-center justify-center gap-1.5 pt-2 pb-safe-offset-8">
+          <span className="text-xs text-[hsl(var(--questionnaire-muted-foreground)/0.6)]">powered by</span>
+          <img src="/Wordmark.png" alt="GymText" className="h-4 object-contain opacity-60" />
+        </div>
+      )}
     </div>
   );
 }
