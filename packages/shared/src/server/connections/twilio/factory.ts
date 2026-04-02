@@ -14,7 +14,7 @@ export interface TwilioCredentials {
   accountSid: string;
   authToken: string;
   phoneNumber: string;
-  messagingServiceSid: string;
+  messagingServiceSid?: string;
 }
 
 /**
@@ -65,7 +65,7 @@ export function createTwilioClient(
 
         const response = await client.messages.create({
           ...(message && { body: message }),
-          messagingServiceSid,
+          ...(messagingServiceSid ? { messagingServiceSid } : { from: fromNumber }),
           to: to,
           statusCallback: statusCallbackUrl,
           ...(mediaUrls && mediaUrls.length > 0 && { mediaUrl: mediaUrls }),

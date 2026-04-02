@@ -23,7 +23,7 @@ const ServerEnvSchema = z.object({
   TWILIO_ACCOUNT_SID: z.string().min(1, 'TWILIO_ACCOUNT_SID is required'),
   TWILIO_AUTH_TOKEN: z.string().min(1, 'TWILIO_AUTH_TOKEN is required'),
   TWILIO_NUMBER: z.string().min(1, 'TWILIO_NUMBER is required'),
-  TWILIO_MESSAGING_SERVICE_SID: z.string().min(1, 'TWILIO_MESSAGING_SERVICE_SID is required'),
+  TWILIO_MESSAGING_SERVICE_SID: z.string().optional(),
 
   // -------------------------------------------------------------------------
   // Stripe
