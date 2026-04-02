@@ -287,6 +287,7 @@ export function Questionnaire({ programId, programName, ownerWordmarkUrl, ownerD
 
     const currentValue = answers[currentQuestion.id];
     const isLastQuestion = isComplete;
+    const hideButton = !!ownerWordmarkUrl;
 
     switch (currentQuestion.type) {
       case 'select':
@@ -296,6 +297,7 @@ export function Questionnaire({ programId, programName, ownerWordmarkUrl, ownerD
             value={currentValue as string | undefined}
             onChange={(v) => setAnswer(v)}
             onNext={handleNext}
+            hideButton={hideButton}
           />
         );
 
@@ -306,6 +308,7 @@ export function Questionnaire({ programId, programName, ownerWordmarkUrl, ownerD
             value={currentValue as string[] | undefined}
             onChange={(v) => setAnswer(v)}
             onNext={handleNext}
+            hideButton={hideButton}
           />
         );
 
@@ -320,6 +323,7 @@ export function Questionnaire({ programId, programName, ownerWordmarkUrl, ownerD
             isSubmit={isLastQuestion}
             isLoading={isSubmitting}
             onConsentChange={currentQuestion.type === 'phone' ? handleConsentChange : undefined}
+            hideButton={hideButton}
           />
         );
 
@@ -330,6 +334,7 @@ export function Questionnaire({ programId, programName, ownerWordmarkUrl, ownerD
             value={currentValue as string | undefined}
             onChange={(v) => setAnswer(v)}
             onNext={handleNext}
+            hideButton={hideButton}
           />
         );
 
@@ -340,6 +345,7 @@ export function Questionnaire({ programId, programName, ownerWordmarkUrl, ownerD
             value={currentValue as string | undefined}
             onChange={(v) => setAnswer(v)}
             onNext={handleNext}
+            hideButton={hideButton}
           />
         );
 

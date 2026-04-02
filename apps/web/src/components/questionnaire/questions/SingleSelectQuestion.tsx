@@ -15,9 +15,10 @@ interface SingleSelectQuestionProps {
   value: string | undefined;
   onChange: (value: string) => void;
   onNext: () => void;
+  hideButton?: boolean;
 }
 
-export function SingleSelectQuestion({ question, value, onChange, onNext }: SingleSelectQuestionProps) {
+export function SingleSelectQuestion({ question, value, onChange, onNext, hideButton }: SingleSelectQuestionProps) {
   const canContinue = question.required ? !!value : true;
 
   return (
@@ -43,9 +44,11 @@ export function SingleSelectQuestion({ question, value, onChange, onNext }: Sing
         ))}
       </div>
 
-      <div className="mt-4">
-        <ContinueButton onClick={onNext} disabled={!canContinue} />
-      </div>
+      {!hideButton && (
+        <div className="mt-4">
+          <ContinueButton onClick={onNext} disabled={!canContinue} />
+        </div>
+      )}
     </div>
   );
 }

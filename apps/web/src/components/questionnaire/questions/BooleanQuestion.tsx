@@ -15,9 +15,10 @@ interface BooleanQuestionProps {
   value: string | undefined;
   onChange: (value: string) => void;
   onNext: () => void;
+  hideButton?: boolean;
 }
 
-export function BooleanQuestion({ question, value, onChange, onNext }: BooleanQuestionProps) {
+export function BooleanQuestion({ question, value, onChange, onNext, hideButton }: BooleanQuestionProps) {
   const canContinue = question.required ? !!value : true;
 
   return (
@@ -36,9 +37,11 @@ export function BooleanQuestion({ question, value, onChange, onNext }: BooleanQu
         <PillButton label="No" isSelected={value === 'no'} onClick={() => onChange('no')} />
       </div>
 
-      <div className="mt-4">
-        <ContinueButton onClick={onNext} disabled={!canContinue} />
-      </div>
+      {!hideButton && (
+        <div className="mt-4">
+          <ContinueButton onClick={onNext} disabled={!canContinue} />
+        </div>
+      )}
     </div>
   );
 }

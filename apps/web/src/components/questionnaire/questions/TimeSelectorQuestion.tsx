@@ -16,9 +16,10 @@ interface TimeSelectorQuestionProps {
   value: string | undefined;
   onChange: (value: string) => void;
   onNext: () => void;
+  hideButton?: boolean;
 }
 
-export function TimeSelectorQuestion({ question, value, onChange, onNext }: TimeSelectorQuestionProps) {
+export function TimeSelectorQuestion({ question, value, onChange, onNext, hideButton }: TimeSelectorQuestionProps) {
   const currentHour = value !== undefined ? parseInt(value, 10) : 6;
 
   const timeOptions = React.useMemo(() => {
@@ -72,9 +73,11 @@ export function TimeSelectorQuestion({ question, value, onChange, onNext }: Time
         </select>
       </div>
 
-      <div className="mt-4">
-        <ContinueButton onClick={onNext} disabled={false} />
-      </div>
+      {!hideButton && (
+        <div className="mt-4">
+          <ContinueButton onClick={onNext} disabled={false} />
+        </div>
+      )}
     </div>
   );
 }
