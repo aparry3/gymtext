@@ -361,7 +361,6 @@ async function completeSignupFlow(
   // Use program-specific price if available, otherwise fall back to global default
   const programId = formData.programId as string | undefined;
   let priceId = globalPriceId;
-  let checkoutMode: Stripe.Checkout.SessionCreateParams['mode'] = 'subscription';
 
   if (programId) {
     try {
@@ -370,11 +369,6 @@ async function completeSignupFlow(
       if (program?.stripePriceId) {
         priceId = program.stripePriceId;
         console.log(`[Signup] Using program-specific price: ${priceId} (program: ${program.name})`);
-      }
-      // Switch to one-time payment mode if billing model is one_time
-      if (program?.billingModel === 'one_time') {
-        checkoutMode = 'payment';
-        console.log(`[Signup] Using one-time payment mode for program: ${program.name}`);
       }
     } catch (err) {
       console.error(`[Signup] Error fetching program ${programId} for pricing, using global default:`, err);
@@ -424,7 +418,7 @@ async function completeSignupFlow(
   // Build checkout session options
   const checkoutOptions: Stripe.Checkout.SessionCreateParams = {
     customer: stripeCustomerId,
-    mode: checkoutMode,
+    mode: 'subscription',
     payment_method_types: ['card'],
     line_items: [
       {

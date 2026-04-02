@@ -90,7 +90,6 @@ export function createSubscriptionService(repos: RepositoryContainer): Subscript
 
       // Check if user is enrolled in a program with a specific price
       let priceId = globalPriceId;
-      let checkoutMode: 'subscription' | 'payment' = 'subscription';
       try {
         const enrollment = await repos.programEnrollment.findActiveByClientId(userId);
         if (enrollment) {
@@ -99,9 +98,6 @@ export function createSubscriptionService(repos: RepositoryContainer): Subscript
             priceId = program.stripePriceId;
             console.log(`[SubscriptionService] Using program-specific price: ${priceId}`);
           }
-          if (program?.billingModel === 'one_time') {
-            checkoutMode = 'payment';
-          }
         }
       } catch (err) {
         console.error('[SubscriptionService] Error fetching program pricing, using global default:', err);
@@ -109,7 +105,7 @@ export function createSubscriptionService(repos: RepositoryContainer): Subscript
 
       const session = await stripe.checkout.sessions.create({
         customer: user.stripeCustomerId || undefined,
-        mode: checkoutMode,
+        mode: 'subscription',
         line_items: [{ price: priceId, quantity: 1 }],
         success_url: `${resolvedBaseUrl}/api/checkout/session?session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${resolvedBaseUrl}/`,
