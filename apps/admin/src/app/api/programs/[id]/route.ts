@@ -88,7 +88,13 @@ export async function PATCH(request: Request, { params }: RouteParams) {
     const { id } = await params;
     const body = await request.json();
 
-    const { name, description, schedulingMode, cadence, lateJoinerPolicy, billingModel, isActive, isPublic } = body;
+    const {
+      name, description, schedulingMode, cadence, lateJoinerPolicy, billingModel, isActive, isPublic,
+      // Pricing fields (Stripe IDs are auto-managed)
+      priceAmountCents, priceCurrency,
+      // Coach scheduling fields
+      schedulingEnabled, schedulingUrl, schedulingNotes,
+    } = body;
 
     // Validate schedulingMode if provided
     if (schedulingMode) {
@@ -145,7 +151,17 @@ export async function PATCH(request: Request, { params }: RouteParams) {
       );
     }
 
-    // Build update object with only provided fields
+    // Handle pricing separately — auto-creates Stripe Product/Price
+    let program = existing;
+    if (priceAmountCents !== undefined) {
+      const updated = await services.program.updatePricing(id, {
+        priceAmountCents,
+        priceCurrency: priceCurrency || 'usd',
+      });
+      if (updated) program = updated;
+    }
+
+    // Build update object with only provided non-pricing fields
     const updates: Record<string, unknown> = {};
     if (name !== undefined) updates.name = name;
     if (description !== undefined) updates.description = description;
@@ -155,8 +171,15 @@ export async function PATCH(request: Request, { params }: RouteParams) {
     if (billingModel !== undefined) updates.billingModel = billingModel;
     if (isActive !== undefined) updates.isActive = isActive;
     if (isPublic !== undefined) updates.isPublic = isPublic;
+    // Coach scheduling
+    if (schedulingEnabled !== undefined) updates.schedulingEnabled = schedulingEnabled;
+    if (schedulingUrl !== undefined) updates.schedulingUrl = schedulingUrl;
+    if (schedulingNotes !== undefined) updates.schedulingNotes = schedulingNotes;
 
-    const program = await services.program.update(id, updates);
+    if (Object.keys(updates).length > 0) {
+      const updated = await services.program.update(id, updates);
+      if (updated) program = updated;
+    }
 
     return NextResponse.json({
       success: true,

@@ -356,7 +356,24 @@ async function completeSignupFlow(
   console.log('[Signup] Creating Stripe checkout session');
   const { publicBaseUrl, baseUrl } = getUrlsConfig();
   const resolvedBaseUrl = publicBaseUrl || baseUrl;
-  const { priceId } = getStripeConfig();
+  const { priceId: globalPriceId } = getStripeConfig();
+
+  // Use program-specific price if available, otherwise fall back to global default
+  const programId = formData.programId as string | undefined;
+  let priceId = globalPriceId;
+
+  if (programId) {
+    try {
+      const repos = getRepositories();
+      const program = await repos.program.findById(programId);
+      if (program?.stripePriceId) {
+        priceId = program.stripePriceId;
+        console.log(`[Signup] Using program-specific price: ${priceId} (program: ${program.name})`);
+      }
+    } catch (err) {
+      console.error(`[Signup] Error fetching program ${programId} for pricing, using global default:`, err);
+    }
+  }
 
   // Handle referral code if present
   const referralCode = formData.referralCode as string | undefined;
@@ -414,6 +431,7 @@ async function completeSignupFlow(
     metadata: {
       userId,
       referralCode: validReferralCode || '',
+      programId: programId || '',
     },
     client_reference_id: userId,
   };

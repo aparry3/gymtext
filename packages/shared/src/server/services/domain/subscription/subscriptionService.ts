@@ -86,7 +86,22 @@ export function createSubscriptionService(repos: RepositoryContainer): Subscript
 
       const { publicBaseUrl, baseUrl } = getUrlsConfig();
       const resolvedBaseUrl = publicBaseUrl || baseUrl;
-      const { priceId } = getStripeConfig();
+      const { priceId: globalPriceId } = getStripeConfig();
+
+      // Check if user is enrolled in a program with a specific price
+      let priceId = globalPriceId;
+      try {
+        const enrollment = await repos.programEnrollment.findActiveByClientId(userId);
+        if (enrollment) {
+          const program = await repos.program.findById(enrollment.programId);
+          if (program?.stripePriceId) {
+            priceId = program.stripePriceId;
+            console.log(`[SubscriptionService] Using program-specific price: ${priceId}`);
+          }
+        }
+      } catch (err) {
+        console.error('[SubscriptionService] Error fetching program pricing, using global default:', err);
+      }
 
       const session = await stripe.checkout.sessions.create({
         customer: user.stripeCustomerId || undefined,
