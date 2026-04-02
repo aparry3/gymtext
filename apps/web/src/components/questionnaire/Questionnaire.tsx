@@ -348,7 +348,7 @@ export function Questionnaire({ programId, programName, ownerWordmarkUrl, ownerD
   };
 
   return (
-    <div className={`questionnaire-theme flex flex-col bg-[hsl(var(--questionnaire-bg))] ${ownerWordmarkUrl ? 'h-screen-safe overflow-hidden' : 'min-h-screen-safe'}`}>
+    <div className={`questionnaire-theme flex flex-col bg-[hsl(var(--questionnaire-bg))] ${ownerWordmarkUrl ? 'h-screen-safe' : 'min-h-screen-safe'}`}>
       {/* Close button - top left */}
       <div className="pt-safe mt-2 px-4">
         <Link
@@ -436,7 +436,7 @@ export function Questionnaire({ programId, programName, ownerWordmarkUrl, ownerD
       </header>
 
       {/* Main content */}
-      <main className={`flex flex-1 flex-col justify-center px-6 pt-8 ${ownerWordmarkUrl ? 'pb-4' : 'pb-safe-offset-12'}`}>
+      <main className={`flex flex-1 flex-col px-6 overflow-y-auto ${ownerWordmarkUrl ? 'justify-start pt-4 pb-4' : 'justify-center pt-8 pb-safe-offset-12'}`}>
         <div className="mx-auto w-full max-w-md">
           {error && (
             <div className="mb-6 rounded-xl bg-red-50 border border-red-200 p-4">
