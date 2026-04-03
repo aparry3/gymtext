@@ -15,6 +15,7 @@ import {
   LateJoinerPolicy,
 } from '@/components/admin/types'
 import { EnrollmentsTable } from '@/components/admin/EnrollmentsTable'
+import { SmsImageDialog } from '@/components/admin/programs/SmsImageDialog'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -152,6 +153,7 @@ interface ProgramDetail extends AdminProgram {
     displayName: string
     ownerType: OwnerType
     avatarUrl: string | null
+    wordmarkUrl: string | null
   }
 }
 
@@ -214,10 +216,9 @@ export default function ProgramDetailPage() {
     questions: [],
   })
 
-  // SMS image upload state
+  // SMS image state
   const [smsImageUrl, setSmsImageUrl] = useState<string | null>(null)
-  const [smsImageUploading, setSmsImageUploading] = useState(false)
-  const smsImageInputRef = useRef<HTMLInputElement>(null)
+  const [smsImageDialogOpen, setSmsImageDialogOpen] = useState(false)
 
   // Dirty tracking refs (snapshots at load time)
   const originalProgramRef = useRef<string>('')
@@ -232,8 +233,8 @@ export default function ProgramDetailPage() {
   // ─── Dirty tracking ────────────────────────────────────────────────
 
   const getCurrentProgramSnapshot = useCallback(() => {
-    return JSON.stringify({ editForm, settingsForm, pricingForm, schedulingForm })
-  }, [editForm, settingsForm, pricingForm, schedulingForm])
+    return JSON.stringify({ editForm, settingsForm, pricingForm, schedulingForm, smsImageUrl })
+  }, [editForm, settingsForm, pricingForm, schedulingForm, smsImageUrl])
 
   const getCurrentVersionSnapshot = useCallback(() => {
     return JSON.stringify(versionForm)
@@ -312,6 +313,7 @@ export default function ProgramDetailPage() {
         settingsForm: newSettingsForm,
         pricingForm: newPricingForm,
         schedulingForm: newSchedulingForm,
+        smsImageUrl: data.program.smsImageUrl || null,
       })
       originalVersionRef.current = JSON.stringify(newVersionForm)
 
@@ -371,6 +373,7 @@ export default function ProgramDetailPage() {
             schedulingEnabled: schedulingForm.schedulingEnabled,
             schedulingUrl: schedulingForm.schedulingUrl || null,
             schedulingNotes: schedulingForm.schedulingNotes || null,
+            smsImageUrl,
           }),
         })
 
@@ -544,50 +547,8 @@ export default function ProgramDetailPage() {
   // For display in the overview, determine what content/questions to show
   const displayContent = viewingVersion ? (viewingVersion.content || '') : versionForm.content
   const displayQuestions = viewingVersion ? (viewingVersion.questions || []) : versionForm.questions
-  const handleSmsImageUpload = async (file: File) => {
-    if (!program) return
-    if (!file.type.startsWith('image/')) {
-      setError('File must be an image')
-      return
-    }
-    if (file.size > 5 * 1024 * 1024) {
-      setError('File size must be less than 5MB')
-      return
-    }
-
-    setSmsImageUploading(true)
-    setError(null)
-    try {
-      const formData = new FormData()
-      formData.append('file', file)
-      const response = await fetch(`/api/programs/${program.id}/image`, {
-        method: 'POST',
-        body: formData,
-      })
-      const result = await response.json()
-      if (!response.ok || !result.success) {
-        throw new Error(result.message || 'Failed to upload image')
-      }
-      setSmsImageUrl(result.data.url)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to upload image')
-    } finally {
-      setSmsImageUploading(false)
-    }
-  }
-
-  const handleRemoveSmsImage = async () => {
-    if (!program) return
-    try {
-      const response = await fetch(`/api/programs/${program.id}/image`, { method: 'DELETE' })
-      const result = await response.json()
-      if (!response.ok || !result.success) {
-        throw new Error(result.message || 'Failed to remove image')
-      }
-      setSmsImageUrl(null)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to remove image')
-    }
+  const handleRemoveSmsImage = () => {
+    setSmsImageUrl(null)
   }
 
   const isReadOnly = !!viewingVersion
@@ -882,7 +843,7 @@ export default function ProgramDetailPage() {
                       <img
                         src={smsImageUrl}
                         alt="SMS image preview"
-                        className="w-full rounded-lg border border-gray-200 object-cover max-h-40"
+                        className="w-full rounded-lg border border-gray-200 object-contain max-h-40 bg-gray-50"
                       />
                       {!isReadOnly && (
                         <div className="flex gap-2">
@@ -890,10 +851,9 @@ export default function ProgramDetailPage() {
                             type="button"
                             variant="outline"
                             size="sm"
-                            onClick={() => smsImageInputRef.current?.click()}
-                            disabled={smsImageUploading}
+                            onClick={() => setSmsImageDialogOpen(true)}
                           >
-                            {smsImageUploading ? 'Uploading...' : 'Replace'}
+                            Replace
                           </Button>
                           <Button
                             type="button"
@@ -908,34 +868,25 @@ export default function ProgramDetailPage() {
                       )}
                     </div>
                   ) : (
-                    <div>
-                      {!isReadOnly && (
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => smsImageInputRef.current?.click()}
-                          disabled={smsImageUploading}
-                        >
-                          {smsImageUploading ? 'Uploading...' : 'Upload Image'}
-                        </Button>
-                      )}
-                      {!smsImageUrl && !isReadOnly && (
-                        <p className="text-xs text-gray-400 mt-1 italic">No SMS image set</p>
-                      )}
-                    </div>
+                    !isReadOnly && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setSmsImageDialogOpen(true)}
+                      >
+                        Add Image
+                      </Button>
+                    )
                   )}
 
-                  <input
-                    ref={smsImageInputRef}
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0]
-                      if (file) handleSmsImageUpload(file)
-                      e.target.value = ''
-                    }}
-                    className="hidden"
+                  <SmsImageDialog
+                    open={smsImageDialogOpen}
+                    onOpenChange={setSmsImageDialogOpen}
+                    programId={program.id}
+                    ownerWordmarkUrl={program.owner.wordmarkUrl}
+                    programLogoUrl={program.logoUrl}
+                    onImageSet={setSmsImageUrl}
                   />
                 </Card>
 

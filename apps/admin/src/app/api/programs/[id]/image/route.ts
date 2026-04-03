@@ -61,18 +61,10 @@ export async function POST(request: Request, { params }: RouteParams) {
       contentType: file.type,
     });
 
-    const updated = await services.program.update(id, { smsImageUrl: url });
-
-    if (!updated) {
-      return NextResponse.json(
-        { success: false, message: 'Failed to update program' },
-        { status: 500 }
-      );
-    }
-
+    // Return the blob URL only — the program record is updated when the user saves
     return NextResponse.json({
       success: true,
-      data: { url, program: updated },
+      data: { url },
     });
   } catch (error) {
     console.error('Error uploading program SMS image:', error);
@@ -87,38 +79,3 @@ export async function POST(request: Request, { params }: RouteParams) {
   }
 }
 
-/**
- * DELETE /api/programs/[id]/image
- * Remove the SMS image from a program
- */
-export async function DELETE(request: Request, { params }: RouteParams) {
-  try {
-    const { id } = await params;
-    const { services } = await getAdminContext();
-
-    const program = await services.program.getById(id);
-    if (!program) {
-      return NextResponse.json(
-        { success: false, message: 'Program not found' },
-        { status: 404 }
-      );
-    }
-
-    const updated = await services.program.update(id, { smsImageUrl: null });
-
-    return NextResponse.json({
-      success: true,
-      data: { program: updated },
-    });
-  } catch (error) {
-    console.error('Error removing program SMS image:', error);
-
-    return NextResponse.json(
-      {
-        success: false,
-        message: error instanceof Error ? error.message : 'Failed to remove image',
-      },
-      { status: 500 }
-    );
-  }
-}
