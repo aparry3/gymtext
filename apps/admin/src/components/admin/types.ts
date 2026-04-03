@@ -355,6 +355,8 @@ export interface AdminProgram {
   schedulingEnabled: boolean;
   schedulingUrl: string | null;
   schedulingNotes: string | null;
+  // Branding
+  smsImageUrl: string | null;
   createdAt: Date;
   updatedAt: Date;
   // Stats

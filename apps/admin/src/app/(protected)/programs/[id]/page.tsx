@@ -214,6 +214,11 @@ export default function ProgramDetailPage() {
     questions: [],
   })
 
+  // SMS image upload state
+  const [smsImageUrl, setSmsImageUrl] = useState<string | null>(null)
+  const [smsImageUploading, setSmsImageUploading] = useState(false)
+  const smsImageInputRef = useRef<HTMLInputElement>(null)
+
   // Dirty tracking refs (snapshots at load time)
   const originalProgramRef = useRef<string>('')
   const originalVersionRef = useRef<string>('')
@@ -289,6 +294,7 @@ export default function ProgramDetailPage() {
       setSettingsForm(newSettingsForm)
       setPricingForm(newPricingForm)
       setSchedulingForm(newSchedulingForm)
+      setSmsImageUrl(data.program.smsImageUrl || null)
 
       // Find published version and populate version form
       const publishedVersion = (data.versions || []).find(
@@ -538,6 +544,52 @@ export default function ProgramDetailPage() {
   // For display in the overview, determine what content/questions to show
   const displayContent = viewingVersion ? (viewingVersion.content || '') : versionForm.content
   const displayQuestions = viewingVersion ? (viewingVersion.questions || []) : versionForm.questions
+  const handleSmsImageUpload = async (file: File) => {
+    if (!program) return
+    if (!file.type.startsWith('image/')) {
+      setError('File must be an image')
+      return
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setError('File size must be less than 5MB')
+      return
+    }
+
+    setSmsImageUploading(true)
+    setError(null)
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      const response = await fetch(`/api/programs/${program.id}/image`, {
+        method: 'POST',
+        body: formData,
+      })
+      const result = await response.json()
+      if (!response.ok || !result.success) {
+        throw new Error(result.message || 'Failed to upload image')
+      }
+      setSmsImageUrl(result.data.url)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to upload image')
+    } finally {
+      setSmsImageUploading(false)
+    }
+  }
+
+  const handleRemoveSmsImage = async () => {
+    if (!program) return
+    try {
+      const response = await fetch(`/api/programs/${program.id}/image`, { method: 'DELETE' })
+      const result = await response.json()
+      if (!response.ok || !result.success) {
+        throw new Error(result.message || 'Failed to remove image')
+      }
+      setSmsImageUrl(null)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to remove image')
+    }
+  }
+
   const isReadOnly = !!viewingVersion
 
   return (
@@ -811,6 +863,80 @@ export default function ProgramDetailPage() {
                       </div>
                     </div>
                   )}
+                </Card>
+
+                {/* SMS Image Card */}
+                <Card className="p-5 bg-white border border-gray-200 rounded-xl shadow-sm">
+                  <div className="flex items-center gap-2 mb-3">
+                    <svg className="text-gray-500" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="3" y="3" width="18" height="18" rx="2" ry="2" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" />
+                    </svg>
+                    <h3 className="text-[15px] font-semibold text-gray-900">SMS Image</h3>
+                  </div>
+                  <p className="text-xs text-gray-400 mb-3">
+                    Image sent with daily workout texts. Falls back to owner avatar, then default GymText image.
+                  </p>
+
+                  {smsImageUrl ? (
+                    <div className="space-y-2">
+                      <img
+                        src={smsImageUrl}
+                        alt="SMS image preview"
+                        className="w-full rounded-lg border border-gray-200 object-cover max-h-40"
+                      />
+                      {!isReadOnly && (
+                        <div className="flex gap-2">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => smsImageInputRef.current?.click()}
+                            disabled={smsImageUploading}
+                          >
+                            {smsImageUploading ? 'Uploading...' : 'Replace'}
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="text-red-500 hover:text-red-600"
+                            onClick={handleRemoveSmsImage}
+                          >
+                            Remove
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div>
+                      {!isReadOnly && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => smsImageInputRef.current?.click()}
+                          disabled={smsImageUploading}
+                        >
+                          {smsImageUploading ? 'Uploading...' : 'Upload Image'}
+                        </Button>
+                      )}
+                      {!smsImageUrl && !isReadOnly && (
+                        <p className="text-xs text-gray-400 mt-1 italic">No SMS image set</p>
+                      )}
+                    </div>
+                  )}
+
+                  <input
+                    ref={smsImageInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0]
+                      if (file) handleSmsImageUpload(file)
+                      e.target.value = ''
+                    }}
+                    className="hidden"
+                  />
                 </Card>
 
                 {/* Sign-up Questions */}
