@@ -94,6 +94,18 @@ function makeDeps(overrides: Partial<Record<keyof DailyMessageServiceDeps, unkno
       getByUserAndDate: vi.fn().mockResolvedValue(null),
       ...((overrides.workoutInstance as object) ?? {}),
     },
+    enrollment: {
+      getActiveEnrollment: vi.fn().mockResolvedValue(null),
+      ...((overrides.enrollment as object) ?? {}),
+    },
+    program: {
+      getById: vi.fn().mockResolvedValue(null),
+      ...((overrides.program as object) ?? {}),
+    },
+    programOwner: {
+      getById: vi.fn().mockResolvedValue(null),
+      ...((overrides.programOwner as object) ?? {}),
+    },
   } as unknown as DailyMessageServiceDeps;
 }
 

@@ -2,13 +2,16 @@ import { UserWithProfile } from '@/server/models/user';
 import { DateTime } from 'luxon';
 import { now } from '@/shared/utils/date';
 import { inngest } from '@/server/connections/inngest/client';
-import { getUrlsConfig } from '@/shared/config';
 import type { UserServiceInstance } from '../domain/user/userService';
 import type { MessagingOrchestratorInstance, QueuedMessageContent } from './messagingOrchestrator';
 import type { DayConfigServiceInstance } from '../domain/calendar/dayConfigService';
 import type { TrainingServiceInstance, WorkoutData } from './trainingService';
 import type { MessageServiceInstance } from '../domain/messaging/messageService';
 import type { WorkoutInstanceServiceInstance } from '../domain/training/workoutInstanceService';
+import type { EnrollmentServiceInstance } from '../domain/program/enrollmentService';
+import type { ProgramServiceInstance } from '../domain/program/programService';
+import type { ProgramOwnerServiceInstance } from '../domain/program/programOwnerService';
+import { resolveSmsImageUrl } from './smsImageResolver';
 
 interface MessageResult {
   success: boolean;
@@ -65,6 +68,9 @@ export interface DailyMessageServiceDeps {
   training: TrainingServiceInstance;
   message: MessageServiceInstance;
   workoutInstance: WorkoutInstanceServiceInstance;
+  enrollment: EnrollmentServiceInstance;
+  program: ProgramServiceInstance;
+  programOwner: ProgramOwnerServiceInstance;
 }
 
 /**
@@ -83,6 +89,9 @@ export function createDailyMessageService(
     training: trainingService,
     message: messageService,
     workoutInstance: workoutInstanceService,
+    enrollment: enrollmentService,
+    program: programService,
+    programOwner: programOwnerService,
   } = deps;
 
   return {
@@ -176,19 +185,27 @@ export function createDailyMessageService(
 
         const customImageUrl = await dayConfigService.getImageUrlForDate(targetDate.toJSDate());
 
-        let mediaUrls: string[] | undefined;
-        if (customImageUrl) {
-          mediaUrls = [customImageUrl];
-          console.log(`Using custom day image for ${targetDate.toISODate()}`);
-        } else {
-          const { publicBaseUrl, baseUrl } = getUrlsConfig();
-          const resolvedBaseUrl = publicBaseUrl || baseUrl;
-          mediaUrls = resolvedBaseUrl ? [`${resolvedBaseUrl}/OpenGraphGymtext.png`] : undefined;
+        let programSmsImageUrl: string | null = null;
+        let ownerAvatarUrl: string | null = null;
 
-          if (!resolvedBaseUrl) {
-            console.warn('BASE_URL not configured - sending workout without logo image');
+        if (!customImageUrl) {
+          const activeEnrollment = await enrollmentService.getActiveEnrollment(user.id);
+          if (activeEnrollment) {
+            const prog = await programService.getById(activeEnrollment.programId);
+            if (prog?.smsImageUrl) {
+              programSmsImageUrl = prog.smsImageUrl;
+            } else if (prog) {
+              const owner = await programOwnerService.getById(prog.ownerId);
+              ownerAvatarUrl = owner?.avatarUrl ?? null;
+            }
           }
         }
+
+        const mediaUrls = resolveSmsImageUrl({
+          customDayImageUrl: customImageUrl ?? null,
+          programSmsImageUrl,
+          ownerAvatarUrl,
+        });
 
         if (user.messagingOptIn !== true) {
           console.log(`[DailyMessageService] Skipping SMS for user ${user.id} - no SMS consent`);

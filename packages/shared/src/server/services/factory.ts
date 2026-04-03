@@ -267,12 +267,14 @@ export function createServices(repos: RepositoryContainer, clients?: ExternalCli
     messagingOrchestrator: getMessagingOrchestrator(),
     dayConfig, training,
     message, workoutInstance,
+    enrollment, program, programOwner,
   });
 
   const weeklyMessage = createWeeklyMessageService({
     user,
     messagingOrchestrator: getMessagingOrchestrator(),
     training, markdown, messagingAgent, dayConfig,
+    enrollment, program, programOwner,
   });
 
   const onboarding = createOnboardingService({
