@@ -66,6 +66,7 @@ export async function GET(request: Request, { params }: RouteParams) {
           displayName: owner.displayName,
           ownerType: owner.ownerType,
           avatarUrl: owner.avatarUrl,
+          wordmarkUrl: owner.wordmarkUrl,
         },
         versions,
         enrollments: enrichedEnrollments,
@@ -96,6 +97,8 @@ export async function PATCH(request: Request, { params }: RouteParams) {
       priceAmountCents, priceCurrency,
       // Coach scheduling fields
       schedulingEnabled, schedulingUrl, schedulingNotes,
+      // Branding
+      smsImageUrl,
     } = body;
 
     // Validate schedulingMode if provided
@@ -177,6 +180,8 @@ export async function PATCH(request: Request, { params }: RouteParams) {
     if (schedulingEnabled !== undefined) updates.schedulingEnabled = schedulingEnabled;
     if (schedulingUrl !== undefined) updates.schedulingUrl = schedulingUrl;
     if (schedulingNotes !== undefined) updates.schedulingNotes = schedulingNotes;
+    // Branding
+    if (smsImageUrl !== undefined) updates.smsImageUrl = smsImageUrl;
 
     if (Object.keys(updates).length > 0) {
       const updated = await services.program.update(id, updates);

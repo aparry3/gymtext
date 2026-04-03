@@ -26,6 +26,12 @@ export interface Program {
   publishedVersionId: string | null;
   /** ID of the cover image for this program */
   coverImageId: string | null;
+  /** URL of the program logo for branding */
+  logoUrl: string | null;
+  /** Subheader text for program branding */
+  subheader: string | null;
+  /** URL of the image sent with daily/weekly SMS texts */
+  smsImageUrl: string | null;
   isActive: boolean;
   isPublic: boolean;
   // Pricing
@@ -56,6 +62,9 @@ export class ProgramModel {
       revenueSplitPercent: row.revenueSplitPercent,
       publishedVersionId: row.publishedVersionId,
       coverImageId: row.coverImageId ?? null,
+      logoUrl: row.logoUrl ?? null,
+      subheader: row.subheader ?? null,
+      smsImageUrl: row.smsImageUrl ?? null,
       isActive: row.isActive,
       isPublic: row.isPublic,
       // Pricing
