@@ -79,8 +79,8 @@ export async function POST(request: NextRequest) {
       message: 'Admin verification successful',
     });
 
-    // Set secure admin cookie
-    response.cookies.set('gt_admin', 'ok', {
+    // Set secure admin cookie with phone number as identity
+    response.cookies.set('gt_admin', normalizedPhone, {
       httpOnly: true,
       secure: isProductionEnvironment(),
       sameSite: 'lax',

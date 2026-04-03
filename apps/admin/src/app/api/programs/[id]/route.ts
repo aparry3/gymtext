@@ -29,9 +29,11 @@ export async function GET(request: Request, { params }: RouteParams) {
     }
 
     // Get enrollment stats and versions
-    const enrollmentCount = await services.enrollment.countActiveEnrollments(program.id);
-    const versionCount = await services.programVersion.countByProgramId(program.id);
-    const versions = await services.programVersion.getByProgramId(program.id);
+    const [enrollmentCount, versionCount, versions] = await Promise.all([
+      services.enrollment.countActiveEnrollments(program.id),
+      services.programVersion.countByProgramId(program.id),
+      services.programVersion.getByProgramId(program.id),
+    ]);
 
     // Get enrollments with client info
     const enrollments = await services.enrollment.listByProgram(program.id);
