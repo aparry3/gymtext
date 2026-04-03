@@ -1,16 +1,17 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
-import { useParams, useRouter } from 'next/navigation'
+import { useState, useEffect, useCallback, useRef } from 'react'
+import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import {
   AdminProgram,
   AdminEnrollment,
   AdminProgramVersion,
+  AdminProgramQuestion,
+  ProgramQuestionType,
   OwnerType,
   EnrollmentSort,
   SchedulingMode,
   ProgramCadence,
-  BillingModel,
   LateJoinerPolicy,
 } from '@/components/admin/types'
 import { EnrollmentsTable } from '@/components/admin/EnrollmentsTable'
@@ -119,6 +120,30 @@ function GripVerticalIcon({ className = '' }: { className?: string }) {
   )
 }
 
+function PlusIcon({ className = '' }: { className?: string }) {
+  return (
+    <svg className={className} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+    </svg>
+  )
+}
+
+function TrashIcon({ className = '' }: { className?: string }) {
+  return (
+    <svg className={className} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+    </svg>
+  )
+}
+
+function ClockIcon({ className = '' }: { className?: string }) {
+  return (
+    <svg className={className} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
+    </svg>
+  )
+}
+
 // ─── Types ────────────────────────────────────────────────────────────
 
 interface ProgramDetail extends AdminProgram {
@@ -130,11 +155,25 @@ interface ProgramDetail extends AdminProgram {
   }
 }
 
+interface VersionFormState {
+  content: string
+  questions: AdminProgramQuestion[]
+}
+
+const questionTypes: { value: ProgramQuestionType; label: string }[] = [
+  { value: 'text', label: 'Text Input' },
+  { value: 'select', label: 'Single Choice' },
+  { value: 'multiselect', label: 'Multiple Choice' },
+  { value: 'scale', label: 'Scale (1-10)' },
+  { value: 'boolean', label: 'Yes/No' },
+]
+
 // ─── Main Component ──────────────────────────────────────────────────
 
 export default function ProgramDetailPage() {
   const { id } = useParams()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [program, setProgram] = useState<ProgramDetail | null>(null)
   const [versions, setVersions] = useState<AdminProgramVersion[]>([])
   const [enrollments, setEnrollments] = useState<AdminEnrollment[]>([])
@@ -144,7 +183,7 @@ export default function ProgramDetailPage() {
   const [enrollmentSort, setEnrollmentSort] = useState<EnrollmentSort>({ field: 'enrolledAt', direction: 'desc' })
   const [activeTab, setActiveTab] = useState('overview')
 
-  // Unified form state
+  // Program form state
   const [editForm, setEditForm] = useState({
     name: '',
     description: '',
@@ -155,7 +194,6 @@ export default function ProgramDetailPage() {
   const [settingsForm, setSettingsForm] = useState({
     schedulingMode: 'rolling_start' as SchedulingMode,
     cadence: 'calendar_days' as ProgramCadence,
-    billingModel: '' as BillingModel | '',
     lateJoinerPolicy: '' as LateJoinerPolicy | '',
   })
 
@@ -170,7 +208,42 @@ export default function ProgramDetailPage() {
     schedulingNotes: '',
   })
 
-  const [isCreatingVersion, setIsCreatingVersion] = useState(false)
+  // Version form state (curriculum + questions from published version)
+  const [versionForm, setVersionForm] = useState<VersionFormState>({
+    content: '',
+    questions: [],
+  })
+
+  // Dirty tracking refs (snapshots at load time)
+  const originalProgramRef = useRef<string>('')
+  const originalVersionRef = useRef<string>('')
+
+  // Historical version viewing
+  const [viewingVersion, setViewingVersion] = useState<AdminProgramVersion | null>(null)
+
+  // Question editing state
+  const [isEditingQuestions, setIsEditingQuestions] = useState(false)
+
+  // ─── Dirty tracking ────────────────────────────────────────────────
+
+  const getCurrentProgramSnapshot = useCallback(() => {
+    return JSON.stringify({ editForm, settingsForm, pricingForm, schedulingForm })
+  }, [editForm, settingsForm, pricingForm, schedulingForm])
+
+  const getCurrentVersionSnapshot = useCallback(() => {
+    return JSON.stringify(versionForm)
+  }, [versionForm])
+
+  const isProgramDirty = originalProgramRef.current !== '' && getCurrentProgramSnapshot() !== originalProgramRef.current
+  const isVersionDirty = originalVersionRef.current !== '' && getCurrentVersionSnapshot() !== originalVersionRef.current
+  const isAnyDirty = isProgramDirty || isVersionDirty
+
+  const getSaveLabel = () => {
+    if (isSaving) return 'Saving...'
+    if (isProgramDirty && isVersionDirty) return 'Save All Changes'
+    if (isVersionDirty) return 'Save & Create New Version'
+    return 'Update Program'
+  }
 
   // ─── Data fetching ──────────────────────────────────────────────
 
@@ -190,27 +263,55 @@ export default function ProgramDetailPage() {
       setProgram({ ...data.program, owner: data.owner })
       setVersions(data.versions || [])
       setEnrollments(data.enrollments)
-      setEditForm({
+
+      const newEditForm = {
         name: data.program.name,
         description: data.program.description || '',
         isActive: data.program.isActive,
         isPublic: data.program.isPublic,
-      })
-      setSettingsForm({
+      }
+      const newSettingsForm = {
         schedulingMode: data.program.schedulingMode,
         cadence: data.program.cadence,
-        billingModel: data.program.billingModel || '',
         lateJoinerPolicy: data.program.lateJoinerPolicy || '',
-      })
-      setPricingForm({
-        priceAmountDollars: data.program.priceAmountCents ? (data.program.priceAmountCents / 100).toFixed(0) : '',
+      }
+      const newPricingForm = {
+        priceAmountDollars: data.program.priceAmountCents ? (data.program.priceAmountCents / 100).toFixed(2) : '',
         priceCurrency: data.program.priceCurrency || 'usd',
-      })
-      setSchedulingForm({
+      }
+      const newSchedulingForm = {
         schedulingEnabled: data.program.schedulingEnabled || false,
         schedulingUrl: data.program.schedulingUrl || '',
         schedulingNotes: data.program.schedulingNotes || '',
+      }
+
+      setEditForm(newEditForm)
+      setSettingsForm(newSettingsForm)
+      setPricingForm(newPricingForm)
+      setSchedulingForm(newSchedulingForm)
+
+      // Find published version and populate version form
+      const publishedVersion = (data.versions || []).find(
+        (v: AdminProgramVersion) => v.id === data.program.publishedVersionId
+      )
+      const newVersionForm: VersionFormState = {
+        content: publishedVersion?.content || '',
+        questions: publishedVersion?.questions ? JSON.parse(JSON.stringify(publishedVersion.questions)) : [],
+      }
+      setVersionForm(newVersionForm)
+
+      // Store snapshots for dirty tracking
+      originalProgramRef.current = JSON.stringify({
+        editForm: newEditForm,
+        settingsForm: newSettingsForm,
+        pricingForm: newPricingForm,
+        schedulingForm: newSchedulingForm,
       })
+      originalVersionRef.current = JSON.stringify(newVersionForm)
+
+      // Clear viewing version on re-fetch
+      setViewingVersion(null)
+      setIsEditingQuestions(false)
     } catch (err) {
       setError('Failed to load program')
       console.error('Error fetching program:', err)
@@ -225,39 +326,83 @@ export default function ProgramDetailPage() {
     }
   }, [id, fetchProgram])
 
+  // Handle ?viewVersion= query param
+  useEffect(() => {
+    const viewVersionId = searchParams.get('viewVersion')
+    if (viewVersionId && versions.length > 0) {
+      const version = versions.find(v => v.id === viewVersionId)
+      if (version) {
+        setViewingVersion(version)
+        setActiveTab('overview')
+      }
+    }
+  }, [searchParams, versions])
+
   // ─── Save handlers ──────────────────────────────────────────────
 
-  const handleUpdateProgram = async () => {
+  const handleSave = async () => {
     if (!program) return
     setIsSaving(true)
     setError(null)
 
     try {
-      const amountCents = pricingForm.priceAmountDollars
-        ? Math.round(parseFloat(pricingForm.priceAmountDollars) * 100)
-        : null
+      // 1. Update program if dirty
+      if (isProgramDirty) {
+        const amountCents = pricingForm.priceAmountDollars
+          ? Math.round(parseFloat(pricingForm.priceAmountDollars) * 100)
+          : null
 
-      const response = await fetch(`/api/programs/${program.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...editForm,
-          schedulingMode: settingsForm.schedulingMode,
-          cadence: settingsForm.cadence,
-          billingModel: settingsForm.billingModel || null,
-          lateJoinerPolicy: settingsForm.lateJoinerPolicy || null,
-          priceAmountCents: amountCents,
-          priceCurrency: pricingForm.priceCurrency || 'usd',
-          schedulingEnabled: schedulingForm.schedulingEnabled,
-          schedulingUrl: schedulingForm.schedulingUrl || null,
-          schedulingNotes: schedulingForm.schedulingNotes || null,
-        }),
-      })
+        const response = await fetch(`/api/programs/${program.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            ...editForm,
+            schedulingMode: settingsForm.schedulingMode,
+            cadence: settingsForm.cadence,
+            lateJoinerPolicy: settingsForm.lateJoinerPolicy || null,
+            priceAmountCents: amountCents,
+            priceCurrency: pricingForm.priceCurrency || 'usd',
+            schedulingEnabled: schedulingForm.schedulingEnabled,
+            schedulingUrl: schedulingForm.schedulingUrl || null,
+            schedulingNotes: schedulingForm.schedulingNotes || null,
+          }),
+        })
 
-      const result = await response.json()
+        const result = await response.json()
+        if (!response.ok || !result.success) {
+          throw new Error(result.message || 'Failed to update program')
+        }
+      }
 
-      if (!response.ok || !result.success) {
-        throw new Error(result.message || 'Failed to update program')
+      // 2. Create new version if version fields dirty
+      if (isVersionDirty) {
+        // Create a new draft version with the current content
+        const createResponse = await fetch(`/api/programs/${program.id}/versions`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            content: versionForm.content,
+            questions: versionForm.questions.length > 0 ? versionForm.questions : null,
+          }),
+        })
+
+        const createResult = await createResponse.json()
+        if (!createResponse.ok || !createResult.success) {
+          throw new Error(createResult.message || 'Failed to create version')
+        }
+
+        // Auto-publish the new version
+        const newVersionId = createResult.data.id
+        const publishResponse = await fetch(`/api/programs/${program.id}/versions/${newVersionId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'publish' }),
+        })
+
+        const publishResult = await publishResponse.json()
+        if (!publishResponse.ok || !publishResult.success) {
+          throw new Error(publishResult.message || 'Failed to publish version')
+        }
       }
 
       await fetchProgram(program.id)
@@ -265,32 +410,6 @@ export default function ProgramDetailPage() {
       setError(err instanceof Error ? err.message : 'Failed to save changes')
     } finally {
       setIsSaving(false)
-    }
-  }
-
-  const handleCreateDraft = async () => {
-    if (!program) return
-    setIsCreatingVersion(true)
-    setError(null)
-
-    try {
-      const response = await fetch(`/api/programs/${program.id}/versions`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({}),
-      })
-
-      const result = await response.json()
-
-      if (!response.ok || !result.success) {
-        throw new Error(result.message || 'Failed to create draft')
-      }
-
-      await fetchProgram(program.id)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create draft')
-    } finally {
-      setIsCreatingVersion(false)
     }
   }
 
@@ -316,6 +435,52 @@ export default function ProgramDetailPage() {
     }
   }
 
+  // ─── Version history handlers ──────────────────────────────────
+
+  const handleViewVersion = (version: AdminProgramVersion) => {
+    setViewingVersion(version)
+    setActiveTab('overview')
+  }
+
+  const handleBackToCurrent = () => {
+    setViewingVersion(null)
+  }
+
+  const handleRevertToVersion = (version: AdminProgramVersion) => {
+    setVersionForm({
+      content: version.content || '',
+      questions: version.questions ? JSON.parse(JSON.stringify(version.questions)) : [],
+    })
+    setViewingVersion(null)
+  }
+
+  // ─── Question editing handlers ──────────────────────────────────
+
+  const addQuestion = () => {
+    const newQ: AdminProgramQuestion = {
+      id: crypto.randomUUID(),
+      questionType: 'text',
+      questionText: '',
+      isRequired: false,
+      sortOrder: versionForm.questions.length,
+    }
+    setVersionForm(prev => ({ ...prev, questions: [...prev.questions, newQ] }))
+  }
+
+  const updateQuestion = (qId: string, updates: Partial<AdminProgramQuestion>) => {
+    setVersionForm(prev => ({
+      ...prev,
+      questions: prev.questions.map(q => q.id === qId ? { ...q, ...updates } : q),
+    }))
+  }
+
+  const removeQuestion = (qId: string) => {
+    setVersionForm(prev => ({
+      ...prev,
+      questions: prev.questions.filter(q => q.id !== qId),
+    }))
+  }
+
   // ─── Labels ─────────────────────────────────────────────────────
 
   const modeLabels: Record<string, string> = {
@@ -328,11 +493,7 @@ export default function ProgramDetailPage() {
     training_days_only: 'Training Days Only',
   }
 
-  const billingLabels: Record<string, string> = {
-    subscription: 'Subscription-based',
-    one_time: 'One Time',
-    free: 'Free',
-  }
+
 
   const versionStatusColors: Record<string, string> = {
     draft: 'bg-yellow-100 text-yellow-800',
@@ -369,10 +530,15 @@ export default function ProgramDetailPage() {
     .slice(0, 2)
 
   const priceDisplay = program.priceAmountCents
-    ? `$${(program.priceAmountCents / 100).toFixed(0)}`
-    : '$0'
+    ? `$${(program.priceAmountCents / 100).toFixed(2)}`
+    : 'Not set'
 
   const hasStripe = !!(program.stripeProductId && program.stripePriceId)
+
+  // For display in the overview, determine what content/questions to show
+  const displayContent = viewingVersion ? (viewingVersion.content || '') : versionForm.content
+  const displayQuestions = viewingVersion ? (viewingVersion.questions || []) : versionForm.questions
+  const isReadOnly = !!viewingVersion
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -401,14 +567,16 @@ export default function ProgramDetailPage() {
               <EyeIcon className="mr-2" />
               Preview Page
             </Button>
-            <Button
-              className="bg-gray-900 hover:bg-gray-800 text-white"
-              onClick={handleUpdateProgram}
-              disabled={isSaving}
-            >
-              <SaveIcon className="mr-2" />
-              {isSaving ? 'Saving...' : 'Update Program'}
-            </Button>
+            {!isReadOnly && (
+              <Button
+                className="bg-gray-900 hover:bg-gray-800 text-white"
+                onClick={handleSave}
+                disabled={isSaving || !isAnyDirty}
+              >
+                <SaveIcon className="mr-2" />
+                {getSaveLabel()}
+              </Button>
+            )}
           </div>
         </div>
         <p className="text-sm text-gray-500 mb-6">
@@ -489,6 +657,45 @@ export default function ProgramDetailPage() {
 
           {/* ── Overview Tab ─────────────────────────────────────── */}
           <TabsContent value="overview">
+            {/* Historical Version Banner */}
+            {viewingVersion && (
+              <div className="mb-6 rounded-lg border border-amber-300 bg-amber-50 px-5 py-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <ClockIcon className="text-amber-600" />
+                    <div>
+                      <p className="text-sm font-semibold text-amber-800">
+                        Viewing Version {viewingVersion.versionNumber}
+                      </p>
+                      <p className="text-xs text-amber-600">
+                        {viewingVersion.publishedAt
+                          ? `Published ${formatRelative(viewingVersion.publishedAt)}`
+                          : `Created ${formatRelative(viewingVersion.createdAt)}`
+                        } &mdash; This is read-only
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="border-amber-300 text-amber-700 hover:bg-amber-100"
+                      onClick={() => handleRevertToVersion(viewingVersion)}
+                    >
+                      Revert to This Version
+                    </Button>
+                    <Button
+                      size="sm"
+                      className="bg-amber-600 hover:bg-amber-700 text-white"
+                      onClick={handleBackToCurrent}
+                    >
+                      Back to Current
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div className="grid grid-cols-[340px_1fr] gap-6">
               {/* ── Left Column: Program Logistics ────────────────── */}
               <div className="space-y-4">
@@ -518,14 +725,6 @@ export default function ProgramDetailPage() {
                         {cadenceLabels[program.cadence]}
                       </div>
                     </div>
-                    <div>
-                      <div className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 mb-0.5">
-                        Billing Model
-                      </div>
-                      <div className="text-sm font-semibold text-gray-900">
-                        {program.billingModel ? billingLabels[program.billingModel] : 'Not Set'}
-                      </div>
-                    </div>
                   </div>
                 </Card>
 
@@ -539,18 +738,41 @@ export default function ProgramDetailPage() {
                   <div className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 mb-1">
                     Monthly Cost
                   </div>
-                  <div className="flex items-center justify-between">
+                  {isReadOnly ? (
                     <div className="flex items-baseline gap-0.5">
                       <span className="text-3xl font-bold text-gray-900">{priceDisplay}</span>
                       <span className="text-sm text-gray-400 font-normal">/mo</span>
                     </div>
-                    {hasStripe && (
-                      <div className="flex items-center gap-1 text-emerald-600">
-                        <CheckCircleIcon className="text-blue-500" />
-                        <span className="text-xs font-medium text-emerald-600">Stripe Connected</span>
+                  ) : (
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg font-bold text-gray-900">$</span>
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={pricingForm.priceAmountDollars}
+                          onChange={(e) =>
+                            setPricingForm(prev => ({ ...prev, priceAmountDollars: e.target.value }))
+                          }
+                          placeholder="0.00"
+                          className="w-24 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-lg font-bold text-gray-900 outline-none focus:border-blue-400"
+                        />
+                        <span className="text-sm text-gray-400 font-normal">/mo</span>
                       </div>
-                    )}
-                  </div>
+                      {!pricingForm.priceAmountDollars && (
+                        <p className="text-xs text-gray-400">
+                          No custom price set. Platform default will be used.
+                        </p>
+                      )}
+                    </div>
+                  )}
+                  {hasStripe && (
+                    <div className="flex items-center gap-1 text-emerald-600 mt-3">
+                      <CheckCircleIcon className="text-blue-500" />
+                      <span className="text-xs font-medium text-emerald-600">Stripe Connected</span>
+                    </div>
+                  )}
                 </Card>
 
                 {/* Coach Scheduling Card */}
@@ -565,6 +787,7 @@ export default function ProgramDetailPage() {
                       onCheckedChange={(checked) =>
                         setSchedulingForm(prev => ({ ...prev, schedulingEnabled: checked }))
                       }
+                      disabled={isReadOnly}
                     />
                   </div>
 
@@ -583,30 +806,97 @@ export default function ProgramDetailPage() {
                           }
                           placeholder="calendly.com/coach/session"
                           className="bg-transparent text-sm text-gray-600 flex-1 outline-none min-w-0"
+                          disabled={isReadOnly}
                         />
                       </div>
                     </div>
                   )}
                 </Card>
 
-                {/* Sign-up Questions Card */}
+                {/* Sign-up Questions */}
                 <div>
                   <div className="flex items-center justify-between mb-3">
                     <h3 className="text-[15px] font-semibold text-gray-900">Sign-up Questions</h3>
-                    <button className="text-sm font-medium text-blue-500 hover:text-blue-600">
-                      Manage
+                    {!isReadOnly && (
+                      <button
+                        className="text-sm font-medium text-blue-500 hover:text-blue-600"
+                        onClick={() => setIsEditingQuestions(!isEditingQuestions)}
+                      >
+                        {isEditingQuestions ? 'Done' : 'Manage'}
+                      </button>
+                    )}
+                  </div>
+
+                  {displayQuestions.length === 0 && !isEditingQuestions ? (
+                    <p className="text-sm text-gray-400 italic">No custom sign-up questions.</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {displayQuestions.map((q) => (
+                        <div key={q.id} className="flex items-center gap-2 bg-gray-100 rounded-lg px-3 py-2.5">
+                          <GripVerticalIcon className="text-gray-400 flex-shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            {isEditingQuestions && !isReadOnly ? (
+                              <div className="space-y-2">
+                                <input
+                                  type="text"
+                                  value={q.questionText}
+                                  onChange={(e) => updateQuestion(q.id, { questionText: e.target.value })}
+                                  placeholder="Question text..."
+                                  className="w-full bg-white border border-gray-200 rounded px-2 py-1 text-sm outline-none focus:border-blue-400"
+                                />
+                                <div className="flex items-center gap-2">
+                                  <select
+                                    value={q.questionType}
+                                    onChange={(e) => updateQuestion(q.id, { questionType: e.target.value as ProgramQuestionType })}
+                                    className="bg-white border border-gray-200 rounded px-2 py-1 text-xs"
+                                  >
+                                    {questionTypes.map(t => (
+                                      <option key={t.value} value={t.value}>{t.label}</option>
+                                    ))}
+                                  </select>
+                                  <label className="flex items-center gap-1 text-xs text-gray-500">
+                                    <input
+                                      type="checkbox"
+                                      checked={q.isRequired}
+                                      onChange={(e) => updateQuestion(q.id, { isRequired: e.target.checked })}
+                                    />
+                                    Required
+                                  </label>
+                                  <button
+                                    onClick={() => removeQuestion(q.id)}
+                                    className="ml-auto text-red-400 hover:text-red-600"
+                                  >
+                                    <TrashIcon />
+                                  </button>
+                                </div>
+                                {(q.questionType === 'select' || q.questionType === 'multiselect') && (
+                                  <input
+                                    type="text"
+                                    value={(q.options || []).join(', ')}
+                                    onChange={(e) => updateQuestion(q.id, { options: e.target.value.split(',').map(s => s.trim()).filter(Boolean) })}
+                                    placeholder="Options (comma separated)"
+                                    className="w-full bg-white border border-gray-200 rounded px-2 py-1 text-xs outline-none focus:border-blue-400"
+                                  />
+                                )}
+                              </div>
+                            ) : (
+                              <span className="text-sm text-gray-600">{q.questionText || '(empty question)'}</span>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {isEditingQuestions && !isReadOnly && (
+                    <button
+                      onClick={addQuestion}
+                      className="mt-2 flex items-center gap-1.5 text-sm text-blue-500 hover:text-blue-600 font-medium"
+                    >
+                      <PlusIcon />
+                      Add Question
                     </button>
-                  </div>
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2 bg-gray-100 rounded-lg px-3 py-2.5">
-                      <GripVerticalIcon className="text-gray-400 flex-shrink-0" />
-                      <span className="text-sm text-gray-600">Age of Participant?</span>
-                    </div>
-                    <div className="flex items-center gap-2 bg-gray-100 rounded-lg px-3 py-2.5">
-                      <GripVerticalIcon className="text-gray-400 flex-shrink-0" />
-                      <span className="text-sm text-gray-600">Current Skill Level (1-10)?</span>
-                    </div>
-                  </div>
+                  )}
                 </div>
               </div>
 
@@ -642,26 +932,29 @@ export default function ProgramDetailPage() {
                   {/* Editor Content Area */}
                   <div className="p-6 min-h-[500px]">
                     <textarea
-                      value={editForm.description}
+                      value={displayContent}
                       onChange={(e) =>
-                        setEditForm(prev => ({ ...prev, description: e.target.value }))
+                        setVersionForm(prev => ({ ...prev, content: e.target.value }))
                       }
                       placeholder="Write your program curriculum here..."
                       className="w-full min-h-[480px] text-[15px] leading-relaxed text-gray-700 bg-transparent outline-none resize-none"
+                      readOnly={isReadOnly}
                     />
                   </div>
 
                   {/* Editor Footer */}
                   <div className="flex items-center justify-between border-t border-gray-200 px-6 py-3">
                     <span className="text-[11px] font-medium uppercase tracking-wider text-gray-400">
-                      Editor Active
+                      {isReadOnly ? 'Read-Only' : 'Editor Active'}
                     </span>
-                    <div className="flex items-center gap-1.5">
-                      <div className="w-3 h-3 rounded-full bg-green-500" />
-                      <span className="text-[11px] font-medium uppercase tracking-wider text-gray-400">
-                        Last saved at {new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}
-                      </span>
-                    </div>
+                    {isVersionDirty && !isReadOnly && (
+                      <div className="flex items-center gap-1.5">
+                        <div className="w-3 h-3 rounded-full bg-yellow-500" />
+                        <span className="text-[11px] font-medium uppercase tracking-wider text-yellow-600">
+                          Unsaved changes
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </Card>
               </div>
@@ -671,46 +964,51 @@ export default function ProgramDetailPage() {
           {/* ── Versions Tab ──────────────────────────────────────── */}
           <TabsContent value="versions">
             <div className="space-y-4">
-              <div className="flex justify-end">
-                <Button onClick={handleCreateDraft} disabled={isCreatingVersion}>
-                  {isCreatingVersion ? 'Creating...' : 'Create Draft'}
-                </Button>
-              </div>
-
               {versions.length === 0 ? (
                 <Card className="p-8 text-center bg-white">
-                  <p className="text-muted-foreground">No versions yet. Create a draft to get started.</p>
+                  <p className="text-muted-foreground">No versions yet. Save curriculum content to create the first version.</p>
                 </Card>
               ) : (
                 <div className="space-y-2">
-                  {versions.map((version) => (
-                    <Card
-                      key={version.id}
-                      className="p-4 cursor-pointer hover:bg-muted/50 transition-colors bg-white"
-                      onClick={() => router.push(`/programs/${program.id}/versions/${version.id}`)}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <span className="font-medium">v{version.versionNumber}</span>
-                          <Badge className={`${versionStatusColors[version.status]} border-0 text-xs`}>
-                            {version.status}
-                          </Badge>
-                          {version.id === program.publishedVersionId && (
-                            <Badge variant="outline" className="border-green-500 text-green-600 text-xs">
-                              Current
-                            </Badge>
-                          )}
+                  {versions.map((version) => {
+                    const isCurrent = version.id === program.publishedVersionId
+                    const contentSnippet = version.content
+                      ? version.content.slice(0, 120) + (version.content.length > 120 ? '...' : '')
+                      : 'No content'
+
+                    return (
+                      <Card
+                        key={version.id}
+                        className={`p-4 cursor-pointer hover:bg-muted/50 transition-colors bg-white ${
+                          viewingVersion?.id === version.id ? 'ring-2 ring-amber-400' : ''
+                        }`}
+                        onClick={() => handleViewVersion(version)}
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-3 mb-1">
+                              <span className="font-medium">v{version.versionNumber}</span>
+                              <Badge className={`${versionStatusColors[version.status]} border-0 text-xs`}>
+                                {version.status}
+                              </Badge>
+                              {isCurrent && (
+                                <Badge variant="outline" className="border-green-500 text-green-600 text-xs">
+                                  Current
+                                </Badge>
+                              )}
+                            </div>
+                            <p className="text-sm text-gray-500 truncate">{contentSnippet}</p>
+                          </div>
+                          <div className="flex items-center gap-4 text-sm text-muted-foreground ml-4 flex-shrink-0">
+                            {version.publishedAt && (
+                              <span>Published {formatRelative(version.publishedAt)}</span>
+                            )}
+                            <span>Created {formatRelative(version.createdAt)}</span>
+                          </div>
                         </div>
-                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                          {version.publishedAt && (
-                            <span>Published {formatRelative(version.publishedAt)}</span>
-                          )}
-                          <span>Created {formatRelative(version.createdAt)}</span>
-                          <Button variant="ghost" size="sm">View</Button>
-                        </div>
-                      </div>
-                    </Card>
-                  ))}
+                      </Card>
+                    )
+                  })}
                 </div>
               )}
             </div>

@@ -2,6 +2,13 @@ import type { NextConfig } from "next";
 import path from "path";
 
 const nextConfig: NextConfig = {
+  async redirects() {
+    return [
+      { source: '/o/coachclatchey', destination: '/clatchey', permanent: true },
+      { source: '/o/mikeyswiercz', destination: '/mikey', permanent: true },
+      { source: '/o/nextlevelbasketball', destination: '/nextlevelbasketball', permanent: true },
+    ];
+  },
   // Enable transpiling of shared package
   transpilePackages: ["@gymtext/shared"],
 

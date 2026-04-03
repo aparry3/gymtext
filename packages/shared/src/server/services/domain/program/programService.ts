@@ -1,6 +1,6 @@
 import type { RepositoryContainer } from '../../../repositories/factory';
 import type { Program, NewProgram, ProgramUpdate } from '../../../models/program';
-import { stripeClient } from '@/server/connections/stripe';
+import { stripeClient, fetchPriceAmountCents } from '@/server/connections/stripe';
 
 /**
  * Program Service Instance Interface
@@ -26,6 +26,16 @@ export function createProgramService(
   // Cache the AI program to avoid repeated lookups
   let cachedAiProgram: Program | null = null;
 
+  async function enrichWithPrice(program: Program): Promise<Program> {
+    if (program.priceAmountCents) return program;
+    const price = await fetchPriceAmountCents(program.stripePriceId);
+    return { ...program, priceAmountCents: price };
+  }
+
+  async function enrichAllWithPrice(programs: Program[]): Promise<Program[]> {
+    return Promise.all(programs.map(enrichWithPrice));
+  }
+
   return {
     async create(data: NewProgram): Promise<Program> {
       const program = await repos.program.create(data);
@@ -45,11 +55,13 @@ export function createProgramService(
     },
 
     async getById(id: string): Promise<Program | null> {
-      return repos.program.findById(id);
+      const program = await repos.program.findById(id);
+      return program ? enrichWithPrice(program) : null;
     },
 
     async getByOwnerId(ownerId: string): Promise<Program[]> {
-      return repos.program.findByOwnerId(ownerId);
+      const programs = await repos.program.findByOwnerId(ownerId);
+      return enrichAllWithPrice(programs);
     },
 
     async getAiProgram(): Promise<Program> {
@@ -67,15 +79,18 @@ export function createProgramService(
     },
 
     async listPublic(): Promise<Program[]> {
-      return repos.program.listPublic();
+      const programs = await repos.program.listPublic();
+      return enrichAllWithPrice(programs);
     },
 
     async listActive(): Promise<Program[]> {
-      return repos.program.listActive();
+      const programs = await repos.program.listActive();
+      return enrichAllWithPrice(programs);
     },
 
     async listAll(): Promise<Program[]> {
-      return repos.program.listAll();
+      const programs = await repos.program.listAll();
+      return enrichAllWithPrice(programs);
     },
 
     async update(id: string, data: ProgramUpdate): Promise<Program | null> {
@@ -132,5 +147,6 @@ export function createProgramService(
         stripePriceId: price.id,
       });
     },
+
   };
 }

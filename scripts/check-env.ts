@@ -125,8 +125,7 @@ function getRelevantTasks(pkg: string): string[] {
   const taskMap: Record<string, string[]> = {
     web: ['web#build', 'build', 'dev'],
     admin: ['admin#build', 'build', 'dev'],
-    programs: ['programs#build', 'build', 'dev'],
-    '@gymtext/shared': ['@gymtext/shared#build', 'build', 'dev'],
+'@gymtext/shared': ['@gymtext/shared#build', 'build', 'dev'],
   };
   return taskMap[pkg] ?? ['build', 'dev'];
 }

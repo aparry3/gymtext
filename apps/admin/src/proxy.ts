@@ -14,7 +14,7 @@ export function proxy(request: NextRequest) {
   if (!isLoginPath && !isAuthApiPath) {
     const adminCookie = request.cookies.get('gt_admin')?.value;
 
-    if (adminCookie !== 'ok') {
+    if (!adminCookie) {
       // Redirect to login
       const url = request.nextUrl.clone();
       url.pathname = '/login';
@@ -31,6 +31,7 @@ export const config = {
     // Explicit routes that need proxy (auth check)
     '/',
     '/login',
+    '/blog/:path*',
     '/calendar/:path*',
     '/users/:path*',
     '/api/:path*',

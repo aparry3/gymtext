@@ -26,6 +26,7 @@ import {
   Bot,
   Globe,
   Tag,
+  Newspaper,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -68,6 +69,7 @@ const navEntries: NavEntry[] = [
       { href: '/exercises', label: 'Exercises', icon: Dumbbell },
     ],
   },
+  { href: '/blog', label: 'Blog', icon: Newspaper },
   { href: '/landing-pages', label: 'Landing Pages', icon: Globe },
   { href: '/promotions', label: 'Promotions', icon: Tag },
   'divider',

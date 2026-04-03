@@ -1,0 +1,73 @@
+/* Next Level Basketball / Rhynia Henry theme colors */
+:root {
+  --nlb-orange: #ea580c;
+  --nlb-dark: #1a1a1a;
+}
+
+.bg-nlb-orange {
+  background-color: var(--nlb-orange);
+}
+.bg-nlb-dark {
+  background-color: var(--nlb-dark);
+}
+.text-nlb-orange {
+  color: var(--nlb-orange);
+}
+.text-nlb-dark {
+  color: var(--nlb-dark);
+}
+.border-nlb-orange {
+  border-color: var(--nlb-orange);
+}
+.border-nlb-dark {
+  border-color: var(--nlb-dark);
+}
+.from-nlb-orange {
+  --tw-gradient-from: #ea580c var(--tw-gradient-from-position, );
+  --tw-gradient-to: rgb(234 88 12 / 0) var(--tw-gradient-to-position, );
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+}
+.via-nlb-orange {
+  --tw-gradient-to: rgb(234 88 12 / 0) var(--tw-gradient-to-position, );
+  --tw-gradient-stops: var(--tw-gradient-from), #ea580c var(--tw-gradient-via-position, ), var(--tw-gradient-to);
+}
+.fill-nlb-orange {
+  fill: var(--nlb-orange);
+}
+.shadow-nlb-orange {
+  --tw-shadow-color: var(--nlb-orange);
+}
+.hover\:bg-nlb-orange:hover {
+  background-color: var(--nlb-orange);
+}
+.hover\:border-nlb-orange:hover {
+  border-color: var(--nlb-orange);
+}
+.hover\:border-nlb-orange\/30:hover {
+  border-color: rgb(234 88 12 / 0.3);
+}
+.hover\:text-nlb-orange:hover {
+  color: var(--nlb-orange);
+}
+.bg-nlb-orange\/10 {
+  background-color: rgb(234 88 12 / 0.1);
+}
+.bg-nlb-orange\/20 {
+  background-color: rgb(234 88 12 / 0.2);
+}
+.text-nlb-orange\/10 {
+  color: rgb(234 88 12 / 0.1);
+}
+.hover\:border-nlb-orange\/50:hover {
+  border-color: rgb(234 88 12 / 0.5);
+}
+.from-nlb-orange\/80 {
+  --tw-gradient-from: rgb(234 88 12 / 0.8) var(--tw-gradient-from-position);
+  --tw-gradient-to: rgb(234 88 12 / 0) var(--tw-gradient-to-position);
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+}
+.shadow-\[0_0_20px_rgba\(234\,88\,12\,0\.4\)\] {
+  --tw-shadow: 0 0 20px rgba(234, 88, 12, 0.4);
+  --tw-shadow-colored: 0 0 20px rgba(234, 88, 12, 0.4);
+  box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+}

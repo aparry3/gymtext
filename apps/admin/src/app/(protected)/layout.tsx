@@ -18,7 +18,7 @@ export default async function AdminLayout({
   const adminCookie = cookieStore.get('gt_admin');
 
   // Check if user is authenticated as admin
-  if (!adminCookie || adminCookie.value !== 'ok') {
+  if (!adminCookie || !adminCookie.value) {
     // Redirect to admin login
     redirect('/login');
   }
