@@ -357,7 +357,7 @@ async function handleAdminTestSignup(
   const user = await repos.user.create({
     name: (formData.name as string) || `Test - ${program.name}`,
     phoneNumber: testPhone,
-    email: (formData.email as string) || null,
+    email: formData.email ? `${(formData.email as string).replace('@', `+${slug}@`)}` : null,
     age: formData.age ? parseInt(formData.age as string, 10) : null,
     gender: (formData.gender as string) || null,
     timezone: (formData.timezone as string) || 'America/New_York',
