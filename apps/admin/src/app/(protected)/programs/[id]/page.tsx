@@ -575,10 +575,12 @@ export default function ProgramDetailPage() {
             <Button
               variant="outline"
               className="border-gray-300 text-gray-700 bg-white hover:bg-gray-50"
-              onClick={() => {/* preview */}}
+              asChild
             >
-              <EyeIcon className="mr-2" />
-              Preview Page
+              <a href={`${process.env.NEXT_PUBLIC_WEB_URL || 'https://gymtext.co'}/start?program=${program?.id}`} target="_blank" rel="noopener noreferrer">
+                <ExternalLinkIcon className="mr-2" />
+                Signup
+              </a>
             </Button>
             {!isReadOnly && (
               <Button
