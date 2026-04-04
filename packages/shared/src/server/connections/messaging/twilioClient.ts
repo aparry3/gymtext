@@ -8,6 +8,7 @@
 import { twilioClient as twilioSdk } from '../twilio/twilio';
 import type { IMessagingClient, MessageResult, MessagingProvider } from './types';
 import type { UserWithProfile } from '@/server/models/user';
+import { parseAdminTestPhone, getBasePhone } from '@/shared/utils/phoneUtils';
 
 export class TwilioMessagingClient implements IMessagingClient {
   public readonly provider: MessagingProvider = 'twilio';
@@ -20,7 +21,14 @@ export class TwilioMessagingClient implements IMessagingClient {
     templateVariables?: Record<string, string>
   ): Promise<MessageResult> {
     try {
-      const twilioResponse = await twilioSdk.sendSMS(user.phoneNumber, message, mediaUrls);
+      // For admin test users (suffixed phones), strip suffix and tag the message
+      const parsed = parseAdminTestPhone(user.phoneNumber);
+      const actualPhone = parsed ? parsed.basePhone : user.phoneNumber;
+      const actualMessage = parsed && message
+        ? `__${parsed.slug}__\n\n${message}`
+        : message;
+
+      const twilioResponse = await twilioSdk.sendSMS(actualPhone, actualMessage, mediaUrls);
 
       return {
         messageId: twilioResponse.sid,

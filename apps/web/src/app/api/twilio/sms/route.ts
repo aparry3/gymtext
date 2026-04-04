@@ -1,8 +1,9 @@
-import { getServices } from '@/lib/context';
+import { getServices, getRepositories } from '@/lib/context';
 import { NextRequest, NextResponse } from 'next/server';
 import twilio from 'twilio';
 import { getTwilioSecrets } from '@/server/config';
 import { UNKNOWN_USER_MESSAGE } from '@gymtext/shared/server';
+import { getAdminConfig } from '@gymtext/shared/shared';
 
 function twimlResponse(twiml: twilio.twiml.MessagingResponse): NextResponse {
   return new NextResponse(twiml.toString(), {
@@ -24,7 +25,19 @@ export async function POST(req: NextRequest) {
     const to = body.To as string || getTwilioSecrets().phoneNumber;
 
     const services = getServices();
-    const user = await services.user.getUserByPhone(from);
+    const repos = getRepositories();
+    let user = await services.user.getUserByPhone(from);
+
+    // If no direct match and sender is an admin phone, check for active test identity
+    if (!user) {
+      const { phoneNumbers } = getAdminConfig();
+      if (phoneNumbers.includes(from)) {
+        const activeTestUserId = await repos.adminTestRouting.getActiveTestUserId(from);
+        if (activeTestUserId) {
+          user = await services.user.getUserById(activeTestUserId);
+        }
+      }
+    }
 
     if (!user) {
       twiml.message(UNKNOWN_USER_MESSAGE);

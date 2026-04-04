@@ -27,6 +27,7 @@ import {
   Globe,
   Tag,
   Newspaper,
+  FlaskConical,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -73,6 +74,7 @@ const navEntries: NavEntry[] = [
   { href: '/landing-pages', label: 'Landing Pages', icon: Globe },
   { href: '/promotions', label: 'Promotions', icon: Tag },
   'divider',
+  { href: '/test-users', label: 'Test Users', icon: FlaskConical },
   { href: '/agents', label: 'Agents', icon: Bot },
   { href: '/agent-logs', label: 'Agent Logs', icon: ScrollText },
 ]
