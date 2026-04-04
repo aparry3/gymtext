@@ -572,16 +572,15 @@ export default function ProgramDetailPage() {
             )}
           </div>
           <div className="flex items-center gap-3">
-            <Button
-              variant="outline"
-              className="border-gray-300 text-gray-700 bg-white hover:bg-gray-50"
-              asChild
+            <a
+              href={`${process.env.NEXT_PUBLIC_WEB_URL || 'https://gymtext.co'}/start?program=${program?.id}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center whitespace-nowrap rounded-xl text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 shadow-sm border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 hover:shadow-md hover:border-gray-300 h-10 px-4 py-2 border-gray-300"
             >
-              <a href={`${process.env.NEXT_PUBLIC_WEB_URL || 'https://gymtext.co'}/start?program=${program?.id}`} target="_blank" rel="noopener noreferrer">
-                <ExternalLinkIcon className="mr-2" />
-                Signup
-              </a>
-            </Button>
+              <ExternalLinkIcon className="mr-2" />
+              Signup
+            </a>
             {!isReadOnly && (
               <Button
                 className="bg-gray-900 hover:bg-gray-800 text-white"
