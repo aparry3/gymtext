@@ -93,7 +93,7 @@ export function SimpleProfileView({ userId, initialData, subscriptionStatus }: S
     fetch(`/api/users/${userId}/referral`)
       .then(res => res.json())
       .then(data => {
-        setReferralCode(data.referralCode || null);
+        setReferralCode(data.data?.referralCode || null);
         setLoadingReferral(false);
       })
       .catch(() => setLoadingReferral(false));

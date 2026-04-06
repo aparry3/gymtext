@@ -389,6 +389,14 @@ async function handleAdminTestSignup(
   // Create onboarding record and trigger onboarding
   await services.onboardingData.createOnboardingRecord(user.id, extractSignupData(formData));
 
+  // Send welcome message if user consented to SMS
+  if (formData.smsConsent) {
+    const userWithProfile = await services.user.getUser(user.id);
+    if (userWithProfile) {
+      await services.onboarding.sendWelcomeMessage(userWithProfile);
+    }
+  }
+
   await inngest.send({
     name: 'user/onboarding.requested',
     data: { userId: user.id, forceCreate: false },
