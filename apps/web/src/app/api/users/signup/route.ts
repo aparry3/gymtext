@@ -93,10 +93,6 @@ async function handleNewUserSignup(services: ServiceContainer, formData: Record<
     gender: formData.gender as string | undefined,
     timezone: formData.timezone as string,
     preferredSendHour: formData.preferredSendHour as number,
-  });
-
-  // Persist SMS consent
-  await services.user.updateUser(user.id, {
     messagingOptIn: formData.smsConsent === true,
     messagingOptInDate: formData.smsConsent ? new Date() : null,
   });
@@ -278,12 +274,6 @@ async function handleDevModeSignup(
 
   console.log('[Signup] Test subscription created');
 
-  // Persist SMS consent
-  await services.user.updateUser(userId, {
-    messagingOptIn: formData.smsConsent === true,
-    messagingOptInDate: formData.smsConsent ? new Date() : null,
-  });
-
   // Send welcome message if user consented to SMS
   if (formData.smsConsent) {
     const userWithProfile = await services.user.getUser(userId);
@@ -353,13 +343,13 @@ async function handleAdminTestSignup(
     await services.user.deleteUser(existing.id);
   }
 
-  // Create user via repository (bypasses phone validation for suffixed phones)
-  const user = await repos.user.create({
+  // Create user via service (validates suffixed phones via getBasePhone)
+  const user = await services.user.createUser({
     name: (formData.name as string) || `Test - ${program.name}`,
     phoneNumber: testPhone,
-    email: formData.email ? `${(formData.email as string).replace('@', `+${slug}@`)}` : null,
-    age: formData.age ? parseInt(formData.age as string, 10) : null,
-    gender: (formData.gender as string) || null,
+    email: formData.email ? `${(formData.email as string).replace('@', `+${slug}@`)}` : undefined,
+    age: formData.age ? parseInt(formData.age as string, 10) : undefined,
+    gender: (formData.gender as string) || undefined,
     timezone: (formData.timezone as string) || 'America/New_York',
     preferredSendHour: (formData.preferredSendHour as number) ?? 8,
     messagingOptIn: formData.smsConsent === true,

@@ -13,6 +13,8 @@ export interface CreateUserRequest {
   preferredSendHour: number;
   email?: string;
   stripeCustomerId?: string;
+  messagingOptIn?: boolean;
+  messagingOptInDate?: Date | null;
 }
 
 /**
@@ -98,6 +100,8 @@ export function createUserService(repos: RepositoryContainer): UserServiceInstan
           preferredSendHour: request.preferredSendHour,
           email: request.email || null,
           stripeCustomerId: request.stripeCustomerId || null,
+          messagingOptIn: request.messagingOptIn ?? false,
+          messagingOptInDate: request.messagingOptInDate ?? null,
         };
 
         // Validate user data using domain model

@@ -150,16 +150,8 @@ export class UserRepository extends BaseRepository {
   }
 
   async create(userData: CreateUserData): Promise<UserWithProfile | undefined> {
-    // Build values object - units field added after migration 20260126000000
     const values = {
-      name: userData.name,
-      phoneNumber: userData.phoneNumber,
-      age: userData.age || null,
-      gender: userData.gender || null,
-      email: userData.email || null,
-      stripeCustomerId: userData.stripeCustomerId || null,
-      timezone: userData.timezone,
-      preferredSendHour: userData.preferredSendHour,
+      ...userData,
       createdAt: new Date(),
       updatedAt: new Date(),
     };

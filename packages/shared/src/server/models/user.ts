@@ -12,7 +12,7 @@ export type UserUpdate = Updateable<Users>;
 
 // Import what we need for the UserModel class
 import type { FitnessProfile } from '@/shared/types/user';
-import { validateUSPhoneNumber } from '@/shared/utils/phoneUtils';
+import { validateUSPhoneNumber, getBasePhone } from '@/shared/utils/phoneUtils';
 
 export type CreateUserData = Omit<NewUser, 'id' | 'createdAt' | 'updatedAt'>;
 export type CreateFitnessProfileData = Partial<FitnessProfile>;
@@ -54,7 +54,10 @@ export class UserModel {
       throw new Error('User name must be at least 2 characters long');
     }
 
-    if (!userData.phoneNumber || !validateUSPhoneNumber(userData.phoneNumber)) {
+    // Accept both regular phones and admin test phones (suffixed). For admin
+    // test phones, validate the base phone underneath the suffix.
+    const phoneToValidate = getBasePhone(userData.phoneNumber || '');
+    if (!phoneToValidate || !validateUSPhoneNumber(phoneToValidate)) {
       throw new Error('Valid US phone number is required');
     }
 
