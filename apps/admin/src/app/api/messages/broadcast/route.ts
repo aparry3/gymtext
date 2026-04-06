@@ -35,12 +35,11 @@ export async function POST(request: Request) {
       );
     }
 
-    const { services, mode } = await getAdminContext();
+    const { services } = await getAdminContext();
 
     console.log('[Admin API] Sending broadcast message:', {
       recipientCount: userIds.length,
       messageLength: message.length,
-      environment: mode,
     });
 
     const results: { sent: number; failed: number; total: number; failures: { userId: string; error: string }[] } = {

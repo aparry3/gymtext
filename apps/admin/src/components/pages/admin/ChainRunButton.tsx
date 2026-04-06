@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover'
 
-export type ChainOperation = 'full' | 'structured' | 'formatted' | 'message'
+export type ChainOperation = 'full' | 'formatted' | 'message'
 export type EntityType = 'fitness-plan' | 'microcycle' | 'workout'
 
 interface ChainRunButtonProps {
@@ -17,14 +17,12 @@ interface ChainRunButtonProps {
 
 const OPERATION_LABELS: Record<ChainOperation, string> = {
   full: 'Full Chain',
-  structured: 'Structured Only',
   formatted: 'Formatted Only',
   message: 'Message Only',
 }
 
 const OPERATION_DESCRIPTIONS: Record<ChainOperation, string> = {
   full: 'Re-generate everything from scratch',
-  structured: 'Re-parse into structured data',
   formatted: 'Re-generate markdown format',
   message: 'Re-generate SMS message',
 }

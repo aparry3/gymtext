@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { getProductionSecrets } from '@/lib/secrets';
-import { getProductionConfig } from '@/lib/config';
+import { getSecrets } from '@/lib/secrets';
+import { getConfig } from '@/lib/config';
 
 interface TriggerRequest {
   type?: 'daily' | 'weekly';
@@ -26,8 +26,8 @@ export async function POST(request: Request) {
     const type = body.type ?? 'daily';
     const forceImmediate = body.forceImmediate ?? false;
 
-    const secrets = getProductionSecrets();
-    const config = getProductionConfig();
+    const secrets = getSecrets();
+    const config = getConfig();
 
     const webAppUrl = config.urls.webApiUrl;
     const cronSecret = secrets.cron.cronSecret;

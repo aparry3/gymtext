@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { useEnvironment } from '@/context/EnvironmentContext'
+import { ExternalLink } from 'lucide-react'
 import { AdminProgramOwner, AdminProgramOwnerDetailResponse, OwnerType } from '@/components/admin/types'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -41,7 +41,6 @@ interface ImageUploadState {
 export default function ProgramOwnerDetailPage() {
   const { id } = useParams()
   const router = useRouter()
-  const { mode } = useEnvironment()
   const [owner, setOwner] = useState<OwnerDetail | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -125,7 +124,7 @@ export default function ProgramOwnerDetailPage() {
     if (id) {
       fetchOwner(id as string)
     }
-  }, [id, fetchOwner, mode])
+  }, [id, fetchOwner])
 
   const handleImageUpload = async (file: File, type: 'avatar' | 'wordmark') => {
     if (!owner) return
@@ -580,6 +579,16 @@ export default function ProgramOwnerDetailPage() {
                       {owner.isActive ? 'Active' : 'Inactive'}
                     </Badge>
                   </div>
+                  {owner.slug && (
+                    <a
+                      href={`${process.env.NEXT_PUBLIC_WEB_URL || 'https://gymtext.co'}/${owner.slug}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800"
+                    >
+                      gymtext.co/{owner.slug} <ExternalLink className="h-3 w-3" />
+                    </a>
+                  )}
                   {owner.bio && (
                     <p className="text-muted-foreground">{owner.bio}</p>
                   )}

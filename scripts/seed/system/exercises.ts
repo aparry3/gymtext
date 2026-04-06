@@ -65,7 +65,7 @@ function normalizeForLex(text: string): string {
 
 export async function seedExercises(): Promise<void> {
   const pool = new Pool({
-    connectionString: process.env.DATABASE_URL || process.env.SANDBOX_DATABASE_URL,
+    connectionString: process.env.DATABASE_URL,
   });
 
   try {

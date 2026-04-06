@@ -140,14 +140,18 @@ export async function GET(
     // Transform messages to match frontend interface
     // Frontend expects: { timestamp, from, to, ... }
     // Database has: { createdAt, phoneFrom, phoneTo, ... }
-    const transformedMessages = messages.map(msg => ({
-      id: msg.id,
-      content: msg.content,
-      direction: msg.direction,
-      timestamp: msg.createdAt instanceof Date ? msg.createdAt.toISOString() : msg.createdAt,
-      from: msg.phoneFrom || '',
-      to: msg.phoneTo || '',
-    }));
+    const transformedMessages = messages.map(msg => {
+      const metadata = msg.metadata as { mediaUrls?: string[] } | null;
+      return {
+        id: msg.id,
+        content: msg.content,
+        direction: msg.direction,
+        timestamp: msg.createdAt instanceof Date ? msg.createdAt.toISOString() : msg.createdAt,
+        from: msg.phoneFrom || '',
+        to: msg.phoneTo || '',
+        ...(metadata?.mediaUrls && { mediaUrls: metadata.mediaUrls }),
+      };
+    });
 
     // Reverse to oldest-first for chat display
     const messagesForDisplay = transformedMessages.reverse();

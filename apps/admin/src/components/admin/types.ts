@@ -292,6 +292,45 @@ export type SchedulingMode = 'rolling_start' | 'cohort';
 // Cadence type for programs
 export type ProgramCadence = 'calendar_days' | 'training_days_only';
 
+// Billing model for programs
+export type BillingModel = 'subscription' | 'one_time' | 'free';
+
+// Late joiner policy for programs
+export type LateJoinerPolicy = 'start_from_beginning' | 'join_current_week';
+
+// Program version status
+export type ProgramVersionStatus = 'draft' | 'published' | 'archived';
+
+// Question type for enrollment questions
+export type ProgramQuestionType = 'text' | 'select' | 'multiselect' | 'scale' | 'boolean';
+
+// Enrollment question
+export interface AdminProgramQuestion {
+  id: string;
+  questionText: string;
+  questionType: ProgramQuestionType;
+  options?: string[];
+  isRequired: boolean;
+  helpText?: string;
+  sortOrder: number;
+}
+
+// Program version for admin display
+export interface AdminProgramVersion {
+  id: string;
+  programId: string;
+  versionNumber: number;
+  status: ProgramVersionStatus;
+  content: string | null;
+  generationConfig: Record<string, unknown> | null;
+  defaultDurationWeeks: number | null;
+  difficultyMetadata: Record<string, unknown> | null;
+  questions: AdminProgramQuestion[] | null;
+  createdAt: string;
+  publishedAt: string | null;
+  archivedAt: string | null;
+}
+
 // Admin-specific program type with stats
 export interface AdminProgram {
   id: string;
@@ -302,8 +341,23 @@ export interface AdminProgram {
   description: string | null;
   schedulingMode: SchedulingMode;
   cadence: ProgramCadence;
+  lateJoinerPolicy: LateJoinerPolicy | null;
+  billingModel: BillingModel | null;
+  publishedVersionId: string | null;
   isActive: boolean;
   isPublic: boolean;
+  // Pricing
+  stripeProductId: string | null;
+  stripePriceId: string | null;
+  priceAmountCents: number | null;
+  priceCurrency: string | null;
+  // Coach scheduling
+  schedulingEnabled: boolean;
+  schedulingUrl: string | null;
+  schedulingNotes: string | null;
+  // Branding
+  logoUrl: string | null;
+  smsImageUrl: string | null;
   createdAt: Date;
   updatedAt: Date;
   // Stats
@@ -354,6 +408,7 @@ export interface AdminProgramDetailResponse {
     ownerType: OwnerType;
     avatarUrl: string | null;
   };
+  versions: AdminProgramVersion[];
   enrollments: AdminEnrollment[];
 }
 

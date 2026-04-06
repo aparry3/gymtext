@@ -15,19 +15,19 @@ const WEB_BASE_URL = process.env.NEXT_PUBLIC_WEB_URL || 'https://gymtext.co';
 const LANDING_PAGES: LandingPage[] = [
   {
     name: 'Coach Pat Clatchey',
-    path: '/o/coachclatchey',
+    path: '/clatchey',
     description: 'Basketball coaching — Legend Series',
     type: 'coach',
   },
   {
     name: 'Mikey Swiercz',
-    path: '/o/mikeyswiercz',
+    path: '/mikey',
     description: 'Soccer training — Johns Hopkins All-American',
     type: 'coach',
   },
   {
     name: 'Coach Rhynia Henry',
-    path: '/o/nextlevelbasketball',
+    path: '/nextlevelbasketball',
     description: 'Next Level Basketball Training & Development',
     type: 'coach',
   },

@@ -23,6 +23,7 @@ const SecretsSchema = z.object({
   TWILIO_ACCOUNT_SID: z.string().min(1, 'TWILIO_ACCOUNT_SID is required'),
   TWILIO_AUTH_TOKEN: z.string().min(1, 'TWILIO_AUTH_TOKEN is required'),
   TWILIO_NUMBER: z.string().min(1, 'TWILIO_NUMBER is required'),
+  TWILIO_MESSAGING_SERVICE_SID: z.string().optional(),
 
   // Stripe
   STRIPE_SECRET_KEY: z.string().min(1, 'STRIPE_SECRET_KEY is required'),
@@ -61,6 +62,7 @@ export interface SecretsConfig {
     accountSid: string;
     authToken: string;
     phoneNumber: string;
+    messagingServiceSid?: string;
   };
   stripe: {
     secretKey: string;
@@ -115,6 +117,7 @@ function loadSecrets(): SecretsConfig {
       accountSid: env.TWILIO_ACCOUNT_SID,
       authToken: env.TWILIO_AUTH_TOKEN,
       phoneNumber: env.TWILIO_NUMBER,
+      messagingServiceSid: env.TWILIO_MESSAGING_SERVICE_SID ?? undefined,
     },
     stripe: {
       secretKey: env.STRIPE_SECRET_KEY,

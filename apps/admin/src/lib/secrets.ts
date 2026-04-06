@@ -2,7 +2,6 @@
  * Admin App Secrets Loader
  *
  * Centralizes all credential/secret environment variable access for the admin app.
- * Supports environment switching between production and sandbox.
  *
  * Secrets vs Config:
  * - Secrets (this file): Sensitive credentials (API keys, database passwords, auth tokens)
@@ -11,43 +10,30 @@
 
 import { z } from 'zod';
 
-export type EnvironmentMode = 'production' | 'sandbox';
-
 // =============================================================================
 // Schema
 // =============================================================================
 
 const SecretsSchema = z.object({
-  // Production - Database
+  // Database
   DATABASE_URL: z.string().min(1, 'DATABASE_URL is required'),
 
-  // Production - Twilio
+  // Twilio
   TWILIO_ACCOUNT_SID: z.string().min(1, 'TWILIO_ACCOUNT_SID is required'),
   TWILIO_AUTH_TOKEN: z.string().min(1, 'TWILIO_AUTH_TOKEN is required'),
   TWILIO_NUMBER: z.string().min(1, 'TWILIO_NUMBER is required'),
+  TWILIO_MESSAGING_SERVICE_SID: z.string().optional(),
 
-  // Production - Stripe
+  // Stripe
   STRIPE_SECRET_KEY: z.string().min(1, 'STRIPE_SECRET_KEY is required'),
   STRIPE_WEBHOOK_SECRET: z.string().optional(),
 
-  // Sandbox - Database (optional, falls back to production)
-  SANDBOX_DATABASE_URL: z.string().optional(),
-
-  // Sandbox - Twilio (optional, falls back to production)
-  SANDBOX_TWILIO_ACCOUNT_SID: z.string().optional(),
-  SANDBOX_TWILIO_AUTH_TOKEN: z.string().optional(),
-  SANDBOX_TWILIO_NUMBER: z.string().optional(),
-
-  // Sandbox - Stripe (optional, falls back to production)
-  SANDBOX_STRIPE_SECRET_KEY: z.string().optional(),
-  SANDBOX_STRIPE_WEBHOOK_SECRET: z.string().optional(),
-
-  // Shared - AI Services (same for all environments)
+  // AI Services
   OPENAI_API_KEY: z.string().min(1, 'OPENAI_API_KEY is required'),
   GOOGLE_API_KEY: z.string().min(1, 'GOOGLE_API_KEY is required'),
   OPENROUTER_API_KEY: z.string().optional(),
 
-  // Shared - Pinecone (same for all environments)
+  // Pinecone
   PINECONE_API_KEY: z.string().min(1, 'PINECONE_API_KEY is required'),
   PINECONE_INDEX: z.string().min(1, 'PINECONE_INDEX is required'),
 
@@ -74,6 +60,7 @@ export interface SecretsConfig {
     accountSid: string;
     authToken: string;
     phoneNumber: string;
+    messagingServiceSid?: string;
   };
   stripe: {
     secretKey: string;
@@ -122,9 +109,9 @@ function getEnv(): EnvVars {
 }
 
 /**
- * Get production secrets.
+ * Get secrets from environment variables.
  */
-export function getProductionSecrets(): SecretsConfig {
+export function getSecrets(): SecretsConfig {
   const env = getEnv();
 
   return {
@@ -135,6 +122,7 @@ export function getProductionSecrets(): SecretsConfig {
       accountSid: env.TWILIO_ACCOUNT_SID,
       authToken: env.TWILIO_AUTH_TOKEN,
       phoneNumber: env.TWILIO_NUMBER,
+      messagingServiceSid: env.TWILIO_MESSAGING_SERVICE_SID ?? undefined,
     },
     stripe: {
       secretKey: env.STRIPE_SECRET_KEY,
@@ -155,46 +143,4 @@ export function getProductionSecrets(): SecretsConfig {
       inngestSigningKey: env.INNGEST_SIGNING_KEY,
     },
   };
-}
-
-/**
- * Get sandbox secrets.
- * Falls back to production for any unset sandbox variables.
- */
-export function getSandboxSecrets(): SecretsConfig {
-  const env = getEnv();
-  const prod = getProductionSecrets();
-
-  return {
-    database: {
-      url: env.SANDBOX_DATABASE_URL || prod.database.url,
-    },
-    twilio: {
-      accountSid: env.SANDBOX_TWILIO_ACCOUNT_SID || prod.twilio.accountSid,
-      authToken: env.SANDBOX_TWILIO_AUTH_TOKEN || prod.twilio.authToken,
-      phoneNumber: env.SANDBOX_TWILIO_NUMBER || prod.twilio.phoneNumber,
-    },
-    stripe: {
-      secretKey: env.SANDBOX_STRIPE_SECRET_KEY || prod.stripe.secretKey,
-      webhookSecret: env.SANDBOX_STRIPE_WEBHOOK_SECRET || prod.stripe.webhookSecret,
-    },
-    // AI and Pinecone are shared across environments
-    ai: prod.ai,
-    pinecone: prod.pinecone,
-    cron: prod.cron,
-  };
-}
-
-/**
- * Get secrets for a specific environment mode.
- */
-export function getSecretsForMode(mode: EnvironmentMode): SecretsConfig {
-  return mode === 'sandbox' ? getSandboxSecrets() : getProductionSecrets();
-}
-
-/**
- * Reset secrets cache (for testing).
- */
-export function resetSecrets(): void {
-  _env = null;
 }

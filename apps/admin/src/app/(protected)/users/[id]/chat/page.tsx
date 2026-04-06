@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { useEnvironment } from '@/context/EnvironmentContext'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -28,7 +27,6 @@ interface Message {
 export default function AdminChatPage() {
   const { id } = useParams()
   const router = useRouter()
-  const { mode } = useEnvironment()
   const [messages, setMessages] = useState<Message[]>([])
   const [inputMessage, setInputMessage] = useState('')
   const [isInitialLoading, setIsInitialLoading] = useState(true)
@@ -120,7 +118,7 @@ export default function AdminChatPage() {
     if (id) {
       fetchConversations(true)
     }
-  }, [id, fetchConversations, mode])
+  }, [id, fetchConversations])
 
   // Handle scroll to top for loading more messages
   useEffect(() => {

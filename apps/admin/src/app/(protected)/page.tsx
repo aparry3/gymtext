@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useCallback, useEffect } from 'react';
-import { useEnvironment } from '@/context/EnvironmentContext';
 import { AdminHeader } from '@/components/admin/AdminHeader';
 import {
   MetricCard,
@@ -14,7 +13,6 @@ import { Users, CreditCard, MessageSquare, AlertTriangle } from 'lucide-react';
 import type { DashboardResponse } from '@/app/api/dashboard/route';
 
 export default function DashboardPage() {
-  const { mode } = useEnvironment();
   const [data, setData] = useState<DashboardResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -42,7 +40,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     fetchDashboard();
-  }, [fetchDashboard, mode]);
+  }, [fetchDashboard]);
 
   return (
     <div className="container mx-auto px-4 py-6 max-w-7xl">

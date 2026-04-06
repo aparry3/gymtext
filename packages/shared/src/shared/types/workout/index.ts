@@ -1,27 +1,9 @@
 /**
  * Centralized workout type exports
- *
- * All workout data uses the Blocks + Items schema.
- * See workoutDetails.ts for the canonical type definitions.
  */
 
 // ============================================================================
-// Workout Details — Blocks + Items Schema (CANONICAL)
-// ============================================================================
-export {
-  type WorkoutDetails,
-  type WorkoutItem,
-  type WorkoutNestedItem,
-  type WorkoutBlock,
-  type WorkoutDetail,
-  type WorkoutDetailType,
-  type FeedbackField,
-  type FeedbackFieldType,
-  type FeedbackRow,
-} from './workoutDetails';
-
-// ============================================================================
-// Formatted Text Schema (markdown workout format — separate concern)
+// Formatted Text Schema (markdown workout format)
 // ============================================================================
 export {
   FormattedWorkoutSchema,

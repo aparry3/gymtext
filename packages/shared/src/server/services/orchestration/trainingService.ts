@@ -89,20 +89,8 @@ export function createTrainingService(deps: TrainingServiceDeps): TrainingServic
       const planContent = result.response;
       console.log('[TrainingService] Generated plan:', planContent.substring(0, 200));
 
-      // Extract structured plan details via AI agent (mirrors week:details pattern)
-      const detailsResult = await simpleAgentRunner.invoke('plan:details', {
-        input: planContent,
-        context,
-        params: { user },
-      })
-        .then((r) => JSON.parse(r.response) as Record<string, unknown>)
-        .catch((error) => {
-          console.error('[TrainingService] Failed to generate plan details:', error);
-          return undefined;
-        });
-
       // Save to database via dossier service
-      const savedPlan = await markdownService.createPlan(user.id, planContent, now().toJSDate(), { details: detailsResult });
+      const savedPlan = await markdownService.createPlan(user.id, planContent, now().toJSDate());
       console.log(`[TrainingService] Saved fitness plan ${savedPlan.id} for user ${user.id}`);
 
       return savedPlan;
@@ -161,26 +149,14 @@ export function createTrainingService(deps: TrainingServiceDeps): TrainingServic
 
       const weekContent = result.response;
 
-      // Run week:format and week:details in parallel (mirrors workout pattern)
+      // Format week for SMS
       const weekContext = [...context, `## Week\n${weekContent}`];
 
-      const [formatResult, detailsResult] = await Promise.all([
-        simpleAgentRunner.invoke('week:format', {
-          input: weekContent,
-          context: weekContext,
-          params: { user },
-        }),
-        simpleAgentRunner.invoke('week:details', {
-          input: weekContent,
-          context: weekContext,
-          params: { user },
-        })
-          .then((r) => JSON.parse(r.response) as Record<string, unknown>)
-          .catch((error) => {
-            console.error(`[TrainingService] Failed to generate structured week:`, error);
-            return undefined;
-          }),
-      ]);
+      const formatResult = await simpleAgentRunner.invoke('week:format', {
+        input: weekContent,
+        context: weekContext,
+        params: { user },
+      });
 
       const weekMessage = formatResult.response;
 
@@ -190,7 +166,7 @@ export function createTrainingService(deps: TrainingServiceDeps): TrainingServic
         plan.id!,
         weekContent,
         weekStart.toJSDate(),
-        { message: weekMessage, details: detailsResult }
+        { message: weekMessage }
       );
 
       console.log(
@@ -226,21 +202,11 @@ export function createTrainingService(deps: TrainingServiceDeps): TrainingServic
         const dayName = getDayOfWeekName(todayDate, timezone);
         const dateStr = targetDate.toISODate()!;
 
-        // Run format and details agents in parallel
+        // Format workout for SMS
         const agentInput = `${dayName} (${dateStr})`;
         const agentOpts = { context, params: { user, date: todayDate } };
 
-        const [formatResult, detailsResult] = await Promise.all([
-          simpleAgentRunner.invoke('workout:format', { input: agentInput, ...agentOpts }),
-          simpleAgentRunner.invoke('workout:details', { input: agentInput, ...agentOpts })
-            .then((r) => {
-              return JSON.parse(r.response) as Record<string, unknown>;
-            })
-            .catch((error) => {
-              console.error(`[TrainingService] Failed to generate structured workout:`, error);
-              return undefined;
-            }),
-        ]);
+        const formatResult = await simpleAgentRunner.invoke('workout:format', { input: agentInput, ...agentOpts });
 
         const rawMessage = stripCodeFences(normalizeWhitespace(formatResult.response));
 
@@ -249,7 +215,6 @@ export function createTrainingService(deps: TrainingServiceDeps): TrainingServic
           clientId: user.id,
           date: dateStr,
           message: rawMessage,
-          details: detailsResult,
         });
 
         // Create short link using the actual workout instance ID

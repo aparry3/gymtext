@@ -23,7 +23,6 @@ import {
   Trash2,
   Wrench,
 } from 'lucide-react'
-import { useEnvironment } from '@/context/EnvironmentContext'
 import { cn } from '@/lib/utils'
 import { AdminHeader } from '@/components/admin/AdminHeader'
 import { AGENT_DOMAINS } from '@/components/admin/types'
@@ -1361,7 +1360,6 @@ function LogDetailView({
 }
 
 export default function AgentLogsPage() {
-  const { mode } = useEnvironment()
   const [logs, setLogs] = useState<AgentLogEntry[]>([])
   const [total, setTotal] = useState(0)
   const [isLoading, setIsLoading] = useState(true)
@@ -1411,7 +1409,7 @@ export default function AgentLogsPage() {
 
   useEffect(() => {
     fetchLogs(agentIdFilter, currentPage)
-  }, [agentIdFilter, currentPage, fetchLogs, mode])
+  }, [agentIdFilter, currentPage, fetchLogs])
 
   const handleRefresh = useCallback(() => {
     fetchLogs(agentIdFilter, currentPage)

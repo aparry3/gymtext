@@ -26,9 +26,10 @@ import {
   Bot,
   Globe,
   Tag,
+  Newspaper,
+  FlaskConical,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { useEnvironment } from '@/context/EnvironmentContext'
 
 interface NavItemDef {
   href: string
@@ -69,9 +70,11 @@ const navEntries: NavEntry[] = [
       { href: '/exercises', label: 'Exercises', icon: Dumbbell },
     ],
   },
+  { href: '/blog', label: 'Blog', icon: Newspaper },
   { href: '/landing-pages', label: 'Landing Pages', icon: Globe },
   { href: '/promotions', label: 'Promotions', icon: Tag },
   'divider',
+  { href: '/test-users', label: 'Test Users', icon: FlaskConical },
   { href: '/agents', label: 'Agents', icon: Bot },
   { href: '/agent-logs', label: 'Agent Logs', icon: ScrollText },
 ]
@@ -207,54 +210,6 @@ function NavGroup({
   )
 }
 
-function EnvironmentToggleSidebar({ collapsed }: { collapsed?: boolean }) {
-  const { setMode, isProduction, isSandbox } = useEnvironment()
-
-  if (collapsed) {
-    return (
-      <button
-        onClick={() => setMode(isProduction ? 'sandbox' : 'production')}
-        className={cn(
-          'w-full rounded-lg border px-2 py-2 text-xs font-medium transition-colors',
-          isProduction
-            ? 'border-green-500/40 bg-green-500/20 text-green-100'
-            : 'border-amber-500/40 bg-amber-500/20 text-amber-100'
-        )}
-        title="Toggle environment"
-      >
-        {isProduction ? 'Prod' : 'SB'}
-      </button>
-    )
-  }
-
-  return (
-    <div className="flex items-center gap-1 p-1 rounded-lg bg-[hsl(var(--sidebar-muted))]">
-      <button
-        onClick={() => setMode('production')}
-        className={cn(
-          'flex-1 px-3 py-1.5 rounded-md text-xs font-medium transition-colors',
-          isProduction
-            ? 'bg-green-600 text-white'
-            : 'text-[hsl(var(--sidebar-foreground))]/70 hover:text-[hsl(var(--sidebar-foreground))]'
-        )}
-      >
-        Production
-      </button>
-      <button
-        onClick={() => setMode('sandbox')}
-        className={cn(
-          'flex-1 px-3 py-1.5 rounded-md text-xs font-medium transition-colors',
-          isSandbox
-            ? 'bg-amber-500 text-white'
-            : 'text-[hsl(var(--sidebar-foreground))]/70 hover:text-[hsl(var(--sidebar-foreground))]'
-        )}
-      >
-        Sandbox
-      </button>
-    </div>
-  )
-}
-
 function SidebarContent({
   currentPath,
   collapsed,
@@ -352,9 +307,7 @@ function SidebarContent({
         })}
       </nav>
 
-      <div className="p-4 border-t border-[hsl(var(--sidebar-border))] space-y-3">
-        <EnvironmentToggleSidebar collapsed={collapsed} />
-
+      <div className="p-4 border-t border-[hsl(var(--sidebar-border))]">
         <Button
           variant="ghost"
           size="sm"

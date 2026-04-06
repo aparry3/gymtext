@@ -2,7 +2,7 @@
  * Workout Instance Repository
  *
  * Handles CRUD operations for workout_instances table.
- * Used to store outputs from workout:format and workout:details agents.
+ * Stores formatted workout messages per user per date.
  */
 import { Kysely, sql } from 'kysely';
 import { BaseRepository, type DatabaseInstance } from '@/server/repositories/baseRepository';
@@ -14,7 +14,6 @@ export interface WorkoutInstanceRow {
   clientId: string;
   date: Date;
   message: string | null;
-  details: Record<string, unknown> | null;
   createdAt: Date;
 }
 
@@ -22,12 +21,10 @@ export interface CreateWorkoutInstanceInput {
   clientId: string;
   date: string; // YYYY-MM-DD format
   message?: string;
-  details?: Record<string, unknown>;
 }
 
 export interface UpdateWorkoutInstanceInput {
   message?: string;
-  details?: Record<string, unknown>;
 }
 
 export class WorkoutInstanceRepository extends BaseRepository {
@@ -39,7 +36,7 @@ export class WorkoutInstanceRepository extends BaseRepository {
    * Upsert a workout instance by client_id + date
    */
   async upsert(input: CreateWorkoutInstanceInput & UpdateWorkoutInstanceInput): Promise<WorkoutInstanceRow> {
-    const { clientId, date, message, details } = input;
+    const { clientId, date, message } = input;
 
     // Use upsert with ON CONFLICT DO UPDATE
     const result = await this.db
@@ -48,12 +45,10 @@ export class WorkoutInstanceRepository extends BaseRepository {
         clientId,
         date,
         message: message ?? null,
-        details: details ? JSON.stringify(details) : null,
       })
       .onConflict((oc) => {
         const updateSet: Record<string, unknown> = {};
         if (message !== undefined) updateSet.message = message ?? null;
-        if (details !== undefined) updateSet.details = JSON.stringify(details);
         return oc.columns(['clientId', 'date']).doUpdateSet(updateSet);
       })
       .returningAll()
@@ -64,7 +59,6 @@ export class WorkoutInstanceRepository extends BaseRepository {
       clientId: result.clientId,
       date: result.date,
       message: result.message,
-      details: result.details as Record<string, unknown> | null,
       createdAt: result.createdAt,
     };
   }
@@ -86,7 +80,6 @@ export class WorkoutInstanceRepository extends BaseRepository {
       clientId: result.clientId,
       date: result.date,
       message: result.message,
-      details: result.details as Record<string, unknown> | null,
       createdAt: result.createdAt,
     };
   }
@@ -109,7 +102,6 @@ export class WorkoutInstanceRepository extends BaseRepository {
       clientId: result.clientId,
       date: result.date,
       message: result.message,
-      details: result.details as Record<string, unknown> | null,
       createdAt: result.createdAt,
     };
   }
@@ -138,7 +130,6 @@ export class WorkoutInstanceRepository extends BaseRepository {
       clientId: r.clientId,
       date: r.date,
       message: r.message,
-      details: r.details as Record<string, unknown> | null,
       createdAt: r.createdAt,
     }));
   }

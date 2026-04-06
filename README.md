@@ -20,7 +20,7 @@ gymtext/
 ### Apps
 
 - **web** - Consumer-facing Next.js application for end users. Handles onboarding, SMS conversations, fitness plans, and subscriptions.
-- **admin** - Admin portal for managing users, viewing conversations, and testing in sandbox mode. Features environment switching between production and sandbox.
+- **admin** - Admin portal for managing users and viewing conversations.
 
 ### Packages
 
@@ -33,7 +33,7 @@ gymtext/
 - Text message delivery via Twilio
 - Progress tracking
 - Secure payment processing with Stripe
-- Admin portal with environment switching (production/sandbox)
+- Admin portal for user management
 
 ## Tech Stack
 
@@ -51,7 +51,7 @@ gymtext/
 ### Prerequisites
 
 - Node.js 18+ and pnpm
-- PostgreSQL database (production + optional sandbox)
+- PostgreSQL database
 - Twilio account for SMS
 - Stripe account for payments
 
@@ -79,11 +79,6 @@ Configure the following in `.env.local`:
 - **Stripe**: `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_ID`
 - **AI**: `OPENAI_API_KEY`, `GOOGLE_API_KEY`
 - **Admin**: `ADMIN_PHONE_NUMBERS` (comma-separated E.164 phone numbers)
-
-For admin sandbox mode, also configure:
-- `SANDBOX_DATABASE_URL`
-- `SANDBOX_TWILIO_ACCOUNT_SID`, `SANDBOX_TWILIO_AUTH_TOKEN`, `SANDBOX_TWILIO_NUMBER`
-- `SANDBOX_STRIPE_SECRET_KEY`, `SANDBOX_STRIPE_WEBHOOK_SECRET`
 
 4. Set up the database:
 ```bash
@@ -131,16 +126,6 @@ The admin portal (`apps/admin`) provides:
 
 - **User Management**: View and manage users, fitness profiles, and subscriptions
 - **Conversation Viewer**: View SMS conversation history
-- **Environment Toggle**: Switch between production and sandbox environments
-
-### Environment Switching
-
-The admin portal supports switching between production and sandbox environments, similar to Stripe's dashboard:
-
-- **Production**: Uses production database, Twilio, and Stripe credentials
-- **Sandbox**: Uses sandbox database, Twilio, and Stripe credentials for testing
-
-When toggled, all database queries, SMS sends, and Stripe operations use the selected environment's credentials. AI services (OpenAI, Pinecone) remain on production.
 
 ## Deployment
 

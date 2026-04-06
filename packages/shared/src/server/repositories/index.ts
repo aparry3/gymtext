@@ -27,3 +27,4 @@ export * from './exerciseAliasRepository';
 export * from './movementRepository';
 export * from './organizationRepository';
 export * from './workoutInstanceRepository';
+export * from './adminTestRoutingRepository';

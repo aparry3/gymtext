@@ -31,7 +31,6 @@ export function createFitnessPlanService(
         plan.content ?? plan.description,
         plan.startDate,
         plan.description,
-        plan.details ? { details: plan.details as unknown as Record<string, unknown> } : undefined,
       );
     },
 

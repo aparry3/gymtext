@@ -15,9 +15,10 @@ interface MultiSelectQuestionProps {
   value: string[] | undefined;
   onChange: (value: string[]) => void;
   onNext: () => void;
+  hideButton?: boolean;
 }
 
-export function MultiSelectQuestion({ question, value = [], onChange, onNext }: MultiSelectQuestionProps) {
+export function MultiSelectQuestion({ question, value = [], onChange, onNext, hideButton }: MultiSelectQuestionProps) {
   const handleToggle = (optionValue: string) => {
     const currentValues = value || [];
     const isSelected = currentValues.includes(optionValue);
@@ -58,9 +59,11 @@ export function MultiSelectQuestion({ question, value = [], onChange, onNext }: 
         ))}
       </div>
 
-      <div className="mt-4">
-        <ContinueButton onClick={onNext} disabled={!canContinue} />
-      </div>
+      {!hideButton && (
+        <div className="mt-4">
+          <ContinueButton onClick={onNext} disabled={!canContinue} />
+        </div>
+      )}
     </div>
   );
 }

@@ -23,6 +23,7 @@ import {
   identifyUser,
 } from '@/lib/analytics';
 import { QuestionnaireProgress } from './QuestionnaireProgress';
+import { ContinueButton } from './ContinueButton';
 import { QuestionCard } from './QuestionCard';
 import { SingleSelectQuestion } from './questions/SingleSelectQuestion';
 import { MultiSelectQuestion } from './questions/MultiSelectQuestion';
@@ -34,10 +35,11 @@ interface QuestionnaireProps {
   programId?: string;
   programName?: string;
   ownerWordmarkUrl?: string;
+  ownerDisplayName?: string;
   questions: QuestionnaireQuestion[];
 }
 
-export function Questionnaire({ programId, programName, ownerWordmarkUrl, questions }: QuestionnaireProps) {
+export function Questionnaire({ programId, programName, ownerWordmarkUrl, ownerDisplayName, questions }: QuestionnaireProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   // Track consent separately from questionnaire answers
@@ -285,6 +287,7 @@ export function Questionnaire({ programId, programName, ownerWordmarkUrl, questi
 
     const currentValue = answers[currentQuestion.id];
     const isLastQuestion = isComplete;
+    const hideButton = !!ownerWordmarkUrl;
 
     switch (currentQuestion.type) {
       case 'select':
@@ -294,6 +297,7 @@ export function Questionnaire({ programId, programName, ownerWordmarkUrl, questi
             value={currentValue as string | undefined}
             onChange={(v) => setAnswer(v)}
             onNext={handleNext}
+            hideButton={hideButton}
           />
         );
 
@@ -304,6 +308,7 @@ export function Questionnaire({ programId, programName, ownerWordmarkUrl, questi
             value={currentValue as string[] | undefined}
             onChange={(v) => setAnswer(v)}
             onNext={handleNext}
+            hideButton={hideButton}
           />
         );
 
@@ -318,6 +323,7 @@ export function Questionnaire({ programId, programName, ownerWordmarkUrl, questi
             isSubmit={isLastQuestion}
             isLoading={isSubmitting}
             onConsentChange={currentQuestion.type === 'phone' ? handleConsentChange : undefined}
+            hideButton={hideButton}
           />
         );
 
@@ -328,6 +334,7 @@ export function Questionnaire({ programId, programName, ownerWordmarkUrl, questi
             value={currentValue as string | undefined}
             onChange={(v) => setAnswer(v)}
             onNext={handleNext}
+            hideButton={hideButton}
           />
         );
 
@@ -338,6 +345,7 @@ export function Questionnaire({ programId, programName, ownerWordmarkUrl, questi
             value={currentValue as string | undefined}
             onChange={(v) => setAnswer(v)}
             onNext={handleNext}
+            hideButton={hideButton}
           />
         );
 
@@ -347,7 +355,7 @@ export function Questionnaire({ programId, programName, ownerWordmarkUrl, questi
   };
 
   return (
-    <div className="questionnaire-theme flex min-h-screen-safe flex-col bg-[hsl(var(--questionnaire-bg))]">
+    <div className={`questionnaire-theme flex flex-col bg-[hsl(var(--questionnaire-bg))] ${ownerWordmarkUrl ? 'h-screen-safe' : 'min-h-screen-safe'}`}>
       {/* Close button - top left */}
       <div className="pt-safe mt-2 px-4">
         <Link
@@ -370,7 +378,7 @@ export function Questionnaire({ programId, programName, ownerWordmarkUrl, questi
       {/* Branding header */}
       <div className="flex flex-col items-center gap-1 py-4">
         {ownerWordmarkUrl ? (
-          <img src={ownerWordmarkUrl} alt="" className="h-8 object-contain" />
+          <img src={ownerWordmarkUrl} alt={ownerDisplayName || ''} className="h-14 object-contain" />
         ) : (
           <img src="/Wordmark.png" alt="GymText" className="h-8 object-contain" />
         )}
@@ -434,8 +442,8 @@ export function Questionnaire({ programId, programName, ownerWordmarkUrl, questi
         <QuestionnaireProgress currentIndex={currentIndex} totalQuestions={totalQuestions} />
       </header>
 
-      {/* Main content */}
-      <main className="flex flex-1 flex-col justify-center px-6 pt-8 pb-safe-offset-12">
+      {/* Main content — question + options scroll, button stays below */}
+      <main className={`flex flex-1 flex-col px-6 overflow-y-auto ${ownerWordmarkUrl ? 'branded-questions justify-start pt-4 pb-4' : 'justify-center pt-8 pb-safe-offset-12'}`}>
         <div className="mx-auto w-full max-w-md">
           {error && (
             <div className="mb-6 rounded-xl bg-red-50 border border-red-200 p-4">
@@ -448,6 +456,24 @@ export function Questionnaire({ programId, programName, ownerWordmarkUrl, questi
           </QuestionCard>
         </div>
       </main>
+
+      {/* Fixed bottom section — only when owner branding is active */}
+      {ownerWordmarkUrl && (
+        <div className="flex-shrink-0 px-6 pt-4 pb-4">
+          <div className="mx-auto w-full max-w-md">
+            <ContinueButton
+              onClick={handleNext}
+              disabled={!hasValidAnswer}
+              isSubmit={isComplete}
+              isLoading={isSubmitting}
+            />
+          </div>
+          <div className="flex items-center justify-center gap-1.5 pt-4 pb-safe">
+            <span className="text-xs text-[hsl(var(--questionnaire-muted-foreground)/0.6)]">powered by</span>
+            <img src="/Wordmark.png" alt="GymText" className="h-4 object-contain opacity-60" />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

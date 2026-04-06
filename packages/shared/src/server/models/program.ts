@@ -26,8 +26,23 @@ export interface Program {
   publishedVersionId: string | null;
   /** ID of the cover image for this program */
   coverImageId: string | null;
+  /** URL of the program logo for branding */
+  logoUrl: string | null;
+  /** Subheader text for program branding */
+  subheader: string | null;
+  /** URL of the image sent with daily/weekly SMS texts */
+  smsImageUrl: string | null;
   isActive: boolean;
   isPublic: boolean;
+  // Pricing
+  stripeProductId: string | null;
+  stripePriceId: string | null;
+  priceAmountCents: number | null;
+  priceCurrency: string | null;
+  // Coach scheduling
+  schedulingEnabled: boolean;
+  schedulingUrl: string | null;
+  schedulingNotes: string | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -47,8 +62,20 @@ export class ProgramModel {
       revenueSplitPercent: row.revenueSplitPercent,
       publishedVersionId: row.publishedVersionId,
       coverImageId: row.coverImageId ?? null,
+      logoUrl: row.logoUrl ?? null,
+      subheader: row.subheader ?? null,
+      smsImageUrl: row.smsImageUrl ?? null,
       isActive: row.isActive,
       isPublic: row.isPublic,
+      // Pricing
+      stripeProductId: row.stripeProductId ?? null,
+      stripePriceId: row.stripePriceId ?? null,
+      priceAmountCents: row.priceAmountCents ?? null,
+      priceCurrency: row.priceCurrency ?? null,
+      // Coach scheduling
+      schedulingEnabled: row.schedulingEnabled,
+      schedulingUrl: row.schedulingUrl ?? null,
+      schedulingNotes: row.schedulingNotes ?? null,
       createdAt: new Date(row.createdAt as unknown as string | number | Date),
       updatedAt: new Date(row.updatedAt as unknown as string | number | Date),
     };

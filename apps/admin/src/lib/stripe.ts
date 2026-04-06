@@ -1,22 +1,18 @@
 /**
  * Admin Stripe Client
  *
- * Creates a Stripe client for the current environment mode.
- * Used by admin API routes that need direct Stripe access.
+ * Creates a Stripe client for use in admin API routes.
  */
 
 import Stripe from 'stripe';
-import { getSecretsForMode, type EnvironmentMode } from './secrets';
+import { getSecrets } from './secrets';
 
-const stripeCache = new Map<string, Stripe>();
+let cachedClient: Stripe | null = null;
 
-export function getStripeClient(mode: EnvironmentMode): Stripe {
-  const secrets = getSecretsForMode(mode);
-  const key = secrets.stripe.secretKey;
-
-  if (!stripeCache.has(key)) {
-    stripeCache.set(key, new Stripe(key, { apiVersion: '2023-10-16' }));
+export function getStripeClient(): Stripe {
+  if (!cachedClient) {
+    const secrets = getSecrets();
+    cachedClient = new Stripe(secrets.stripe.secretKey, { apiVersion: '2023-10-16' });
   }
-
-  return stripeCache.get(key)!;
+  return cachedClient;
 }

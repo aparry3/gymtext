@@ -1,0 +1,22 @@
+/* Mikey Swiercz / Johns Hopkins theme colors */
+:root {
+  --jhu-blue: #002D72;
+  --jhu-black: #1a1a1a;
+  --jhu-gold: #cfae70;
+}
+
+.bg-jhu-blue {
+  background-color: var(--jhu-blue);
+}
+.text-jhu-blue {
+  color: var(--jhu-blue);
+}
+.text-jhu-gold {
+  color: var(--jhu-gold);
+}
+.border-jhu-blue {
+  border-color: var(--jhu-blue);
+}
+.border-jhu-gold {
+  border-color: var(--jhu-gold);
+}

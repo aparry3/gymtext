@@ -17,6 +17,7 @@ export function ContinueButton({ onClick, disabled = false, isLoading = false, i
   return (
     <button
       type="button"
+      data-continue-btn
       onClick={onClick}
       disabled={disabled || isLoading}
       className={`

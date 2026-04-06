@@ -6,6 +6,8 @@ import type { SignupData } from '@/server/repositories/onboardingRepository';
 import { getStripeSecrets, getEnvironmentSettings } from '@/server/config';
 import { getStripeConfig, getUrlsConfig } from '@/shared/config';
 import { isProductionEnvironment } from '@/shared/config/public';
+import { getAdminConfig } from '@gymtext/shared/shared';
+import { buildAdminTestPhone } from '@gymtext/shared/shared/utils/phoneUtils';
 
 const { secretKey } = getStripeSecrets();
 const stripe = new Stripe(secretKey, {
@@ -37,6 +39,13 @@ export async function POST(request: NextRequest) {
     console.log('[Signup] Form data:', formData);
 
     const services = getServices();
+
+    // Admin test signup: admin phone + program → create test user with suffixed phone, skip Stripe
+    const { phoneNumbers: adminPhones } = getAdminConfig();
+    if (adminPhones.includes(formData.phoneNumber as string) && formData.programId) {
+      console.log('[Signup] Admin test signup detected');
+      return await handleAdminTestSignup(services, formData);
+    }
 
     // Check for existing user by phone number
     const existingUser = await services.user.getUserByPhone(formData.phoneNumber);
@@ -311,6 +320,109 @@ async function handleDevModeSignup(
 }
 
 /**
+ * Handle signup for an admin test user.
+ * Admin uses the normal signup form with their real phone — backend creates a
+ * suffixed test user identity, skips Stripe, and triggers onboarding.
+ * If a test user already exists for this program, it's fully reset (deleted + re-created).
+ */
+async function handleAdminTestSignup(
+  services: ServiceContainer,
+  formData: Record<string, unknown>
+) {
+  const repos = getRepositories();
+  const programId = formData.programId as string;
+
+  // Look up program for the slug
+  const program = await repos.program.findById(programId);
+  if (!program) {
+    return NextResponse.json({ success: false, message: 'Program not found' }, { status: 404 });
+  }
+
+  const slug = program.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  const testPhone = buildAdminTestPhone(formData.phoneNumber as string, slug);
+
+  // If test user already exists for this program, full reset
+  const existing = await repos.user.findByPhoneNumber(testPhone);
+  if (existing) {
+    console.log(`[Signup] Admin test user exists for "${program.name}", resetting`);
+    // Clear active test routing if this was the active user
+    const activeTestUserId = await repos.adminTestRouting.getActiveTestUserId(formData.phoneNumber as string);
+    if (activeTestUserId === existing.id) {
+      await repos.adminTestRouting.clearActiveTestUser(formData.phoneNumber as string);
+    }
+    await services.user.deleteUser(existing.id);
+  }
+
+  // Create user via repository (bypasses phone validation for suffixed phones)
+  const user = await repos.user.create({
+    name: (formData.name as string) || `Test - ${program.name}`,
+    phoneNumber: testPhone,
+    email: formData.email ? `${(formData.email as string).replace('@', `+${slug}@`)}` : null,
+    age: formData.age ? parseInt(formData.age as string, 10) : null,
+    gender: (formData.gender as string) || null,
+    timezone: (formData.timezone as string) || 'America/New_York',
+    preferredSendHour: (formData.preferredSendHour as number) ?? 8,
+    messagingOptIn: formData.smsConsent === true,
+    messagingOptInDate: formData.smsConsent ? new Date() : null,
+  });
+
+  if (!user) {
+    return NextResponse.json({ success: false, message: 'Failed to create test user' }, { status: 500 });
+  }
+
+  console.log(`[Signup] Admin test user created: ${user.id} (${testPhone})`);
+
+  // Create test subscription (no Stripe)
+  const now = new Date();
+  const periodEnd = new Date(now);
+  periodEnd.setFullYear(periodEnd.getFullYear() + 1);
+
+  await repos.subscription.create({
+    clientId: user.id,
+    stripeSubscriptionId: `sub_test_${Date.now()}`,
+    status: 'active',
+    planType: 'monthly',
+    currentPeriodStart: now,
+    currentPeriodEnd: periodEnd,
+  });
+
+  // Create onboarding record and trigger onboarding
+  await services.onboardingData.createOnboardingRecord(user.id, extractSignupData(formData));
+
+  // Send welcome message if user consented to SMS
+  if (formData.smsConsent) {
+    const userWithProfile = await services.user.getUser(user.id);
+    if (userWithProfile) {
+      await services.onboarding.sendWelcomeMessage(userWithProfile);
+    }
+  }
+
+  await inngest.send({
+    name: 'user/onboarding.requested',
+    data: { userId: user.id, forceCreate: false },
+  });
+
+  // Set session cookie and return redirect (no checkout)
+  const sessionToken = services.userAuth.createSessionToken(user.id);
+
+  const response = NextResponse.json({
+    success: true,
+    redirectUrl: '/me',
+  });
+
+  response.cookies.set('gt_user_session', sessionToken, {
+    httpOnly: true,
+    secure: isProductionEnvironment(),
+    sameSite: 'lax',
+    maxAge: 30 * 24 * 60 * 60,
+    path: '/',
+  });
+
+  console.log(`[Signup] Admin test signup complete for "${program.name}", redirecting to /me`);
+  return response;
+}
+
+/**
  * Complete the signup flow common to new and unsubscribed existing users
  */
 async function completeSignupFlow(
@@ -356,7 +468,24 @@ async function completeSignupFlow(
   console.log('[Signup] Creating Stripe checkout session');
   const { publicBaseUrl, baseUrl } = getUrlsConfig();
   const resolvedBaseUrl = publicBaseUrl || baseUrl;
-  const { priceId } = getStripeConfig();
+  const { priceId: globalPriceId } = getStripeConfig();
+
+  // Use program-specific price if available, otherwise fall back to global default
+  const programId = formData.programId as string | undefined;
+  let priceId = globalPriceId;
+
+  if (programId) {
+    try {
+      const repos = getRepositories();
+      const program = await repos.program.findById(programId);
+      if (program?.stripePriceId) {
+        priceId = program.stripePriceId;
+        console.log(`[Signup] Using program-specific price: ${priceId} (program: ${program.name})`);
+      }
+    } catch (err) {
+      console.error(`[Signup] Error fetching program ${programId} for pricing, using global default:`, err);
+    }
+  }
 
   // Handle referral code if present
   const referralCode = formData.referralCode as string | undefined;
@@ -414,6 +543,7 @@ async function completeSignupFlow(
     metadata: {
       userId,
       referralCode: validReferralCode || '',
+      programId: programId || '',
     },
     client_reference_id: userId,
   };

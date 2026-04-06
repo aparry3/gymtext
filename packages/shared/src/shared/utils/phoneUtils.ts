@@ -115,3 +115,56 @@ export function createNormalizedUSPhone(phone: string): NormalizedUSPhone | null
   }
   return null;
 }
+
+// ── Admin Test Phone Utilities ──────────────────────────────────
+// Admin test users have phone numbers like +1234567890_programslug
+// The suffix separates test identities for multi-program testing.
+
+const ADMIN_TEST_PHONE_SEPARATOR = '_';
+
+/**
+ * Parse an admin test phone number into its base phone and slug.
+ * Returns null if the phone is not a suffixed admin test phone.
+ *
+ * @example parseAdminTestPhone('+13392223571_marathon') → { basePhone: '+13392223571', slug: 'marathon' }
+ * @example parseAdminTestPhone('+13392223571') → null
+ */
+export function parseAdminTestPhone(phone: string): { basePhone: string; slug: string } | null {
+  if (!phone || typeof phone !== 'string') return null;
+  const separatorIndex = phone.indexOf(ADMIN_TEST_PHONE_SEPARATOR);
+  if (separatorIndex === -1) return null;
+
+  const basePhone = phone.slice(0, separatorIndex);
+  const slug = phone.slice(separatorIndex + 1);
+
+  if (!validateUSPhoneNumber(basePhone) || !slug) return null;
+  return { basePhone, slug };
+}
+
+/**
+ * Check if a phone number is an admin test phone (has a suffix).
+ */
+export function isAdminTestPhone(phone: string): boolean {
+  return parseAdminTestPhone(phone) !== null;
+}
+
+/**
+ * Extract the base phone from a potentially suffixed phone number.
+ * If not suffixed, returns the original phone unchanged.
+ *
+ * @example getBasePhone('+13392223571_marathon') → '+13392223571'
+ * @example getBasePhone('+13392223571') → '+13392223571'
+ */
+export function getBasePhone(phone: string): string {
+  const parsed = parseAdminTestPhone(phone);
+  return parsed ? parsed.basePhone : phone;
+}
+
+/**
+ * Build an admin test phone from a base phone and program slug.
+ *
+ * @example buildAdminTestPhone('+13392223571', 'marathon') → '+13392223571_marathon'
+ */
+export function buildAdminTestPhone(basePhone: string, slug: string): string {
+  return `${basePhone}${ADMIN_TEST_PHONE_SEPARATOR}${slug}`;
+}

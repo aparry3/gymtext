@@ -28,6 +28,7 @@ export function getTwilioSecrets() {
     accountSid: env.TWILIO_ACCOUNT_SID,
     authToken: env.TWILIO_AUTH_TOKEN,
     phoneNumber: env.TWILIO_NUMBER,
+    messagingServiceSid: env.TWILIO_MESSAGING_SERVICE_SID,
   };
 }
 

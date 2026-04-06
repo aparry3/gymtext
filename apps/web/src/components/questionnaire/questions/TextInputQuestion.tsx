@@ -20,6 +20,7 @@ interface TextInputQuestionProps {
   isSubmit?: boolean;
   isLoading?: boolean;
   onConsentChange?: (smsConsent: boolean, termsConsent: boolean) => void;
+  hideButton?: boolean;
 }
 
 /**
@@ -54,6 +55,7 @@ export function TextInputQuestion({
   isSubmit = false,
   isLoading = false,
   onConsentChange,
+  hideButton,
 }: TextInputQuestionProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const isPhone = question.type === 'phone';
@@ -202,9 +204,11 @@ export function TextInputQuestion({
         </div>
       )}
 
-      <div className="mt-4">
-        <ContinueButton onClick={onNext} disabled={!canContinue} isSubmit={isSubmit} isLoading={isLoading} />
-      </div>
+      {!hideButton && (
+        <div className="mt-4">
+          <ContinueButton onClick={onNext} disabled={!canContinue} isSubmit={isSubmit} isLoading={isLoading} />
+        </div>
+      )}
 
     </div>
   );

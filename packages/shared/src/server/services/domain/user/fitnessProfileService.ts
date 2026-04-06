@@ -95,18 +95,7 @@ export function createFitnessProfileService(
 
           console.log('[FitnessProfileService] Created initial profile via profile:update agent');
 
-          // Extract structured details for UI display
-          const profileDetails = await agentRunner.invoke('profile:details', {
-            input: updatedProfile,
-            params: { user },
-          })
-            .then((r) => JSON.parse(r.response) as Record<string, unknown>)
-            .catch((error) => {
-              console.error('[FitnessProfileService] Failed to generate profile details:', error);
-              return undefined;
-            });
-
-          await repos.profile.createProfileForUser(user.id, updatedProfile, { details: profileDetails });
+          await repos.profile.createProfileForUser(user.id, updatedProfile);
 
           return updatedProfile;
         } catch (error) {

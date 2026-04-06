@@ -27,7 +27,6 @@ export class FitnessPlanRepository extends BaseRepository {
       clientId: result.clientId,
       content: row.content ?? null,
       description: result.description || '',
-      details: row.details ?? null,
       startDate: new Date(result.startDate as unknown as string | number | Date),
       createdAt: new Date(result.createdAt as unknown as string | number | Date),
     };
@@ -36,22 +35,15 @@ export class FitnessPlanRepository extends BaseRepository {
   /**
    * Create a new fitness plan
    */
-  async create(userId: string, content: string, startDate: Date, description?: string, options?: { details?: Record<string, unknown> }): Promise<FitnessPlan> {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const insertValues: any = {
-      clientId: userId,
-      content,
-      description: description ?? content,
-      startDate,
-    };
-
-    if (options?.details) {
-      insertValues.details = JSON.stringify(options.details);
-    }
-
+  async create(userId: string, content: string, startDate: Date, description?: string): Promise<FitnessPlan> {
     const result = await this.db
       .insertInto('fitnessPlans')
-      .values(insertValues)
+      .values({
+        clientId: userId,
+        content,
+        description: description ?? content,
+        startDate,
+      })
       .returningAll()
       .executeTakeFirstOrThrow();
 
@@ -62,7 +54,6 @@ export class FitnessPlanRepository extends BaseRepository {
       clientId: result.clientId,
       content: row.content ?? null,
       description: result.description || '',
-      details: row.details ?? null,
       startDate: new Date(result.startDate as unknown as string | number | Date),
       createdAt: new Date(result.createdAt as unknown as string | number | Date),
     };
@@ -113,7 +104,6 @@ export class FitnessPlanRepository extends BaseRepository {
       clientId: result.clientId,
       content: row.content ?? null,
       description: result.description || '',
-      details: row.details ?? null,
       startDate: new Date(result.startDate as unknown as string | number | Date),
       createdAt: new Date(result.createdAt as unknown as string | number | Date),
     };
