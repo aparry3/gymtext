@@ -1,10 +1,27 @@
 'use client'
 
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { AdminProgram, ProgramSort, OwnerType } from './types'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Input } from '@/components/ui/input'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { formatRelative } from '@/shared/utils/date'
 
 interface ProgramsTableProps {
@@ -87,6 +104,7 @@ export function ProgramsTable({
                 />
               </th>
               <th className="hidden md:table-cell p-4 text-left">Status</th>
+              <th className="p-4 text-right">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -135,10 +153,59 @@ interface ProgramRowProps {
 
 function ProgramRow({ program }: ProgramRowProps) {
   const router = useRouter()
+  const [isBusy, setIsBusy] = useState(false)
+  const [deleteOpen, setDeleteOpen] = useState(false)
+  const [deleteConfirmText, setDeleteConfirmText] = useState('')
+  const [deleteError, setDeleteError] = useState<string | null>(null)
 
   const handleRowClick = () => {
     router.push(`/programs/${program.id}`)
   }
+
+  const handleDuplicate = async () => {
+    if (isBusy) return
+    setIsBusy(true)
+    try {
+      const response = await fetch(`/api/programs/${program.id}/duplicate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),
+      })
+      const result = await response.json()
+      if (!response.ok || !result.success) {
+        throw new Error(result.message || 'Failed to duplicate program')
+      }
+      router.push(`/programs/${result.data.program.id}`)
+    } catch (err) {
+      console.error('Error duplicating program:', err)
+      alert(err instanceof Error ? err.message : 'Failed to duplicate program')
+      setIsBusy(false)
+    }
+  }
+
+  const handleDelete = async () => {
+    if (isBusy) return
+    setIsBusy(true)
+    setDeleteError(null)
+    try {
+      const response = await fetch(`/api/programs/${program.id}`, {
+        method: 'DELETE',
+      })
+      const result = await response.json()
+      if (!response.ok || !result.success) {
+        throw new Error(result.message || 'Failed to delete program')
+      }
+      setDeleteOpen(false)
+      router.refresh()
+    } catch (err) {
+      console.error('Error deleting program:', err)
+      setDeleteError(err instanceof Error ? err.message : 'Failed to delete program')
+    } finally {
+      setIsBusy(false)
+    }
+  }
+
+  const canConfirmDelete = deleteConfirmText.trim() === program.name
 
   const ownerTypeColors: Record<OwnerType, string> = {
     coach: 'bg-blue-100 text-blue-800',
@@ -205,9 +272,78 @@ function ProgramRow({ program }: ProgramRowProps) {
           )}
         </div>
       </td>
+
+      <td className="p-4 text-right" onClick={(e) => e.stopPropagation()}>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="sm" disabled={isBusy} aria-label="Program actions">
+              <MoreHorizontalIcon className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={handleDuplicate}>Duplicate</DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onClick={() => {
+                setDeleteConfirmText('')
+                setDeleteError(null)
+                setDeleteOpen(true)
+              }}
+              className="text-red-600"
+            >
+              Delete
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        <Dialog open={deleteOpen} onOpenChange={(open) => !isBusy && setDeleteOpen(open)}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Delete program</DialogTitle>
+              <DialogDescription>
+                This permanently deletes <span className="font-semibold">{program.name}</span> and
+                all of its versions. This cannot be undone. Type the program name to confirm.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-2 py-2">
+              <Input
+                value={deleteConfirmText}
+                onChange={(e) => setDeleteConfirmText(e.target.value)}
+                placeholder={program.name}
+                autoFocus
+              />
+              {deleteError && (
+                <p className="text-sm text-red-600">{deleteError}</p>
+              )}
+            </div>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setDeleteOpen(false)}
+                disabled={isBusy}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={handleDelete}
+                disabled={!canConfirmDelete || isBusy}
+              >
+                {isBusy ? 'Deleting…' : 'Delete program'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </td>
     </tr>
   )
 }
+
+const MoreHorizontalIcon = ({ className }: { className?: string }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0ZM12.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0ZM18.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z" />
+  </svg>
+)
 
 function ProgramsTableSkeleton() {
   return (
@@ -222,6 +358,7 @@ function ProgramsTableSkeleton() {
               <th className="hidden md:table-cell p-4 text-left">Enrollments</th>
               <th className="hidden md:table-cell p-4 text-left">Created</th>
               <th className="hidden md:table-cell p-4 text-left">Status</th>
+              <th className="p-4 text-right">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -247,6 +384,9 @@ function ProgramsTableSkeleton() {
                 </td>
                 <td className="hidden md:table-cell p-4">
                   <Skeleton className="h-5 w-16" />
+                </td>
+                <td className="p-4">
+                  <Skeleton className="h-8 w-20 ml-auto" />
                 </td>
               </tr>
             ))}

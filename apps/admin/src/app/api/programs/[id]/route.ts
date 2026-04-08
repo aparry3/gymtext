@@ -92,7 +92,7 @@ export async function PATCH(request: Request, { params }: RouteParams) {
     const body = await request.json();
 
     const {
-      name, description, schedulingMode, cadence, lateJoinerPolicy, billingModel, isActive, isPublic,
+      name, description, ownerId, schedulingMode, cadence, lateJoinerPolicy, billingModel, isActive, isPublic,
       // Pricing fields (Stripe IDs are auto-managed)
       priceAmountCents, priceCurrency,
       // Coach scheduling fields
@@ -170,6 +170,7 @@ export async function PATCH(request: Request, { params }: RouteParams) {
     const updates: Record<string, unknown> = {};
     if (name !== undefined) updates.name = name;
     if (description !== undefined) updates.description = description;
+    if (ownerId !== undefined) updates.ownerId = ownerId;
     if (schedulingMode !== undefined) updates.schedulingMode = schedulingMode;
     if (cadence !== undefined) updates.cadence = cadence;
     if (lateJoinerPolicy !== undefined) updates.lateJoinerPolicy = lateJoinerPolicy;
@@ -195,11 +196,50 @@ export async function PATCH(request: Request, { params }: RouteParams) {
 
   } catch (error) {
     console.error('Error updating program:', error);
-
     return NextResponse.json(
       {
         success: false,
         message: error instanceof Error ? error.message : 'An error occurred updating program'
+      },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(request: Request, { params }: RouteParams) {
+  try {
+    const { id } = await params;
+    const { services } = await getAdminContext();
+
+    const existing = await services.program.getById(id);
+    if (!existing) {
+      return NextResponse.json(
+        { success: false, message: 'Program not found' },
+        { status: 404 }
+      );
+    }
+
+    const activeEnrollments = await services.enrollment.countActiveEnrollments(id);
+    if (activeEnrollments > 0) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: `Cannot delete program with ${activeEnrollments} active enrollment(s). Cancel enrollments first.`,
+        },
+        { status: 409 }
+      );
+    }
+
+    await services.program.delete(id);
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error('Error deleting program:', error);
+
+    return NextResponse.json(
+      {
+        success: false,
+        message: error instanceof Error ? error.message : 'An error occurred deleting program'
       },
       { status: 500 }
     );

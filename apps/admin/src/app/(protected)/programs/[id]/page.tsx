@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import {
   AdminProgram,
+  AdminProgramOwner,
   AdminEnrollment,
   AdminProgramVersion,
   AdminProgramQuestion,
@@ -189,9 +190,13 @@ export default function ProgramDetailPage() {
   const [editForm, setEditForm] = useState({
     name: '',
     description: '',
+    ownerId: '',
     isActive: true,
     isPublic: false,
   })
+
+  // Program owners (for owner selector)
+  const [owners, setOwners] = useState<AdminProgramOwner[]>([])
 
   const [settingsForm, setSettingsForm] = useState({
     schedulingMode: 'rolling_start' as SchedulingMode,
@@ -273,6 +278,7 @@ export default function ProgramDetailPage() {
       const newEditForm = {
         name: data.program.name,
         description: data.program.description || '',
+        ownerId: data.program.ownerId || '',
         isActive: data.program.isActive,
         isPublic: data.program.isPublic,
       }
@@ -333,6 +339,22 @@ export default function ProgramDetailPage() {
       fetchProgram(id as string)
     }
   }, [id, fetchProgram])
+
+  // Fetch owners list for the owner selector
+  useEffect(() => {
+    async function fetchOwners() {
+      try {
+        const response = await fetch('/api/program-owners?pageSize=100')
+        const result = await response.json()
+        if (result.success) {
+          setOwners(result.data.owners)
+        }
+      } catch (err) {
+        console.error('Error fetching owners:', err)
+      }
+    }
+    fetchOwners()
+  }, [])
 
   // Handle ?viewVersion= query param
   useEffect(() => {
@@ -559,8 +581,17 @@ export default function ProgramDetailPage() {
       <div className="px-8 pt-8 pb-0">
         {/* Title Row */}
         <div className="flex items-center justify-between mb-1">
-          <div className="flex items-center gap-3">
-            <h1 className="text-3xl font-bold text-gray-900">{program.name}</h1>
+          <div className="flex items-center gap-3 flex-1 min-w-0">
+            {isReadOnly ? (
+              <h1 className="text-3xl font-bold text-gray-900">{program.name}</h1>
+            ) : (
+              <input
+                type="text"
+                value={editForm.name}
+                onChange={(e) => setEditForm(prev => ({ ...prev, name: e.target.value }))}
+                className="text-3xl font-bold text-gray-900 bg-transparent border-0 border-b border-transparent hover:border-gray-200 focus:border-blue-400 outline-none px-1 -ml-1 min-w-0 flex-1 max-w-2xl"
+              />
+            )}
             <Badge className="bg-green-100 text-green-700 border-0 text-[11px] font-semibold uppercase tracking-wide px-2.5 py-0.5 rounded-full">
               <span className="inline-block w-1.5 h-1.5 bg-green-500 rounded-full mr-1.5" />
               {program.isActive ? 'Active' : 'Inactive'}
@@ -714,6 +745,89 @@ export default function ProgramDetailPage() {
               {/* ── Left Column: Program Logistics ────────────────── */}
               <div className="space-y-4">
                 <h2 className="text-lg font-semibold text-gray-900">Program Logistics</h2>
+
+                {/* Program Details Card */}
+                <Card className="p-5 bg-white border border-gray-200 rounded-xl shadow-sm">
+                  <div className="flex items-center gap-2 mb-5">
+                    <SettingsIcon className="text-gray-500" />
+                    <h3 className="text-[15px] font-semibold text-gray-900">Program Details</h3>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div>
+                      <div className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 mb-1">
+                        Description
+                      </div>
+                      {isReadOnly ? (
+                        <div className="text-sm text-gray-700 whitespace-pre-wrap">
+                          {program.description || <span className="text-gray-400">No description</span>}
+                        </div>
+                      ) : (
+                        <textarea
+                          value={editForm.description}
+                          onChange={(e) => setEditForm(prev => ({ ...prev, description: e.target.value }))}
+                          rows={4}
+                          placeholder="Describe this program..."
+                          className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 outline-none focus:border-blue-400 resize-y"
+                        />
+                      )}
+                    </div>
+
+                    <div>
+                      <div className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 mb-1">
+                        Owner
+                      </div>
+                      {isReadOnly ? (
+                        <div className="text-sm font-semibold text-gray-900">
+                          {program.owner.displayName}
+                        </div>
+                      ) : (
+                        <select
+                          value={editForm.ownerId}
+                          onChange={(e) => setEditForm(prev => ({ ...prev, ownerId: e.target.value }))}
+                          className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 outline-none focus:border-blue-400"
+                        >
+                          {owners.length === 0 && (
+                            <option value={editForm.ownerId}>{program.owner.displayName}</option>
+                          )}
+                          {owners.map((o) => (
+                            <option key={o.id} value={o.id}>
+                              {o.displayName} ({o.ownerType})
+                            </option>
+                          ))}
+                        </select>
+                      )}
+                    </div>
+
+                    <div className="flex items-center justify-between pt-2 border-t border-gray-100">
+                      <div>
+                        <div className="text-[10px] font-semibold uppercase tracking-widest text-gray-400">
+                          Active
+                        </div>
+                        <div className="text-xs text-gray-500">Program is available for new enrollments</div>
+                      </div>
+                      <Switch
+                        checked={editForm.isActive}
+                        onCheckedChange={(checked) => setEditForm(prev => ({ ...prev, isActive: checked }))}
+                        disabled={isReadOnly}
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="text-[10px] font-semibold uppercase tracking-widest text-gray-400">
+                          Public
+                        </div>
+                        <div className="text-xs text-gray-500">Listed in public program catalog</div>
+                      </div>
+                      <Switch
+                        checked={editForm.isPublic}
+                        onCheckedChange={(checked) => setEditForm(prev => ({ ...prev, isPublic: checked }))}
+                        disabled={isReadOnly}
+                      />
+                    </div>
+                  </div>
+                </Card>
 
                 {/* Operation Mode Card */}
                 <Card className="p-5 bg-white border border-gray-200 rounded-xl shadow-sm">
