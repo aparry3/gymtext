@@ -24,6 +24,18 @@ export class ProgramRepository extends BaseRepository {
   }
 
   /**
+   * Delete a program by ID. Cascades to versions, family links, and enrollments.
+   */
+  async delete(id: string): Promise<boolean> {
+    const result = await this.db
+      .deleteFrom('programs')
+      .where('id', '=', id)
+      .executeTakeFirst();
+
+    return Number(result.numDeletedRows ?? 0) > 0;
+  }
+
+  /**
    * Find a program by ID
    */
   async findById(id: string): Promise<Program | null> {
