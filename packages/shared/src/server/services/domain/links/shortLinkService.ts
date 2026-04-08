@@ -16,6 +16,7 @@ export interface ShortLinkServiceInstance {
   resolveShortLink(code: string): Promise<ResolvedShortLink | null>;
   createWorkoutLink(userId: string, workoutId: string, options?: CreateShortLinkOptions): Promise<ShortLink>;
   createProfileLink(userId: string, options?: CreateShortLinkOptions): Promise<ShortLink>;
+  createCoachLink(userId: string, targetUrl: string, options?: CreateShortLinkOptions): Promise<ShortLink>;
   getFullUrl(code: string): string;
   cleanupExpiredLinks(): Promise<number>;
 }
@@ -90,6 +91,14 @@ export function createShortLinkService(repos: RepositoryContainer): ShortLinkSer
     ): Promise<ShortLink> {
       const targetPath = '/me';
       return this.createShortLink(userId, targetPath, options);
+    },
+
+    async createCoachLink(
+      userId: string,
+      targetUrl: string,
+      options?: CreateShortLinkOptions
+    ): Promise<ShortLink> {
+      return this.createShortLink(userId, targetUrl, options);
     },
 
     getFullUrl(code: string): string {

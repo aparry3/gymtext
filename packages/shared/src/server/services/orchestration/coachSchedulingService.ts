@@ -4,6 +4,7 @@ import type { UserServiceInstance } from '../domain/user/userService';
 import type { ProgramRepository } from '@/server/repositories/programRepository';
 import type { ProgramEnrollmentRepository } from '@/server/repositories/programEnrollmentRepository';
 import type { MessagingOrchestratorInstance } from './messagingOrchestrator';
+import type { ShortLinkServiceInstance } from '../domain/links/shortLinkService';
 import { buildCoachLink } from '@/server/utils/coachLink';
 
 export type CoachLinkSource = 'welcome' | 'intent' | 'milestone' | 'churn';
@@ -29,6 +30,7 @@ export interface CoachSchedulingServiceDeps {
   programRepository: ProgramRepository;
   enrollmentRepository: ProgramEnrollmentRepository;
   messagingOrchestrator: MessagingOrchestratorInstance;
+  shortLink: ShortLinkServiceInstance;
   db: Kysely<DB>;
 }
 
@@ -54,7 +56,7 @@ const COOLDOWN_DAYS: Record<CoachLinkSource, number> = {
 export function createCoachSchedulingService(
   deps: CoachSchedulingServiceDeps,
 ): CoachSchedulingServiceInstance {
-  const { user: userService, programRepository, enrollmentRepository, messagingOrchestrator, db } = deps;
+  const { user: userService, programRepository, enrollmentRepository, messagingOrchestrator, shortLink, db } = deps;
 
   async function wasSentRecently(clientId: string, days: number): Promise<boolean> {
     if (days <= 0) return false;
@@ -95,12 +97,22 @@ export function createCoachSchedulingService(
       );
       if (!link) return { sent: false, reason: 'no_url' };
 
+      // Wrap the long Calendly URL in a short link to keep the SMS compact.
+      // UTM params (including utm_content=userId) are preserved in the stored target.
+      let shortUrl = link;
+      try {
+        const created = await shortLink.createCoachLink(user.id, link);
+        shortUrl = shortLink.getFullUrl(created.code);
+      } catch (err) {
+        console.error('[CoachScheduling] Failed to create short link, falling back to full URL:', err);
+      }
+
       const intro = source === 'welcome'
         ? `Heads up — ${program.name} includes time with your coach. Grab a slot whenever you're ready:`
         : `Want to hop on a quick call with your coach? Grab a time here:`;
 
       const note = program.schedulingNotes ? `\n\n${program.schedulingNotes}` : '';
-      const content = `${intro}\n${link}${note}`;
+      const content = `${intro}\n${shortUrl}${note}`;
 
       const result = await messagingOrchestrator.sendImmediate(
         user,
@@ -111,9 +123,9 @@ export function createCoachSchedulingService(
       );
 
       if (!result.success) {
-        return { sent: false, reason: 'send_failed', link };
+        return { sent: false, reason: 'send_failed', link: shortUrl };
       }
-      return { sent: true, link };
+      return { sent: true, link: shortUrl };
     },
   };
 }

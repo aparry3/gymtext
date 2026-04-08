@@ -324,6 +324,7 @@ export function createServices(repos: RepositoryContainer, clients?: ExternalCli
     programRepository: repos.program,
     enrollmentRepository: repos.programEnrollment,
     messagingOrchestrator: getMessagingOrchestrator(),
+    shortLink,
     db: repos.db,
   });
   coachSchedulingRef = coachScheduling;
