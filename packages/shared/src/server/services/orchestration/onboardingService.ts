@@ -5,6 +5,7 @@ import type { TrainingServiceInstance } from './trainingService';
 import type { MessagingOrchestratorInstance, QueuedMessageContent } from './messagingOrchestrator';
 import type { MessagingAgentServiceInstance } from '../agents/messaging/messagingAgentService';
 import type { WorkoutInstanceServiceInstance } from '../domain/training/workoutInstanceService';
+import type { CoachSchedulingServiceInstance } from './coachSchedulingService';
 import { WELCOME_MESSAGE } from './messagingConstants';
 
 // =============================================================================
@@ -28,6 +29,7 @@ export interface OnboardingServiceDeps {
   workoutInstance: WorkoutInstanceServiceInstance;
   messagingOrchestrator: MessagingOrchestratorInstance;
   messagingAgent: MessagingAgentServiceInstance;
+  coachScheduling?: CoachSchedulingServiceInstance;
 }
 
 /**
@@ -42,6 +44,7 @@ export function createOnboardingService(
     workoutInstance: workoutInstanceService,
     messagingOrchestrator,
     messagingAgent: messagingAgentService,
+    coachScheduling: coachSchedulingService,
   } = deps;
 
   const prepareCombinedPlanMicrocycleMessage = async (user: UserWithProfile): Promise<string> => {
@@ -142,6 +145,19 @@ export function createOnboardingService(
         // Use messagingOrchestrator instead of messageQueueService
         await messagingOrchestrator.queueMessages(user, messages, 'onboarding');
         console.log(`[Onboarding] Successfully queued onboarding messages for ${user.id}`);
+
+        // Layer A — welcome coach link. Service no-ops if program isn't coach-enabled.
+        if (coachSchedulingService) {
+          try {
+            const result = await coachSchedulingService.sendCoachLink(user.id, 'welcome');
+            if (result.sent) {
+              console.log(`[Onboarding] Sent welcome coach link to ${user.id}`);
+            }
+          } catch (error) {
+            console.error(`[Onboarding] Failed to send welcome coach link to ${user.id}:`, error);
+            // Don't throw — coach link is supplemental
+          }
+        }
       } catch (error) {
         console.error(`[Onboarding] Failed to send onboarding messages to ${user.id}:`, error);
         throw error;

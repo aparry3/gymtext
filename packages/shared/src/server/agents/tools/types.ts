@@ -70,4 +70,10 @@ export interface ToolServiceContainer {
     getOrGenerateWorkout: (userId: string, timezone: string) => Promise<ToolResult>;
   };
   queueMessage: (user: UserWithProfile, content: { content: string }, queueName: string) => Promise<{ messageId: string; queueEntryId: string }>;
+  coachScheduling: {
+    sendCoachLink: (
+      userId: string,
+      source: 'welcome' | 'intent' | 'milestone' | 'churn',
+    ) => Promise<{ sent: boolean; reason?: string; link?: string }>;
+  };
 }

@@ -143,6 +143,53 @@ The acknowledgment message is sent to the user immediately. Your final response 
   },
 };
 
+export const sendCoachCalendarLinkTool: ToolDefinition = {
+  name: 'send_coach_calendar_link',
+  title: 'Send Coach Calendar Link',
+  shortDescription: "Text the user a link to book time with their coach",
+  description: `Send the user a Calendly link to book time with their coach.
+
+Use this tool when:
+- User explicitly asks to talk to a coach ("can I get on a call?", "I want to talk to someone", "is there a coach I can ask?")
+- User sounds frustrated, stuck, or confused in a way better answered live (form questions, programming confusion they can't articulate, motivation/accountability)
+- User asks a question that's clearly better handled by a human coach than over text
+
+Do NOT use this tool for:
+- Routine questions you can answer yourself
+- Workout changes (use modify_workout)
+- Profile/preference updates (use update_profile)
+
+The tool no-ops silently if the user's program doesn't include coach time, so it's safe to call when in doubt about whether the program is coach-enabled.
+
+After calling this tool, briefly acknowledge in your response (e.g., "Just sent you a link to grab a time with your coach"). Don't paste the link yourself — the tool sends it.`,
+  schema: z.object({}),
+  priority: 2,
+  execute: async (ctx): Promise<ToolResult> => {
+    const result = await ctx.services.coachScheduling.sendCoachLink(ctx.user.id, 'intent');
+    if (result.sent) {
+      return {
+        toolType: 'action',
+        response: 'Sent the user a link to book time with their coach.',
+      };
+    }
+    const reason = result.reason ?? 'unknown';
+    let response: string;
+    switch (reason) {
+      case 'not_enrolled':
+      case 'not_enabled':
+      case 'no_url':
+        response = "This user's program doesn't include coach time, so no link was sent. Answer their question directly instead.";
+        break;
+      case 'cooldown':
+        response = 'A coach link was already sent recently — do not send another. Acknowledge their request and answer directly if possible.';
+        break;
+      default:
+        response = `Could not send coach link (${reason}). Answer the user's question directly.`;
+    }
+    return { toolType: 'query', response };
+  },
+};
+
 export const getWorkoutTool: ToolDefinition = {
   name: 'get_workout',
   title: 'Get Workout',
