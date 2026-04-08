@@ -395,7 +395,7 @@ Create a well-structured markdown document that clearly shows:
     max_iterations: 3,
     description: 'Main chat agent for conversational responses',
     is_active: true,
-    tool_ids: ['update_profile', 'get_workout', 'modify_workout', 'modify_plan'],
+    tool_ids: ['update_profile', 'get_workout', 'modify_workout', 'modify_plan', 'send_coach_calendar_link'],
     user_prompt_template: '{{input}}',
     examples: null,
     eval_rubric: null,

@@ -56,6 +56,7 @@ import { createProgramOwnerService, type ProgramOwnerServiceInstance } from './d
 import { createProgramService, type ProgramServiceInstance } from './domain/program/programService';
 import { createEnrollmentService, type EnrollmentServiceInstance } from './domain/program/enrollmentService';
 import { createProgramVersionService, type ProgramVersionServiceInstance } from './domain/program/programVersionService';
+import { createCoachSchedulingService, type CoachSchedulingServiceInstance } from './orchestration/coachSchedulingService';
 
 export interface ExternalClients {
   stripeClient?: Stripe;
@@ -106,6 +107,7 @@ export interface ServiceContainer {
   regeneration: RegenerationServiceInstance;
   agentRunner: SimpleAgentRunnerInstance;
   toolRegistry: ToolRegistry;
+  coachScheduling: CoachSchedulingServiceInstance;
 }
 
 export function createServices(repos: RepositoryContainer, clients?: ExternalClients): ServiceContainer {
@@ -236,6 +238,9 @@ export function createServices(repos: RepositoryContainer, clients?: ExternalCli
       },
     },
     queueMessage: (...args: Parameters<ReturnType<typeof getMessagingOrchestrator>['queueMessage']>) => getMessagingOrchestrator().queueMessage(...args),
+    coachScheduling: {
+      sendCoachLink: (...args: Parameters<typeof coachScheduling.sendCoachLink>) => coachScheduling.sendCoachLink(...args),
+    },
   });
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -277,10 +282,17 @@ export function createServices(repos: RepositoryContainer, clients?: ExternalCli
     enrollment, program, programOwner,
   });
 
+  // Forward declared so onboarding can reference it without TDZ issues
+  let coachSchedulingRef: CoachSchedulingServiceInstance | undefined;
+  const coachSchedulingProxy: CoachSchedulingServiceInstance = {
+    sendCoachLink: (...args) => coachSchedulingRef!.sendCoachLink(...args),
+  };
+
   const onboarding = createOnboardingService({
     markdown, training, workoutInstance,
     messagingOrchestrator: getMessagingOrchestrator(),
     messagingAgent,
+    coachScheduling: coachSchedulingProxy,
   });
 
   const onboardingCoordinator = createOnboardingCoordinator({
@@ -307,6 +319,16 @@ export function createServices(repos: RepositoryContainer, clients?: ExternalCli
     message, user, markdown, agentRunner,
   });
 
+  const coachScheduling = createCoachSchedulingService({
+    user,
+    programRepository: repos.program,
+    enrollmentRepository: repos.programEnrollment,
+    messagingOrchestrator: getMessagingOrchestrator(),
+    shortLink,
+    db: repos.db,
+  });
+  coachSchedulingRef = coachScheduling;
+
   return {
     user, fitnessProfile, onboardingData, message, queue, fitnessPlan,
     workoutInstance,
@@ -324,6 +346,7 @@ export function createServices(repos: RepositoryContainer, clients?: ExternalCli
     exerciseResolution, exerciseMetrics, blog, organization,
     agentDefinition, agentLog, markdown, regeneration,
     agentRunner, toolRegistry,
+    coachScheduling,
   };
 }
 
