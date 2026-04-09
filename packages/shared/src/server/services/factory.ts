@@ -272,14 +272,14 @@ export function createServices(repos: RepositoryContainer, clients?: ExternalCli
     messagingOrchestrator: getMessagingOrchestrator(),
     dayConfig, training,
     message, workoutInstance,
-    enrollment, program, programOwner,
+    enrollment, program,
   });
 
   const weeklyMessage = createWeeklyMessageService({
     user,
     messagingOrchestrator: getMessagingOrchestrator(),
     training, markdown, messagingAgent, dayConfig,
-    enrollment, program, programOwner,
+    enrollment, program,
   });
 
   // Forward declared so onboarding can reference it without TDZ issues
@@ -292,6 +292,7 @@ export function createServices(repos: RepositoryContainer, clients?: ExternalCli
     markdown, training, workoutInstance,
     messagingOrchestrator: getMessagingOrchestrator(),
     messagingAgent,
+    enrollment, program,
     coachScheduling: coachSchedulingProxy,
   });
 

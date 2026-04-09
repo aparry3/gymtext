@@ -2,8 +2,10 @@
  * Messaging constants for SMS content
  */
 
-export const WELCOME_MESSAGE =
-  "Welcome to GymText! Ready to transform your fitness? We'll be texting you daily workouts starting soon. Msg & data rates may apply. Reply HELP for support or STOP to opt out.";
+export const buildWelcomeMessage = (brand: string = 'GymText'): string =>
+  `Welcome to ${brand}! Ready to transform your fitness? We'll be texting you daily workouts starting soon. Msg & data rates may apply. Reply HELP for support or STOP to opt out.`;
+
+export const WELCOME_MESSAGE = buildWelcomeMessage();
 
 // STOP/UNSUBSCRIBE responses
 export const STOP_CONFIRMATION =

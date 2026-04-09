@@ -78,10 +78,10 @@ export function createShortLinkService(repos: RepositoryContainer): ShortLinkSer
 
     async createWorkoutLink(
       userId: string,
-      workoutId: string,
+      _workoutId: string,
       options?: CreateShortLinkOptions
     ): Promise<ShortLink> {
-      const targetPath = `/me/workouts/${workoutId}`;
+      const targetPath = '/me';
       return this.createShortLink(userId, targetPath, options);
     },
 

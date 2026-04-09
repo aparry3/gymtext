@@ -10,7 +10,6 @@ import type { MessageServiceInstance } from '../domain/messaging/messageService'
 import type { WorkoutInstanceServiceInstance } from '../domain/training/workoutInstanceService';
 import type { EnrollmentServiceInstance } from '../domain/program/enrollmentService';
 import type { ProgramServiceInstance } from '../domain/program/programService';
-import type { ProgramOwnerServiceInstance } from '../domain/program/programOwnerService';
 import { resolveSmsImageUrl } from './smsImageResolver';
 
 interface MessageResult {
@@ -70,7 +69,6 @@ export interface DailyMessageServiceDeps {
   workoutInstance: WorkoutInstanceServiceInstance;
   enrollment: EnrollmentServiceInstance;
   program: ProgramServiceInstance;
-  programOwner: ProgramOwnerServiceInstance;
 }
 
 /**
@@ -91,7 +89,6 @@ export function createDailyMessageService(
     workoutInstance: workoutInstanceService,
     enrollment: enrollmentService,
     program: programService,
-    programOwner: programOwnerService,
   } = deps;
 
   return {
@@ -186,7 +183,6 @@ export function createDailyMessageService(
         const customImageUrl = await dayConfigService.getImageUrlForDate(targetDate.toJSDate());
 
         let programSmsImageUrl: string | null = null;
-        let ownerAvatarUrl: string | null = null;
 
         if (!customImageUrl) {
           const activeEnrollment = await enrollmentService.getActiveEnrollment(user.id);
@@ -194,9 +190,6 @@ export function createDailyMessageService(
             const prog = await programService.getById(activeEnrollment.programId);
             if (prog?.smsImageUrl) {
               programSmsImageUrl = prog.smsImageUrl;
-            } else if (prog) {
-              const owner = await programOwnerService.getById(prog.ownerId);
-              ownerAvatarUrl = owner?.avatarUrl ?? null;
             }
           }
         }
@@ -204,7 +197,6 @@ export function createDailyMessageService(
         const mediaUrls = resolveSmsImageUrl({
           customDayImageUrl: customImageUrl ?? null,
           programSmsImageUrl,
-          ownerAvatarUrl,
         });
 
         if (user.messagingOptIn !== true) {

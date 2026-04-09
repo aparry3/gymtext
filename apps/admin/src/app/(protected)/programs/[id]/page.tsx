@@ -158,9 +158,48 @@ interface ProgramDetail extends AdminProgram {
   }
 }
 
+interface ProgramFormatFormState {
+  title: string
+  instruction: string
+  examples: string[]
+}
+
 interface VersionFormState {
   content: string
   questions: AdminProgramQuestion[]
+  formats: ProgramFormatFormState[]
+}
+
+const MAX_FORMAT_EXAMPLES = 2
+
+const emptyFormat = (): ProgramFormatFormState => ({ title: '', instruction: '', examples: [] })
+
+interface LegacyGenConfig {
+  formatGuidance?: string
+  formatExamples?: string[]
+  formats?: Array<{ title?: string; instruction?: string; examples?: string[] }>
+}
+
+function coerceFormats(genConfig: LegacyGenConfig | null | undefined): ProgramFormatFormState[] {
+  if (!genConfig) return []
+  if (Array.isArray(genConfig.formats) && genConfig.formats.length > 0) {
+    return genConfig.formats.map(f => ({
+      title: f?.title ?? '',
+      instruction: f?.instruction ?? '',
+      examples: Array.isArray(f?.examples) ? [...f!.examples!] : [],
+    }))
+  }
+  // Legacy coercion from old single-pair shape
+  const legacyGuidance = genConfig.formatGuidance ?? ''
+  const legacyExamples = Array.isArray(genConfig.formatExamples) ? genConfig.formatExamples : []
+  if (legacyGuidance || legacyExamples.length > 0) {
+    return [{
+      title: 'Daily Message Format',
+      instruction: legacyGuidance,
+      examples: [...legacyExamples],
+    }]
+  }
+  return []
 }
 
 const questionTypes: { value: ProgramQuestionType; label: string }[] = [
@@ -219,6 +258,7 @@ export default function ProgramDetailPage() {
   const [versionForm, setVersionForm] = useState<VersionFormState>({
     content: '',
     questions: [],
+    formats: [],
   })
 
   // SMS image state
@@ -307,9 +347,11 @@ export default function ProgramDetailPage() {
       const publishedVersion = (data.versions || []).find(
         (v: AdminProgramVersion) => v.id === data.program.publishedVersionId
       )
+      const publishedGenConfig = (publishedVersion?.generationConfig ?? null) as LegacyGenConfig | null
       const newVersionForm: VersionFormState = {
         content: publishedVersion?.content || '',
         questions: publishedVersion?.questions ? JSON.parse(JSON.stringify(publishedVersion.questions)) : [],
+        formats: coerceFormats(publishedGenConfig),
       }
       setVersionForm(newVersionForm)
 
@@ -407,6 +449,28 @@ export default function ProgramDetailPage() {
 
       // 2. Create new version if version fields dirty
       if (isVersionDirty) {
+        // Preserve any existing nested fields on generationConfig (e.g. promptIds, context, resources)
+        // from the currently published version, then overlay format fields.
+        const publishedVersion = versions.find(v => v.id === program.publishedVersionId)
+        const baseGenConfig = (publishedVersion?.generationConfig ?? {}) as Record<string, unknown>
+        const cleanedFormats = versionForm.formats
+          .map(f => ({
+            title: f.title.trim(),
+            instruction: f.instruction.trim(),
+            examples: f.examples.map(e => e.trim()).filter(Boolean),
+          }))
+          .filter(f => f.instruction || f.examples.length > 0)
+        const mergedGenConfig: Record<string, unknown> = { ...baseGenConfig }
+        // Strip legacy single-pair fields if present
+        delete mergedGenConfig.formatGuidance
+        delete mergedGenConfig.formatExamples
+        if (cleanedFormats.length > 0) {
+          mergedGenConfig.formats = cleanedFormats
+        } else {
+          delete mergedGenConfig.formats
+        }
+        const hasGenConfig = Object.keys(mergedGenConfig).length > 0
+
         // Create a new draft version with the current content
         const createResponse = await fetch(`/api/programs/${program.id}/versions`, {
           method: 'POST',
@@ -414,6 +478,7 @@ export default function ProgramDetailPage() {
           body: JSON.stringify({
             content: versionForm.content,
             questions: versionForm.questions.length > 0 ? versionForm.questions : null,
+            generationConfig: hasGenConfig ? mergedGenConfig : null,
           }),
         })
 
@@ -478,9 +543,11 @@ export default function ProgramDetailPage() {
   }
 
   const handleRevertToVersion = (version: AdminProgramVersion) => {
+    const genConfig = (version.generationConfig ?? null) as LegacyGenConfig | null
     setVersionForm({
       content: version.content || '',
       questions: version.questions ? JSON.parse(JSON.stringify(version.questions)) : [],
+      formats: coerceFormats(genConfig),
     })
     setViewingVersion(null)
   }
@@ -1149,6 +1216,175 @@ export default function ProgramDetailPage() {
                     )}
                   </div>
                 </Card>
+
+                {/* ── Program Formats ──────────────────────────────── */}
+                {(() => {
+                  const displayFormats: ProgramFormatFormState[] = isReadOnly
+                    ? coerceFormats(viewingVersion?.generationConfig as LegacyGenConfig | null)
+                    : versionForm.formats
+                  return (
+                    <>
+                      <h2 className="text-lg font-semibold text-gray-900 pt-2">Program Formats</h2>
+                      <Card className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+                        <div className="p-5 space-y-5">
+                          <p className="text-xs text-gray-500 leading-relaxed">
+                            Program-specific formatting guidance injected into the{' '}
+                            <code className="text-[11px] bg-gray-100 px-1 py-0.5 rounded">workout:format</code> agent
+                            when generating daily SMS workouts. Each format has a title, instruction, and up to {MAX_FORMAT_EXAMPLES} examples.
+                            Use this for sport-specific programs (basketball, yoga, climbing) where default lifting/running formatting doesn&apos;t fit.
+                            Leave empty to use the default formatting rules.
+                          </p>
+
+                          {displayFormats.length === 0 && (
+                            <p className="text-xs text-gray-400 italic">No formats defined.</p>
+                          )}
+
+                          {displayFormats.map((fmt, fIdx) => (
+                            <div key={fIdx} className="border border-gray-200 rounded-lg p-4 space-y-3 bg-gray-50/50">
+                              <div className="flex items-start justify-between gap-3">
+                                <div className="flex-1 space-y-1.5">
+                                  <label className="block text-xs font-semibold uppercase tracking-wider text-gray-600">
+                                    Format Title
+                                  </label>
+                                  <input
+                                    type="text"
+                                    value={fmt.title}
+                                    onChange={(e) =>
+                                      setVersionForm(prev => ({
+                                        ...prev,
+                                        formats: prev.formats.map((f, i) =>
+                                          i === fIdx ? { ...f, title: e.target.value } : f
+                                        ),
+                                      }))
+                                    }
+                                    readOnly={isReadOnly}
+                                    placeholder="e.g. Daily Message Format"
+                                    className="w-full text-sm text-gray-700 bg-white border border-gray-200 rounded-lg px-3 py-2 outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                                  />
+                                </div>
+                                {!isReadOnly && (
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      setVersionForm(prev => ({
+                                        ...prev,
+                                        formats: prev.formats.filter((_, i) => i !== fIdx),
+                                      }))
+                                    }
+                                    className="shrink-0 mt-6 text-xs text-red-500 hover:text-red-600 font-medium px-2 py-1"
+                                  >
+                                    Remove Format
+                                  </button>
+                                )}
+                              </div>
+
+                              <div className="space-y-1.5">
+                                <label className="block text-xs font-semibold uppercase tracking-wider text-gray-600">
+                                  Formatting Guidance
+                                </label>
+                                <textarea
+                                  value={fmt.instruction}
+                                  onChange={(e) =>
+                                    setVersionForm(prev => ({
+                                      ...prev,
+                                      formats: prev.formats.map((f, i) =>
+                                        i === fIdx ? { ...f, instruction: e.target.value } : f
+                                      ),
+                                    }))
+                                  }
+                                  readOnly={isReadOnly}
+                                  placeholder="e.g. Basketball sessions use drill blocks instead of sets×reps. Group by: Skill Work, Live Play, Conditioning..."
+                                  rows={5}
+                                  className="w-full text-sm text-gray-700 bg-white border border-gray-200 rounded-lg px-3 py-2 outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 resize-y"
+                                />
+                              </div>
+
+                              <div className="space-y-2">
+                                <label className="block text-xs font-semibold uppercase tracking-wider text-gray-600">
+                                  Example Messages ({fmt.examples.length}/{MAX_FORMAT_EXAMPLES})
+                                </label>
+                                {fmt.examples.map((example, eIdx) => (
+                                  <div key={eIdx} className="flex gap-2">
+                                    <textarea
+                                      value={example}
+                                      onChange={(e) =>
+                                        setVersionForm(prev => ({
+                                          ...prev,
+                                          formats: prev.formats.map((f, i) =>
+                                            i === fIdx
+                                              ? {
+                                                  ...f,
+                                                  examples: f.examples.map((ex, j) =>
+                                                    j === eIdx ? e.target.value : ex
+                                                  ),
+                                                }
+                                              : f
+                                          ),
+                                        }))
+                                      }
+                                      readOnly={isReadOnly}
+                                      placeholder={`Example ${eIdx + 1}`}
+                                      rows={6}
+                                      className="flex-1 text-sm text-gray-700 bg-white border border-gray-200 rounded-lg px-3 py-2 outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 resize-y font-mono"
+                                    />
+                                    {!isReadOnly && (
+                                      <button
+                                        type="button"
+                                        onClick={() =>
+                                          setVersionForm(prev => ({
+                                            ...prev,
+                                            formats: prev.formats.map((f, i) =>
+                                              i === fIdx
+                                                ? { ...f, examples: f.examples.filter((_, j) => j !== eIdx) }
+                                                : f
+                                            ),
+                                          }))
+                                        }
+                                        className="shrink-0 self-start text-xs text-red-500 hover:text-red-600 font-medium px-2 py-1"
+                                      >
+                                        Remove
+                                      </button>
+                                    )}
+                                  </div>
+                                ))}
+                                {!isReadOnly && fmt.examples.length < MAX_FORMAT_EXAMPLES && (
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      setVersionForm(prev => ({
+                                        ...prev,
+                                        formats: prev.formats.map((f, i) =>
+                                          i === fIdx ? { ...f, examples: [...f.examples, ''] } : f
+                                        ),
+                                      }))
+                                    }
+                                    className="mt-1 flex items-center gap-1.5 text-sm text-blue-500 hover:text-blue-600 font-medium"
+                                  >
+                                    <PlusIcon />
+                                    Add Example
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+
+                          {!isReadOnly && (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setVersionForm(prev => ({ ...prev, formats: [...prev.formats, emptyFormat()] }))
+                              }
+                              className="flex items-center gap-1.5 text-sm text-blue-500 hover:text-blue-600 font-medium"
+                            >
+                              <PlusIcon />
+                              Add Format
+                            </button>
+                          )}
+                        </div>
+                      </Card>
+                    </>
+                  )
+                })()}
               </div>
             </div>
           </TabsContent>

@@ -194,7 +194,7 @@ export function createTrainingService(deps: TrainingServiceDeps): TrainingServic
         }
 
         const weekContent = options?.weekContent ?? microcycle.content;
-        const context = await markdownService.getContext(user.id, ['week'], {
+        const context = await markdownService.getContext(user.id, ['week', 'programFormat'], {
           weekContentOverride: weekContent ?? undefined,
         });
         console.log('[TrainingService] Week content:', weekContent);

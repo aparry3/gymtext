@@ -4,7 +4,7 @@ import { getServices, getRepositories, type ServiceContainer } from '@/lib/conte
 import { inngest } from '@/server/connections/inngest/client';
 import type { SignupData } from '@/server/repositories/onboardingRepository';
 import { getStripeSecrets, getEnvironmentSettings } from '@/server/config';
-import { getStripeConfig, getUrlsConfig } from '@/shared/config';
+import { getStripeConfig, getUrlsConfig, getProgramConfig } from '@/shared/config';
 import { isProductionEnvironment } from '@/shared/config/public';
 import { getAdminConfig } from '@gymtext/shared/shared';
 import { buildAdminTestPhone } from '@gymtext/shared/shared/utils/phoneUtils';
@@ -274,6 +274,9 @@ async function handleDevModeSignup(
 
   console.log('[Signup] Test subscription created');
 
+  // Enroll in program BEFORE sending welcome so brand/image resolve correctly
+  await ensureEnrollment(services, userId, formData);
+
   // Send welcome message if user consented to SMS
   if (formData.smsConsent) {
     const userWithProfile = await services.user.getUser(userId);
@@ -379,6 +382,9 @@ async function handleAdminTestSignup(
   // Create onboarding record and trigger onboarding
   await services.onboardingData.createOnboardingRecord(user.id, extractSignupData(formData));
 
+  // Enroll in program BEFORE sending welcome so brand/image resolve correctly
+  await ensureEnrollment(services, user.id, formData);
+
   // Send welcome message if user consented to SMS
   if (formData.smsConsent) {
     const userWithProfile = await services.user.getUser(user.id);
@@ -430,6 +436,9 @@ async function completeSignupFlow(
     // Ignore if no existing record
   }
   await services.onboardingData.createOnboardingRecord(userId, extractSignupData(formData));
+
+  // Enroll in program BEFORE sending welcome so brand/image resolve correctly
+  await ensureEnrollment(services, userId, formData);
 
   // Send Twilio-compliant welcome message if user consented to SMS
   console.log('[Signup] smsConsent:', formData.smsConsent);
@@ -568,6 +577,45 @@ async function completeSignupFlow(
   });
 
   return response;
+}
+/**
+ * Ensure the user is enrolled in a program before welcome messages are sent.
+ *
+ * Mirrors the enrollment logic in onboardingSteps.ts Step 3. Safe to call
+ * before the Inngest onboarding job runs — Step 3 will see the active
+ * enrollment and reuse it. Without this, `sendWelcomeMessage` can't resolve
+ * the program brand/image and falls back to the default GymText welcome.
+ */
+async function ensureEnrollment(
+  services: ServiceContainer,
+  userId: string,
+  formData: Record<string, unknown>
+): Promise<void> {
+  try {
+    const existing = await services.enrollment.getActiveEnrollment(userId);
+    if (existing) return;
+
+    const programId =
+      (formData.programId as string | undefined) || getProgramConfig().defaultProgramId;
+    if (!programId) {
+      console.warn('[Signup] No programId in form data and DEFAULT_PROGRAM_ID not configured — skipping pre-welcome enrollment');
+      return;
+    }
+
+    const program = await services.program.getById(programId);
+    if (!program) {
+      console.warn(`[Signup] Program ${programId} not found — skipping pre-welcome enrollment`);
+      return;
+    }
+
+    console.log(`[Signup] Creating pre-welcome enrollment for ${userId} (program: ${program.id})`);
+    await services.enrollment.enrollClient(userId, program.id, {
+      programVersionId: program.publishedVersionId ?? undefined,
+    });
+  } catch (error) {
+    // Don't block signup if enrollment fails — Inngest Step 3 will retry
+    console.error(`[Signup] Pre-welcome enrollment failed for ${userId}:`, error);
+  }
 }
 
 /**
