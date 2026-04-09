@@ -6,7 +6,10 @@ import type { MessagingOrchestratorInstance, QueuedMessageContent } from './mess
 import type { MessagingAgentServiceInstance } from '../agents/messaging/messagingAgentService';
 import type { WorkoutInstanceServiceInstance } from '../domain/training/workoutInstanceService';
 import type { CoachSchedulingServiceInstance } from './coachSchedulingService';
-import { WELCOME_MESSAGE } from './messagingConstants';
+import type { EnrollmentServiceInstance } from '../domain/program/enrollmentService';
+import type { ProgramServiceInstance } from '../domain/program/programService';
+import { buildWelcomeMessage } from './messagingConstants';
+import { resolveSmsImageUrl } from './smsImageResolver';
 
 // =============================================================================
 // Factory Pattern (Recommended)
@@ -29,6 +32,8 @@ export interface OnboardingServiceDeps {
   workoutInstance: WorkoutInstanceServiceInstance;
   messagingOrchestrator: MessagingOrchestratorInstance;
   messagingAgent: MessagingAgentServiceInstance;
+  enrollment: EnrollmentServiceInstance;
+  program: ProgramServiceInstance;
   coachScheduling?: CoachSchedulingServiceInstance;
 }
 
@@ -44,6 +49,8 @@ export function createOnboardingService(
     workoutInstance: workoutInstanceService,
     messagingOrchestrator,
     messagingAgent: messagingAgentService,
+    enrollment: enrollmentService,
+    program: programService,
     coachScheduling: coachSchedulingService,
   } = deps;
 
@@ -119,12 +126,29 @@ export function createOnboardingService(
     async sendWelcomeMessage(user: UserWithProfile): Promise<void> {
       console.log(`[Onboarding] Sending welcome message to ${user.id}`);
       try {
+        let brand = 'GymText';
+        let programSmsImageUrl: string | null = null;
+
+        const activeEnrollment = await enrollmentService.getActiveEnrollment(user.id);
+        if (activeEnrollment) {
+          const prog = await programService.getById(activeEnrollment.programId);
+          if (prog) {
+            brand = prog.name;
+            programSmsImageUrl = prog.smsImageUrl ?? null;
+          }
+        }
+
+        const mediaUrls = resolveSmsImageUrl({
+          customDayImageUrl: null,
+          programSmsImageUrl,
+        });
+
         await messagingOrchestrator.queueMessages(
           user,
-          [{ content: WELCOME_MESSAGE }],
+          [{ content: buildWelcomeMessage(brand), mediaUrls }],
           'onboarding'
         );
-        console.log(`[Onboarding] Queued welcome message for ${user.id}`);
+        console.log(`[Onboarding] Queued welcome message for ${user.id} (brand: ${brand})`);
       } catch (error) {
         console.error(`[Onboarding] Failed to queue welcome message for ${user.id}:`, error);
         // Don't throw - welcome message failure shouldn't block signup

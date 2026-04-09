@@ -29,6 +29,15 @@ export interface GenerationConfig {
     /** Tone/style (e.g., "concise", "detailed", "motivational") */
     style?: string;
   };
+  /**
+   * Program-specific formatting guidance entries. Each format has a title,
+   * an instruction, and optional few-shot example messages. All defined
+   * formats are injected into the `workout:format` agent context (via
+   * MarkdownService under the `programFormat` key) so sport-specific
+   * programs can shape how individual day messages are rendered. A program
+   * can define multiple formats (e.g. "Practice Day" vs "Game Day").
+   */
+  formats?: ProgramFormat[];
   /** Supporting materials */
   resources?: {
     /** Uploaded PDFs, spreadsheets */
@@ -36,6 +45,23 @@ export interface GenerationConfig {
     /** Exercise demos, etc. */
     imageRefs?: string[];
   };
+}
+
+/**
+ * A single formatting guidance entry for a program version.
+ *
+ * Rendered into the `workout:format` agent context under `## Program
+ * Formatting Guidance` → `### {title}`, with instruction text and any
+ * example messages. Empty entries (no instruction and no examples) are
+ * skipped at render time.
+ */
+export interface ProgramFormat {
+  /** Human label, e.g. "Daily Message Format" or "Game Day" */
+  title: string;
+  /** The actual guidance the agent should apply */
+  instruction: string;
+  /** Few-shot example messages illustrating the format */
+  examples: string[];
 }
 
 /**

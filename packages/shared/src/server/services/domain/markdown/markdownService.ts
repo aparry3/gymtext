@@ -4,7 +4,7 @@ import type { Profile } from '@/server/repositories/profileRepository';
 import type { FitnessPlan } from '@/server/models/fitnessPlan';
 import type { Microcycle } from '@/server/models/microcycle';
 
-export type ContextType = 'profile' | 'plan' | 'week' | 'previousWeek';
+export type ContextType = 'profile' | 'plan' | 'week' | 'previousWeek' | 'programFormat';
 
 export interface ContextOptions {
   date?: Date;
@@ -61,8 +61,9 @@ export function createMarkdownService(repos: RepositoryContainer): MarkdownServi
       const needsPlan = types.includes('plan');
       const needsWeek = types.includes('week') && !options?.weekContentOverride;
       const needsPreviousWeek = types.includes('previousWeek');
+      const needsProgramFormat = types.includes('programFormat');
 
-      const [profileContent, plan, week] = await Promise.all([
+      const [profileContent, plan, week, enrollment] = await Promise.all([
         needsProfile ? repos.profile.getCurrentProfileText(userId) : Promise.resolve(null),
         needsPlan ? repos.fitnessPlan.getLatest(userId) : Promise.resolve(null),
         needsWeek || needsPreviousWeek
@@ -70,7 +71,33 @@ export function createMarkdownService(repos: RepositoryContainer): MarkdownServi
               ? repos.microcycle.getByDate(userId, options.date)
               : repos.microcycle.getLatest(userId))
           : Promise.resolve(null),
+        needsProgramFormat ? repos.programEnrollment.findActiveByClientId(userId) : Promise.resolve(null),
       ]);
+
+      // Resolve the program version for format guidance if needed
+      let programFormatBlock: string | null = null;
+      if (needsProgramFormat && enrollment?.programVersionId) {
+        const version = await repos.programVersion.findById(enrollment.programVersionId);
+        const formats = version?.generationConfig?.formats ?? [];
+        const sections: string[] = [];
+        formats.forEach((fmt, idx) => {
+          const title = fmt?.title?.trim() || `Format ${idx + 1}`;
+          const instruction = fmt?.instruction?.trim() ?? '';
+          const examples = (fmt?.examples ?? [])
+            .map((e) => e?.trim())
+            .filter((e): e is string => Boolean(e));
+          if (!instruction && examples.length === 0) return;
+          const parts: string[] = [`### ${title}`];
+          if (instruction) parts.push(instruction);
+          if (examples.length) {
+            parts.push(`**Examples:**\n${examples.join('\n\n---\n\n')}`);
+          }
+          sections.push(parts.join('\n\n'));
+        });
+        if (sections.length) {
+          programFormatBlock = `## Program Formatting Guidance\nThe enrolled program defines the following format(s). Apply whichever is relevant to the current task.\n\n${sections.join('\n\n')}`;
+        }
+      }
 
       // Fetch previous week if needed (depends on current week's startDate)
       let previousWeek: Microcycle | null = null;
@@ -101,6 +128,10 @@ export function createMarkdownService(repos: RepositoryContainer): MarkdownServi
           case 'week': {
             const weekContent = options?.weekContentOverride ?? week?.content;
             if (weekContent) context.push(`## Week\n${weekContent}`);
+            break;
+          }
+          case 'programFormat': {
+            if (programFormatBlock) context.push(programFormatBlock);
             break;
           }
         }

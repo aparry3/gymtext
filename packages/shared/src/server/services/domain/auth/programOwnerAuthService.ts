@@ -3,6 +3,7 @@ import { getAdminConfig } from '@/shared/config';
 import type { RepositoryContainer } from '../../../repositories/factory';
 import type { ITwilioClient } from '@/server/connections/twilio/factory';
 import type { ProgramOwner } from '@/server/models/programOwner';
+import { sendAuthSms } from './sendAuthSms';
 
 // =============================================================================
 // Factory Pattern
@@ -91,7 +92,7 @@ export function createProgramOwnerAuthService(
         await repos.userAuth.createAuthCode(phoneNumber, code, expiresAt);
 
         const message = `Your GymText Programs verification code is: ${code}\n\nThis code expires in ${CODE_EXPIRY_MINUTES} minutes.`;
-        await deps.twilioClient.sendSMS(phoneNumber, message);
+        await sendAuthSms(deps.twilioClient, phoneNumber, message);
 
         console.log(`[ProgramOwnerAuth] Verification code sent to ${phoneNumber} (owner: ${owner.displayName})`);
 

@@ -9,7 +9,6 @@ import type { MessagingAgentServiceInstance } from '../agents/messaging/messagin
 import type { DayConfigServiceInstance } from '../domain/calendar/dayConfigService';
 import type { EnrollmentServiceInstance } from '../domain/program/enrollmentService';
 import type { ProgramServiceInstance } from '../domain/program/programService';
-import type { ProgramOwnerServiceInstance } from '../domain/program/programOwnerService';
 import { resolveSmsImageUrl } from './smsImageResolver';
 
 interface MessageResult {
@@ -67,7 +66,6 @@ export interface WeeklyMessageServiceDeps {
   dayConfig: DayConfigServiceInstance;
   enrollment: EnrollmentServiceInstance;
   program: ProgramServiceInstance;
-  programOwner: ProgramOwnerServiceInstance;
 }
 
 /**
@@ -87,7 +85,6 @@ export function createWeeklyMessageService(
     dayConfig: dayConfigService,
     enrollment: enrollmentService,
     program: programService,
-    programOwner: programOwnerService,
   } = deps;
 
   return {
@@ -174,11 +171,10 @@ export function createWeeklyMessageService(
           return { success: false, userId: user.id, error: 'Failed to format weekly message' };
         }
 
-        // Get image URL (custom → program → owner → default)
+        // Get image URL (custom → program → default)
         const customImageUrl = await dayConfigService.getImageUrlForDate(nextSundayDate);
 
         let programSmsImageUrl: string | null = null;
-        let ownerAvatarUrl: string | null = null;
 
         if (!customImageUrl) {
           const activeEnrollment = await enrollmentService.getActiveEnrollment(user.id);
@@ -186,9 +182,6 @@ export function createWeeklyMessageService(
             const prog = await programService.getById(activeEnrollment.programId);
             if (prog?.smsImageUrl) {
               programSmsImageUrl = prog.smsImageUrl;
-            } else if (prog) {
-              const owner = await programOwnerService.getById(prog.ownerId);
-              ownerAvatarUrl = owner?.avatarUrl ?? null;
             }
           }
         }
@@ -196,7 +189,6 @@ export function createWeeklyMessageService(
         const mediaUrls = resolveSmsImageUrl({
           customDayImageUrl: customImageUrl ?? null,
           programSmsImageUrl,
-          ownerAvatarUrl,
         });
 
         if (user.messagingOptIn !== true) {

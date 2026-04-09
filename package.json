@@ -56,6 +56,7 @@
     "agent:update-user-prompts:dry": "source .env.local && tsx scripts/update-user-prompts.ts --dry-run",
     "fixture:capture": "source .env.local && tsx scripts/fixtures/capture.ts",
     "fixture:run": "source .env.local && tsx scripts/fixtures/run.ts",
+    "calendly:webhooks": "source .env.local && tsx scripts/calendly/webhooks.ts",
     "test": "vitest run",
     "test:ui": "vitest --ui"
   },

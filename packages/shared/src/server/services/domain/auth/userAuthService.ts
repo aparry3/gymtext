@@ -4,6 +4,7 @@ import { getAdminConfig } from '@/shared/config';
 import type { RepositoryContainer } from '../../../repositories/factory';
 import type { ITwilioClient } from '@/server/connections/twilio/factory';
 import type { AdminAuthServiceInstance } from './adminAuthService';
+import { sendAuthSms } from './sendAuthSms';
 
 // =============================================================================
 // Factory Pattern (Recommended)
@@ -80,7 +81,7 @@ export function createUserAuthService(
         await repos.userAuth.createAuthCode(phoneNumber, code, expiresAt);
 
         const message = `Your GymText verification code is: ${code}\n\nThis code expires in ${CODE_EXPIRY_MINUTES} minutes.`;
-        await deps.twilioClient.sendSMS(phoneNumber, message);
+        await sendAuthSms(deps.twilioClient, phoneNumber, message);
 
         if (isDev) {
           console.log(`[UserAuth:Dev] 🔑 Verification code for ${phoneNumber}: ${code}`);
