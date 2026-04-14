@@ -49,7 +49,7 @@ export async function GET(request: Request, { params }: RouteParams) {
     }
 
     // Get enrollments for this program
-    let enrollments = await services.enrollment.listByProgram(programId);
+    const enrollments = await services.enrollment.listByProgram(programId);
 
     // Enrich with client info
     const enrichedEnrollments = await Promise.all(

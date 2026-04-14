@@ -3,6 +3,7 @@ import type { FitnessPlan } from '@/server/models/fitnessPlan';
 import type { Message } from '@/server/models/conversation';
 import type { DayOfWeek } from '@/shared/utils/date';
 import type { SimpleAgentRunnerInstance } from '@/server/agents/runner';
+import type { MarkdownServiceInstance } from '../../domain/markdown/markdownService';
 
 // =============================================================================
 // Factory Pattern
@@ -14,17 +15,21 @@ import type { SimpleAgentRunnerInstance } from '@/server/agents/runner';
 export interface MessagingAgentServiceInstance {
   generateWelcomeMessage(user: UserWithProfile): Promise<string>;
   generatePlanSummary(user: UserWithProfile, plan: FitnessPlan, previousMessages?: Message[]): Promise<string[]>;
-  generatePlanMicrocycleCombinedMessage(fitnessPlan: string, weekOne: string, currentWeekday: DayOfWeek): Promise<string>;
+  generatePlanMicrocycleCombinedMessage(user: UserWithProfile, fitnessPlan: string, weekOne: string, currentWeekday: DayOfWeek): Promise<string>;
+}
+
+export interface MessagingAgentServiceDeps {
+  agentRunner: SimpleAgentRunnerInstance;
+  markdown: MarkdownServiceInstance;
 }
 
 /**
  * Create a MessagingAgentService instance
- *
- * @param agentRunner - AgentRunner for invoking agents
  */
 export function createMessagingAgentService(
-  agentRunner: SimpleAgentRunnerInstance
+  deps: MessagingAgentServiceDeps
 ): MessagingAgentServiceInstance {
+  const { agentRunner, markdown: markdownService } = deps;
   return {
     /**
      * Generate a welcome message for a new user
@@ -93,6 +98,7 @@ Text me anytime with questions about your workouts, your plan, or if you just ne
      * Uses DB prompt: messaging:plan-ready
      */
     async generatePlanMicrocycleCombinedMessage(
+      user: UserWithProfile,
       fitnessPlan: string,
       weekOne: string,
       currentWeekday: DayOfWeek
@@ -103,8 +109,12 @@ Text me anytime with questions about your workouts, your plan, or if you just ne
         `<Today>${currentWeekday}</Today>`,
       ];
 
+      const programFormatContext = await markdownService.getContext(user.id, ['programFormat']);
+
       const result = await agentRunner.invoke('messaging:plan-ready', {
         input: contextParts.join('\n\n'),
+        context: programFormatContext,
+        params: { user },
       });
       return result.response as string;
     },

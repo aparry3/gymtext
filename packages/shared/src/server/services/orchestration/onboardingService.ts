@@ -65,7 +65,7 @@ export function createOnboardingService(
     if (!microcycle.content) throw new Error(`No microcycle content found for user ${user.id}`);
 
     const currentWeekday = getDayOfWeek(undefined, user.timezone);
-    const message = await messagingAgentService.generatePlanMicrocycleCombinedMessage(plan.content, microcycle.content, currentWeekday);
+    const message = await messagingAgentService.generatePlanMicrocycleCombinedMessage(user, plan.content, microcycle.content, currentWeekday);
     console.log(`[Onboarding] Prepared combined plan+microcycle message for ${user.id}`);
     return message;
   };

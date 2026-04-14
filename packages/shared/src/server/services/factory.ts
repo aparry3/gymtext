@@ -265,7 +265,7 @@ export function createServices(repos: RepositoryContainer, clients?: ExternalCli
   });
 
   const programAgent = createProgramAgentService(agentRunner);
-  const messagingAgent = createMessagingAgentService(agentRunner);
+  const messagingAgent = createMessagingAgentService({ agentRunner, markdown });
 
   const dailyMessage = createDailyMessageService({
     user,

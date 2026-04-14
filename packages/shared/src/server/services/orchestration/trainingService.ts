@@ -149,8 +149,9 @@ export function createTrainingService(deps: TrainingServiceDeps): TrainingServic
 
       const weekContent = result.response;
 
-      // Format week for SMS
-      const weekContext = [...context, `## Week\n${weekContent}`];
+      // Format week for SMS (include programFormat so the formatter matches the program's voice)
+      const programFormatContext = await markdownService.getContext(userId, ['programFormat']);
+      const weekContext = [...context, ...programFormatContext, `## Week\n${weekContent}`];
 
       const formatResult = await simpleAgentRunner.invoke('week:format', {
         input: weekContent,
@@ -220,7 +221,7 @@ export function createTrainingService(deps: TrainingServiceDeps): TrainingServic
         // Create short link using the actual workout instance ID
         let shortLinkSuffix = '';
         try {
-          const shortLink = await shortLinkService.createWorkoutLink(user.id, workoutInstance.id);
+          const shortLink = await shortLinkService.createWorkoutLink(user.id);
           const fullUrl = shortLinkService.getFullUrl(shortLink.code);
           shortLinkSuffix = `\n\n(More details: ${fullUrl})`;
         } catch (error) {
@@ -253,7 +254,7 @@ export function createTrainingService(deps: TrainingServiceDeps): TrainingServic
     },
 
     async formatWeekMessage(user: UserWithProfile, weekContent: string): Promise<string> {
-      const context = await markdownService.getContext(user.id, ['profile']);
+      const context = await markdownService.getContext(user.id, ['profile', 'programFormat']);
 
       const result = await simpleAgentRunner.invoke('week:format', {
         input: weekContent,
@@ -296,7 +297,7 @@ export function createTrainingService(deps: TrainingServiceDeps): TrainingServic
       // Generate short link using the actual workout instance ID
       let shortLinkSuffix = '';
       try {
-        const shortLink = await shortLinkService.createWorkoutLink(user.id, workoutInstance.id);
+        const shortLink = await shortLinkService.createWorkoutLink(user.id);
         const fullUrl = shortLinkService.getFullUrl(shortLink.code);
         shortLinkSuffix = `\n\n(More details: ${fullUrl})`;
       } catch (error) {

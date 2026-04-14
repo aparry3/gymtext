@@ -14,7 +14,7 @@ import type { RepositoryContainer } from '../../../repositories/factory';
 export interface ShortLinkServiceInstance {
   createShortLink(clientId: string, targetPath: string, options?: CreateShortLinkOptions): Promise<ShortLink>;
   resolveShortLink(code: string): Promise<ResolvedShortLink | null>;
-  createWorkoutLink(userId: string, workoutId: string, options?: CreateShortLinkOptions): Promise<ShortLink>;
+  createWorkoutLink(userId: string, options?: CreateShortLinkOptions): Promise<ShortLink>;
   createProfileLink(userId: string, options?: CreateShortLinkOptions): Promise<ShortLink>;
   createCoachLink(userId: string, targetUrl: string, options?: CreateShortLinkOptions): Promise<ShortLink>;
   getFullUrl(code: string): string;
@@ -78,7 +78,6 @@ export function createShortLinkService(repos: RepositoryContainer): ShortLinkSer
 
     async createWorkoutLink(
       userId: string,
-      _workoutId: string,
       options?: CreateShortLinkOptions
     ): Promise<ShortLink> {
       const targetPath = '/me';

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * WhatsApp Cloud API Webhook Handler
  *
@@ -130,7 +131,6 @@ async function handleIncomingMessages(value: any, services: any): Promise<void> 
   for (const message of messages) {
     const fromPhone = message.from; // E.164 format: 15551234567
     const messageId = message.id;
-    const timestamp = message.timestamp;
     const messageType = message.type; // 'text', 'image', 'audio', 'video', 'document', etc.
 
     // Get message content based on type
