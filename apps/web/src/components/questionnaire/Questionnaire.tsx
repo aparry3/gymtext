@@ -44,7 +44,7 @@ export function Questionnaire({ programId, programName, ownerWordmarkUrl, ownerD
   const [error, setError] = useState<string | null>(null);
   // Track consent separately from questionnaire answers
   const [smsConsent, setSmsConsent] = useState(false);
-  const [termsConsent, setTermsConsent] = useState(false);
+  const [, setTermsConsent] = useState(false);
   const {
     currentQuestion,
     currentIndex,

@@ -324,12 +324,12 @@ function getAdditionalMetadata(metadata: LogMetadata | null): Record<string, unk
   if (!metadata) return null
 
   const {
-    usage,
-    toolCalls,
-    toolIterations,
-    retryAttempt,
-    isToolAgent,
-    invokeParams,
+    usage: _usage,
+    toolCalls: _toolCalls,
+    toolIterations: _toolIterations,
+    retryAttempt: _retryAttempt,
+    isToolAgent: _isToolAgent,
+    invokeParams: _invokeParams,
     ...rest
   } = metadata
 

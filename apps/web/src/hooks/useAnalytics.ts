@@ -4,7 +4,7 @@ import { useEffect } from 'react'
 import { getAnalyticsConfig } from '@/shared/config/public'
 
 export function useAnalytics() {
-  const { writeKey, isEnabled } = getAnalyticsConfig()
+  const { isEnabled } = getAnalyticsConfig()
 
   const track = (event: string, properties: Record<string, unknown> = {}) => {
     if (!isEnabled) {

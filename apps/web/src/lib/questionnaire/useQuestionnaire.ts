@@ -180,7 +180,6 @@ export function useQuestionnaire({ programId, questions }: UseQuestionnaireOptio
   }, [state]);
 
   const currentQuestion = state.questions[state.currentIndex];
-  const currentAnswer = state.answers[currentQuestion?.id];
 
   const hasValidAnswer = useCallback(() => {
     if (!currentQuestion) return false;

@@ -1,9 +1,8 @@
 import { UserWithProfile } from '../../models/user';
-import { now, getDayOfWeek } from '@/shared/utils/date';
+import { now } from '@/shared/utils/date';
 import type { MarkdownServiceInstance } from '../domain/markdown/markdownService';
 import type { TrainingServiceInstance } from './trainingService';
 import type { MessagingOrchestratorInstance, QueuedMessageContent } from './messagingOrchestrator';
-import type { MessagingAgentServiceInstance } from '../agents/messaging/messagingAgentService';
 import type { WorkoutInstanceServiceInstance } from '../domain/training/workoutInstanceService';
 import type { CoachSchedulingServiceInstance } from './coachSchedulingService';
 import type { EnrollmentServiceInstance } from '../domain/program/enrollmentService';
@@ -31,7 +30,6 @@ export interface OnboardingServiceDeps {
   training: TrainingServiceInstance;
   workoutInstance: WorkoutInstanceServiceInstance;
   messagingOrchestrator: MessagingOrchestratorInstance;
-  messagingAgent: MessagingAgentServiceInstance;
   enrollment: EnrollmentServiceInstance;
   program: ProgramServiceInstance;
   coachScheduling?: CoachSchedulingServiceInstance;
@@ -48,27 +46,10 @@ export function createOnboardingService(
     training: trainingService,
     workoutInstance: workoutInstanceService,
     messagingOrchestrator,
-    messagingAgent: messagingAgentService,
     enrollment: enrollmentService,
     program: programService,
     coachScheduling: coachSchedulingService,
   } = deps;
-
-  const prepareCombinedPlanMicrocycleMessage = async (user: UserWithProfile): Promise<string> => {
-    const plan = await markdownService.getPlan(user.id);
-    if (!plan) throw new Error(`No fitness plan found for user ${user.id}`);
-    if (!plan.content) throw new Error(`No plan content found for user ${user.id}`);
-
-    const currentDate = now(user.timezone).toJSDate();
-    const { microcycle } = await trainingService.prepareMicrocycleForDate(user.id, plan, currentDate, user.timezone);
-    if (!microcycle) throw new Error(`No microcycle found for user ${user.id}`);
-    if (!microcycle.content) throw new Error(`No microcycle content found for user ${user.id}`);
-
-    const currentWeekday = getDayOfWeek(undefined, user.timezone);
-    const message = await messagingAgentService.generatePlanMicrocycleCombinedMessage(plan.content, microcycle.content, currentWeekday);
-    console.log(`[Onboarding] Prepared combined plan+microcycle message for ${user.id}`);
-    return message;
-  };
 
   const prepareWorkoutMessage = async (user: UserWithProfile): Promise<string> => {
     const targetDate = now(user.timezone).startOf('day');
@@ -158,15 +139,12 @@ export function createOnboardingService(
     async sendOnboardingMessages(user: UserWithProfile): Promise<void> {
       console.log(`[Onboarding] Sending onboarding messages to ${user.id}`);
       try {
-        const planMicrocycleMessage = await prepareCombinedPlanMicrocycleMessage(user);
         const workoutMessage = await prepareWorkoutMessage(user);
 
         const messages: QueuedMessageContent[] = [
-          { content: planMicrocycleMessage },
           { content: workoutMessage }
         ];
 
-        // Use messagingOrchestrator instead of messageQueueService
         await messagingOrchestrator.queueMessages(user, messages, 'onboarding');
         console.log(`[Onboarding] Successfully queued onboarding messages for ${user.id}`);
 

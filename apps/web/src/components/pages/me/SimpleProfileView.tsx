@@ -20,12 +20,9 @@ export interface ProfileData {
   smsConsentedAt: string | null;
 }
 
-type SubscriptionStatus = 'active' | 'cancel_pending' | 'canceled' | 'none';
-
 interface SimpleProfileViewProps {
   userId: string;
   initialData: ProfileData;
-  subscriptionStatus: SubscriptionStatus;
 }
 
 interface FormState {
@@ -36,27 +33,6 @@ interface FormState {
   preferredSendHour: number;
   preferredMessagingProvider: '' | 'twilio' | 'whatsapp';
   smsConsent: boolean;
-}
-
-function formatPhoneInput(value: string): string {
-  const digits = value.replace(/\D/g, '').slice(0, 11);
-  const localDigits = digits.length === 11 && digits.startsWith('1')
-    ? digits.slice(1)
-    : digits;
-
-  if (localDigits.length <= 3) {
-    return localDigits;
-  }
-
-  if (localDigits.length <= 6) {
-    return `(${localDigits.slice(0, 3)}) ${localDigits.slice(3)}`;
-  }
-
-  return `(${localDigits.slice(0, 3)}) ${localDigits.slice(3, 6)}-${localDigits.slice(6, 10)}`;
-}
-
-function getPhoneDigits(value: string): string {
-  return value.replace(/\D/g, '');
 }
 
 function buildFormState(data: ProfileData): FormState {
@@ -71,7 +47,7 @@ function buildFormState(data: ProfileData): FormState {
   };
 }
 
-export function SimpleProfileView({ userId, initialData, subscriptionStatus }: SimpleProfileViewProps) {
+export function SimpleProfileView({ userId, initialData }: SimpleProfileViewProps) {
   const [formState, setFormState] = useState<FormState>(() => buildFormState(initialData));
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');

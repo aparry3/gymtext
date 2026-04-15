@@ -1,8 +1,19 @@
 'use client'
 
+import Link from 'next/link'
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { ExternalLink } from 'lucide-react'
+import {
+  ArrowLeft,
+  ArrowUpRight,
+  CalendarDays,
+  ExternalLink,
+  FolderKanban,
+  Phone,
+  ShieldCheck,
+  Users,
+} from 'lucide-react'
+import { cn } from '@/lib/utils'
 import { AdminProgramOwner, AdminProgramOwnerDetailResponse, OwnerType } from '@/components/admin/types'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -10,6 +21,7 @@ import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Input } from '@/components/ui/input'
+import { Switch } from '@/components/ui/switch'
 import { formatRelative } from '@/shared/utils/date'
 import {
   Breadcrumb,
@@ -20,14 +32,16 @@ import {
   BreadcrumbPage
 } from '@/components/ui/breadcrumb'
 
+interface OwnerProgram {
+  id: string
+  name: string
+  isActive: boolean
+  enrollmentCount: number
+  createdAt: Date | string
+}
+
 interface OwnerDetail extends AdminProgramOwner {
-  programs: {
-    id: string
-    name: string
-    isActive: boolean
-    enrollmentCount: number
-    createdAt: Date
-  }[]
+  programs: OwnerProgram[]
 }
 
 type ImageInputMode = 'file' | 'url'
@@ -36,6 +50,40 @@ interface ImageUploadState {
   mode: ImageInputMode
   isUploading: boolean
   previewUrl: string
+}
+
+const ownerTypeStyles: Record<OwnerType, string> = {
+  coach: 'bg-blue-100 text-blue-800 border-blue-200',
+  trainer: 'bg-emerald-100 text-emerald-800 border-emerald-200',
+  influencer: 'bg-amber-100 text-amber-800 border-amber-200',
+  admin: 'bg-violet-100 text-violet-800 border-violet-200',
+}
+
+function formatPhoneForDisplay(phone: string | null | undefined): string {
+  if (!phone) return ''
+
+  const cleaned = phone.replace(/\D/g, '').replace(/^1/, '')
+  if (cleaned.length !== 10) return phone
+
+  return `(${cleaned.slice(0, 3)}) ${cleaned.slice(3, 6)}-${cleaned.slice(6, 10)}`
+}
+
+function formatAbsoluteDate(date: Date | string): string {
+  const parsed = new Date(date)
+  if (Number.isNaN(parsed.getTime())) return 'Unknown'
+
+  return new Intl.DateTimeFormat('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  }).format(parsed)
+}
+
+function buildPublicOwnerUrl(slug: string | null): string | null {
+  if (!slug) return null
+
+  const baseUrl = process.env.NEXT_PUBLIC_WEB_URL || 'https://gymtext.co'
+  return `${baseUrl.replace(/\/$/, '')}/${slug}`
 }
 
 export default function ProgramOwnerDetailPage() {
@@ -72,7 +120,6 @@ export default function ProgramOwnerDetailPage() {
   const avatarInputRef = useRef<HTMLInputElement>(null)
   const wordmarkInputRef = useRef<HTMLInputElement>(null)
 
-  // Fetch owner data
   const fetchOwner = useCallback(async (ownerId: string) => {
     setIsLoading(true)
     setError(null)
@@ -87,20 +134,13 @@ export default function ProgramOwnerDetailPage() {
 
       const data: AdminProgramOwnerDetailResponse = result.data
       setOwner({ ...data.owner, programs: data.programs })
-      // Format phone for display
-      const phone = data.owner.phone || '';
-      const cleaned = phone.replace(/\D/g, '').replace(/^1/, '');
-      let formattedPhone = '';
-      if (cleaned.length === 10) {
-        formattedPhone = `(${cleaned.slice(0, 3)}) ${cleaned.slice(3, 6)}-${cleaned.slice(6, 10)}`;
-      }
       setEditForm({
         displayName: data.owner.displayName,
         slug: data.owner.slug || '',
         bio: data.owner.bio || '',
         avatarUrl: data.owner.avatarUrl || '',
         wordmarkUrl: data.owner.wordmarkUrl || '',
-        phone: formattedPhone,
+        phone: formatPhoneForDisplay(data.owner.phone),
         isActive: data.owner.isActive,
         ownerType: data.owner.ownerType,
       })
@@ -131,7 +171,6 @@ export default function ProgramOwnerDetailPage() {
 
     const setUploadState = type === 'avatar' ? setAvatarUpload : setWordmarkUpload
 
-    // Validate file
     if (!file.type.startsWith('image/')) {
       setError('File must be an image')
       return
@@ -161,7 +200,6 @@ export default function ProgramOwnerDetailPage() {
         throw new Error(result.message || 'Failed to upload image')
       }
 
-      // Update preview and form
       const url = result.data.url
       setUploadState(prev => ({ ...prev, previewUrl: url }))
 
@@ -171,7 +209,6 @@ export default function ProgramOwnerDetailPage() {
         setEditForm(prev => ({ ...prev, wordmarkUrl: url }))
       }
 
-      // Refresh owner data
       await fetchOwner(owner.id)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to upload image')
@@ -194,9 +231,8 @@ export default function ProgramOwnerDetailPage() {
     setError(null)
 
     try {
-      // Format phone number to E.164
-      const cleanedPhone = editForm.phone.replace(/\D/g, '');
-      const formattedPhone = cleanedPhone.length === 10 ? `+1${cleanedPhone}` : null;
+      const cleanedPhone = editForm.phone.replace(/\D/g, '')
+      const formattedPhone = cleanedPhone.length === 10 ? `+1${cleanedPhone}` : null
 
       const response = await fetch(`/api/program-owners/${owner.id}`, {
         method: 'PATCH',
@@ -213,7 +249,6 @@ export default function ProgramOwnerDetailPage() {
         throw new Error(result.message || 'Failed to update program owner')
       }
 
-      // Refresh data
       await fetchOwner(owner.id)
       setIsEditing(false)
     } catch (err) {
@@ -225,20 +260,13 @@ export default function ProgramOwnerDetailPage() {
 
   const handleCancel = () => {
     if (owner) {
-      // Format phone for display
-      const phone = owner.phone || '';
-      const cleaned = phone.replace(/\D/g, '').replace(/^1/, '');
-      let formattedPhone = '';
-      if (cleaned.length === 10) {
-        formattedPhone = `(${cleaned.slice(0, 3)}) ${cleaned.slice(3, 6)}-${cleaned.slice(6, 10)}`;
-      }
       setEditForm({
         displayName: owner.displayName,
         slug: owner.slug || '',
         bio: owner.bio || '',
         avatarUrl: owner.avatarUrl || '',
         wordmarkUrl: owner.wordmarkUrl || '',
-        phone: formattedPhone,
+        phone: formatPhoneForDisplay(owner.phone),
         isActive: owner.isActive,
         ownerType: owner.ownerType,
       })
@@ -251,6 +279,7 @@ export default function ProgramOwnerDetailPage() {
         previewUrl: owner.wordmarkUrl || '',
       }))
     }
+
     setIsEditing(false)
   }
 
@@ -260,15 +289,17 @@ export default function ProgramOwnerDetailPage() {
 
   if (error && !owner) {
     return (
-      <div className="container mx-auto px-4 py-6 max-w-4xl">
-        <Card className="border-destructive/20 bg-destructive/5 p-6">
-          <div className="text-center space-y-4">
-            <p className="text-destructive">{error}</p>
-            <Button variant="outline" onClick={() => router.push('/program-owners')}>
-              Back to Program Owners
-            </Button>
-          </div>
-        </Card>
+      <div className="min-h-screen bg-slate-50">
+        <div className="container mx-auto max-w-5xl px-4 py-6">
+          <Card className="border-destructive/20 bg-destructive/5 p-6">
+            <div className="space-y-4 text-center">
+              <p className="text-destructive">{error}</p>
+              <Button variant="outline" onClick={() => router.push('/program-owners')}>
+                Back to Program Owners
+              </Button>
+            </div>
+          </Card>
+        </div>
       </div>
     )
   }
@@ -277,428 +308,638 @@ export default function ProgramOwnerDetailPage() {
 
   const initials = owner.displayName
     .split(' ')
-    .map(n => n[0])
+    .map(part => part[0])
     .join('')
     .toUpperCase()
     .slice(0, 2)
 
-  const typeColors: Record<string, string> = {
-    ai: 'bg-purple-100 text-purple-800',
-    coach: 'bg-blue-100 text-blue-800',
-    trainer: 'bg-green-100 text-green-800',
-    influencer: 'bg-orange-100 text-orange-800',
-  }
+  const publicOwnerUrl = buildPublicOwnerUrl(owner.slug)
 
   return (
-    <div className="container mx-auto px-4 py-6 max-w-4xl">
-      <div className="space-y-6">
-        {/* Breadcrumb */}
-        <Breadcrumb>
-          <BreadcrumbList>
-            <BreadcrumbItem>
-              <BreadcrumbLink href="/program-owners">Program Owners</BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbPage>{owner.displayName}</BreadcrumbPage>
-            </BreadcrumbItem>
-          </BreadcrumbList>
-        </Breadcrumb>
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(59,130,246,0.10),_transparent_40%),linear-gradient(to_bottom,_#f8fafc,_#ffffff)]">
+      <div className="container mx-auto max-w-6xl px-4 py-6">
+        <div className="space-y-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="space-y-3">
+              <Breadcrumb>
+                <BreadcrumbList>
+                  <BreadcrumbItem>
+                    <BreadcrumbLink href="/program-owners">Program Owners</BreadcrumbLink>
+                  </BreadcrumbItem>
+                  <BreadcrumbSeparator />
+                  <BreadcrumbItem>
+                    <BreadcrumbPage>{owner.displayName}</BreadcrumbPage>
+                  </BreadcrumbItem>
+                </BreadcrumbList>
+              </Breadcrumb>
+              <Button
+                variant="ghost"
+                onClick={() => router.push('/program-owners')}
+                className="w-fit gap-2 px-0 text-slate-600 hover:bg-transparent hover:text-slate-900"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Back to Program Owners
+              </Button>
+            </div>
 
-        {/* Error Banner */}
-        {error && (
-          <Card className="border-destructive/20 bg-destructive/5 p-4">
-            <p className="text-sm text-destructive">{error}</p>
-          </Card>
-        )}
-
-        {/* Owner Card */}
-        <Card className="p-6">
-          <div className="flex flex-col md:flex-row md:items-start gap-6">
-            {/* Avatar */}
-            <Avatar className="h-24 w-24">
-              {owner.avatarUrl ? (
-                <AvatarImage src={owner.avatarUrl} alt={owner.displayName} />
-              ) : null}
-              <AvatarFallback className="text-2xl bg-primary/10 text-primary">
-                {initials}
-              </AvatarFallback>
-            </Avatar>
-
-            {/* Info */}
-            <div className="flex-1 space-y-4">
+            <div className="flex flex-wrap items-center gap-2">
+              {publicOwnerUrl && !isEditing && (
+                <a
+                  href={publicOwnerUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900"
+                >
+                  View Public Page
+                  <ExternalLink className="h-4 w-4" />
+                </a>
+              )}
               {isEditing ? (
-                <div className="space-y-4">
-                  <div>
-                    <label className="text-sm font-medium text-gray-700">Display Name</label>
+                <>
+                  <Button onClick={handleSave} disabled={isSaving}>
+                    {isSaving ? 'Saving...' : 'Save Changes'}
+                  </Button>
+                  <Button variant="outline" onClick={handleCancel} disabled={isSaving}>
+                    Cancel
+                  </Button>
+                </>
+              ) : (
+                <Button variant="outline" onClick={() => setIsEditing(true)}>
+                  Edit Owner
+                </Button>
+              )}
+            </div>
+          </div>
+
+          {error && (
+            <Card className="border-destructive/20 bg-destructive/5 p-4">
+              <p className="text-sm text-destructive">{error}</p>
+            </Card>
+          )}
+
+          <Card className="overflow-hidden border-slate-200 shadow-sm">
+            <div className="bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 px-6 py-8 text-white">
+              <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+                <div className="flex flex-col gap-5 sm:flex-row sm:items-start">
+                  <Avatar className="h-24 w-24 border-4 border-white/10 shadow-lg">
+                    {owner.avatarUrl ? (
+                      <AvatarImage src={owner.avatarUrl} alt={owner.displayName} />
+                    ) : null}
+                    <AvatarFallback className="bg-white/10 text-2xl text-white">
+                      {initials}
+                    </AvatarFallback>
+                  </Avatar>
+
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h1 className="text-3xl font-semibold tracking-tight">{owner.displayName}</h1>
+                        <Badge className={cn('border', ownerTypeStyles[owner.ownerType])}>
+                          {owner.ownerType}
+                        </Badge>
+                        <Badge
+                          variant="secondary"
+                          className={cn(
+                            'border text-xs',
+                            owner.isActive
+                              ? 'border-emerald-400/30 bg-emerald-400/15 text-emerald-100'
+                              : 'border-white/15 bg-white/10 text-slate-200'
+                          )}
+                        >
+                          {owner.isActive ? 'Active' : 'Inactive'}
+                        </Badge>
+                      </div>
+
+                      {owner.bio ? (
+                        <p className="max-w-2xl text-sm leading-6 text-slate-300">{owner.bio}</p>
+                      ) : (
+                        <p className="text-sm text-slate-400">No bio added yet.</p>
+                      )}
+                    </div>
+
+                    <div className="flex flex-wrap gap-3 text-sm text-slate-300">
+                      <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5">
+                        <CalendarDays className="h-4 w-4" />
+                        Joined {formatAbsoluteDate(owner.createdAt)}
+                      </div>
+                      <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5">
+                        <ShieldCheck className="h-4 w-4" />
+                        {owner.userId ? 'Linked to a user account' : 'No linked user account'}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {owner.wordmarkUrl && !isEditing && (
+                  <div className="rounded-2xl border border-white/10 bg-white px-4 py-3 shadow-lg">
+                    <div className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+                      Wordmark
+                    </div>
+                    <img
+                      src={owner.wordmarkUrl}
+                      alt={`${owner.displayName} wordmark`}
+                      className="h-10 max-w-[180px] object-contain"
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="grid gap-4 border-t border-slate-200 bg-white p-6 md:grid-cols-3">
+              <StatCard
+                icon={<FolderKanban className="h-5 w-5" />}
+                label="Programs"
+                value={String(owner.programCount)}
+                tone="blue"
+              />
+              <StatCard
+                icon={<Users className="h-5 w-5" />}
+                label="Active enrollments"
+                value={String(owner.enrollmentCount)}
+                tone="emerald"
+              />
+              <StatCard
+                icon={<CalendarDays className="h-5 w-5" />}
+                label="Last updated"
+                value={formatRelative(owner.updatedAt)}
+                tone="slate"
+              />
+            </div>
+          </Card>
+
+          {isEditing ? (
+            <Card className="border-slate-200 p-6 shadow-sm">
+              <div className="mb-6">
+                <h2 className="text-lg font-semibold text-slate-900">Edit Owner</h2>
+                <p className="mt-1 text-sm text-slate-500">
+                  Update the public profile, portal settings, and admin metadata for this owner.
+                </p>
+              </div>
+
+              <div className="grid gap-6 lg:grid-cols-2">
+                <div className="space-y-5">
+                  <FormField label="Display Name">
                     <Input
                       value={editForm.displayName}
                       onChange={(e) => setEditForm(prev => ({ ...prev, displayName: e.target.value }))}
-                      className="mt-1"
                     />
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-700">Slug</label>
+                  </FormField>
+
+                  <FormField label="Slug" helpText="URL-friendly identifier for public pages.">
                     <Input
                       value={editForm.slug}
                       onChange={(e) => {
-                        // Auto-format: lowercase, replace spaces with hyphens, allow only alphanumeric + hyphens
                         const formatted = e.target.value
                           .toLowerCase()
                           .replace(/\s+/g, '-')
-                          .replace(/[^a-z0-9-]/g, '');
-                        setEditForm(prev => ({ ...prev, slug: formatted }));
+                          .replace(/[^a-z0-9-]/g, '')
+
+                        setEditForm(prev => ({ ...prev, slug: formatted }))
                       }}
-                      placeholder="e.g., pat-clatchey"
-                      className="mt-1"
+                      placeholder="e.g. pat-clatchey"
                     />
-                    <p className="text-xs text-muted-foreground mt-1">
-                      URL-friendly identifier for public pages (e.g., pat-clatchey)
-                    </p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-700">Type</label>
+                  </FormField>
+
+                  <FormField label="Type">
                     <select
                       value={editForm.ownerType}
                       onChange={(e) => setEditForm(prev => ({ ...prev, ownerType: e.target.value as OwnerType }))}
-                      className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                      className="flex h-10 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                     >
                       <option value="coach">Coach</option>
                       <option value="trainer">Trainer</option>
                       <option value="influencer">Influencer</option>
                       <option value="admin">Admin</option>
                     </select>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-700">Bio</label>
-                    <textarea
-                      value={editForm.bio}
-                      onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setEditForm(prev => ({ ...prev, bio: e.target.value }))}
-                      className="mt-1 flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                      rows={3}
-                    />
-                  </div>
+                  </FormField>
 
-                  {/* Avatar Upload */}
-                  <div>
-                    <label className="text-sm font-medium text-gray-700">Avatar</label>
-                    <div className="mt-1 space-y-2">
-                      <div className="flex gap-2">
-                        <Button
-                          type="button"
-                          variant={avatarUpload.mode === 'file' ? 'default' : 'outline'}
-                          size="sm"
-                          onClick={() => setAvatarUpload(prev => ({ ...prev, mode: 'file' }))}
-                        >
-                          Upload File
-                        </Button>
-                        <Button
-                          type="button"
-                          variant={avatarUpload.mode === 'url' ? 'default' : 'outline'}
-                          size="sm"
-                          onClick={() => setAvatarUpload(prev => ({ ...prev, mode: 'url' }))}
-                        >
-                          Enter URL
-                        </Button>
-                      </div>
-
-                      {avatarUpload.mode === 'file' ? (
-                        <div className="flex items-center gap-3">
-                          <input
-                            ref={avatarInputRef}
-                            type="file"
-                            accept="image/*"
-                            onChange={(e) => handleFileSelect(e, 'avatar')}
-                            className="hidden"
-                          />
-                          <Button
-                            type="button"
-                            variant="outline"
-                            onClick={() => avatarInputRef.current?.click()}
-                            disabled={avatarUpload.isUploading}
-                          >
-                            {avatarUpload.isUploading ? 'Uploading...' : 'Choose File'}
-                          </Button>
-                          {avatarUpload.previewUrl && (
-                            <div className="flex items-center gap-2">
-                              <img
-                                src={avatarUpload.previewUrl}
-                                alt="Avatar preview"
-                                className="h-10 w-10 rounded-full object-cover"
-                              />
-                              <span className="text-sm text-muted-foreground">Current avatar</span>
-                            </div>
-                          )}
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-3">
-                          <Input
-                            value={editForm.avatarUrl}
-                            onChange={(e) => {
-                              setEditForm(prev => ({ ...prev, avatarUrl: e.target.value }))
-                              setAvatarUpload(prev => ({ ...prev, previewUrl: e.target.value }))
-                            }}
-                            placeholder="https://..."
-                            className="flex-1"
-                          />
-                          {avatarUpload.previewUrl && (
-                            <img
-                              src={avatarUpload.previewUrl}
-                              alt="Avatar preview"
-                              className="h-10 w-10 rounded-full object-cover"
-                            />
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Wordmark Upload */}
-                  <div>
-                    <label className="text-sm font-medium text-gray-700">Wordmark</label>
-                    <p className="text-xs text-muted-foreground mb-1">
-                      Logo displayed in the questionnaire header
-                    </p>
-                    <div className="mt-1 space-y-2">
-                      <div className="flex gap-2">
-                        <Button
-                          type="button"
-                          variant={wordmarkUpload.mode === 'file' ? 'default' : 'outline'}
-                          size="sm"
-                          onClick={() => setWordmarkUpload(prev => ({ ...prev, mode: 'file' }))}
-                        >
-                          Upload File
-                        </Button>
-                        <Button
-                          type="button"
-                          variant={wordmarkUpload.mode === 'url' ? 'default' : 'outline'}
-                          size="sm"
-                          onClick={() => setWordmarkUpload(prev => ({ ...prev, mode: 'url' }))}
-                        >
-                          Enter URL
-                        </Button>
-                      </div>
-
-                      {wordmarkUpload.mode === 'file' ? (
-                        <div className="flex items-center gap-3">
-                          <input
-                            ref={wordmarkInputRef}
-                            type="file"
-                            accept="image/*"
-                            onChange={(e) => handleFileSelect(e, 'wordmark')}
-                            className="hidden"
-                          />
-                          <Button
-                            type="button"
-                            variant="outline"
-                            onClick={() => wordmarkInputRef.current?.click()}
-                            disabled={wordmarkUpload.isUploading}
-                          >
-                            {wordmarkUpload.isUploading ? 'Uploading...' : 'Choose File'}
-                          </Button>
-                          {wordmarkUpload.previewUrl && (
-                            <div className="flex items-center gap-2">
-                              <img
-                                src={wordmarkUpload.previewUrl}
-                                alt="Wordmark preview"
-                                className="h-10 max-w-[120px] object-contain"
-                              />
-                              <span className="text-sm text-muted-foreground">Current wordmark</span>
-                            </div>
-                          )}
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-3">
-                          <Input
-                            value={editForm.wordmarkUrl}
-                            onChange={(e) => {
-                              setEditForm(prev => ({ ...prev, wordmarkUrl: e.target.value }))
-                              setWordmarkUpload(prev => ({ ...prev, previewUrl: e.target.value }))
-                            }}
-                            placeholder="https://..."
-                            className="flex-1"
-                          />
-                          {wordmarkUpload.previewUrl && (
-                            <img
-                              src={wordmarkUpload.previewUrl}
-                              alt="Wordmark preview"
-                              className="h-10 max-w-[120px] object-contain"
-                            />
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="text-sm font-medium text-gray-700">Phone Number</label>
+                  <FormField label="Phone Number" helpText="Required for Programs Portal access.">
                     <Input
                       type="tel"
                       value={editForm.phone}
                       onChange={(e) => {
-                        const cleaned = e.target.value.replace(/\D/g, '');
-                        let formatted = cleaned;
+                        const cleaned = e.target.value.replace(/\D/g, '')
+                        let formatted = cleaned
+
                         if (cleaned.length <= 3) {
-                          formatted = cleaned;
+                          formatted = cleaned
                         } else if (cleaned.length <= 6) {
-                          formatted = `(${cleaned.slice(0, 3)}) ${cleaned.slice(3)}`;
+                          formatted = `(${cleaned.slice(0, 3)}) ${cleaned.slice(3)}`
                         } else {
-                          formatted = `(${cleaned.slice(0, 3)}) ${cleaned.slice(3, 6)}-${cleaned.slice(6, 10)}`;
+                          formatted = `(${cleaned.slice(0, 3)}) ${cleaned.slice(3, 6)}-${cleaned.slice(6, 10)}`
                         }
-                        setEditForm(prev => ({ ...prev, phone: formatted }));
+
+                        setEditForm(prev => ({ ...prev, phone: formatted }))
                       }}
-                      className="mt-1"
                       placeholder="(555) 123-4567"
                       maxLength={14}
                     />
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Required for Programs Portal access
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      id="isActive"
-                      checked={editForm.isActive}
-                      onChange={(e) => setEditForm(prev => ({ ...prev, isActive: e.target.checked }))}
-                      className="rounded"
-                    />
-                    <label htmlFor="isActive" className="text-sm font-medium text-gray-700">
-                      Active
-                    </label>
+                  </FormField>
+
+                  <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4">
+                    <div className="flex items-center justify-between gap-4">
+                      <div>
+                        <p className="text-sm font-medium text-slate-900">Owner Status</p>
+                        <p className="text-sm text-slate-500">
+                          Inactive owners remain visible in admin but can be treated as disabled elsewhere.
+                        </p>
+                      </div>
+                      <Switch
+                        checked={editForm.isActive}
+                        onCheckedChange={(checked) => setEditForm(prev => ({ ...prev, isActive: checked }))}
+                      />
+                    </div>
                   </div>
                 </div>
-              ) : (
-                <>
-                  <div className="flex items-center gap-3">
-                    <h1 className="text-2xl font-bold">{owner.displayName}</h1>
-                    <Badge className={`${typeColors[owner.ownerType]} border-0`}>
-                      {owner.ownerType}
-                    </Badge>
-                    <Badge variant={owner.isActive ? 'default' : 'secondary'}>
-                      {owner.isActive ? 'Active' : 'Inactive'}
-                    </Badge>
+
+                <div className="space-y-5">
+                  <FormField label="Bio">
+                    <textarea
+                      value={editForm.bio}
+                      onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setEditForm(prev => ({ ...prev, bio: e.target.value }))}
+                      className="flex min-h-[120px] w-full rounded-xl border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                      rows={5}
+                    />
+                  </FormField>
+
+                  <ImageEditor
+                    label="Avatar"
+                    uploadState={avatarUpload}
+                    value={editForm.avatarUrl}
+                    inputRef={avatarInputRef}
+                    onModeChange={(mode) => setAvatarUpload(prev => ({ ...prev, mode }))}
+                    onSelectFile={() => avatarInputRef.current?.click()}
+                    onFileChange={(e) => handleFileSelect(e, 'avatar')}
+                    onUrlChange={(value) => {
+                      setEditForm(prev => ({ ...prev, avatarUrl: value }))
+                      setAvatarUpload(prev => ({ ...prev, previewUrl: value }))
+                    }}
+                    previewClassName="h-12 w-12 rounded-full object-cover"
+                  />
+
+                  <ImageEditor
+                    label="Wordmark"
+                    helpText="Logo displayed in the questionnaire header."
+                    uploadState={wordmarkUpload}
+                    value={editForm.wordmarkUrl}
+                    inputRef={wordmarkInputRef}
+                    onModeChange={(mode) => setWordmarkUpload(prev => ({ ...prev, mode }))}
+                    onSelectFile={() => wordmarkInputRef.current?.click()}
+                    onFileChange={(e) => handleFileSelect(e, 'wordmark')}
+                    onUrlChange={(value) => {
+                      setEditForm(prev => ({ ...prev, wordmarkUrl: value }))
+                      setWordmarkUpload(prev => ({ ...prev, previewUrl: value }))
+                    }}
+                    previewClassName="h-10 max-w-[140px] object-contain"
+                  />
+                </div>
+              </div>
+            </Card>
+          ) : (
+            <div className="grid gap-6 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
+              <Card className="border-slate-200 p-6 shadow-sm">
+                <div className="mb-5">
+                  <h2 className="text-lg font-semibold text-slate-900">Owner Details</h2>
+                  <p className="mt-1 text-sm text-slate-500">
+                    Key profile and portal information for this program owner.
+                  </p>
+                </div>
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <DetailItem
+                    label="Phone"
+                    value={owner.phone ? formatPhoneForDisplay(owner.phone) : 'No phone added'}
+                    icon={<Phone className="h-4 w-4" />}
+                  />
+                  <DetailItem
+                    label="Slug"
+                    value={owner.slug || 'No public slug'}
+                    icon={<ExternalLink className="h-4 w-4" />}
+                  />
+                  <DetailItem
+                    label="Created"
+                    value={formatAbsoluteDate(owner.createdAt)}
+                    icon={<CalendarDays className="h-4 w-4" />}
+                  />
+                  <DetailItem
+                    label="Updated"
+                    value={formatRelative(owner.updatedAt)}
+                    icon={<CalendarDays className="h-4 w-4" />}
+                  />
+                </div>
+
+                <div className="mt-6 space-y-4">
+                  <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4">
+                    <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                      Public profile
+                    </div>
+                    {publicOwnerUrl ? (
+                      <a
+                        href={publicOwnerUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-2 inline-flex items-center gap-2 text-sm font-medium text-blue-600 transition hover:text-blue-700"
+                      >
+                        {publicOwnerUrl.replace(/^https?:\/\//, '')}
+                        <ExternalLink className="h-4 w-4" />
+                      </a>
+                    ) : (
+                      <p className="mt-2 text-sm text-slate-500">
+                        No public profile URL is configured because this owner does not have a slug yet.
+                      </p>
+                    )}
                   </div>
-                  {owner.slug && (
-                    <a
-                      href={`${process.env.NEXT_PUBLIC_WEB_URL || 'https://gymtext.co'}/${owner.slug}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800"
-                    >
-                      gymtext.co/{owner.slug} <ExternalLink className="h-3 w-3" />
-                    </a>
-                  )}
-                  {owner.bio && (
-                    <p className="text-muted-foreground">{owner.bio}</p>
-                  )}
+
                   {owner.wordmarkUrl && (
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm text-muted-foreground">Wordmark:</span>
+                    <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                      <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                        Brand wordmark
+                      </div>
                       <img
                         src={owner.wordmarkUrl}
-                        alt="Wordmark"
-                        className="h-8 max-w-[120px] object-contain"
+                        alt={`${owner.displayName} wordmark`}
+                        className="mt-3 h-10 max-w-[180px] object-contain"
                       />
                     </div>
                   )}
-                  <div className="text-sm text-muted-foreground">
-                    Created {formatRelative(owner.createdAt)}
-                  </div>
-                </>
-              )}
-
-              {/* Actions */}
-              <div className="flex gap-2 pt-4">
-                {isEditing ? (
-                  <>
-                    <Button onClick={handleSave} disabled={isSaving}>
-                      {isSaving ? 'Saving...' : 'Save Changes'}
-                    </Button>
-                    <Button variant="outline" onClick={handleCancel} disabled={isSaving}>
-                      Cancel
-                    </Button>
-                  </>
-                ) : (
-                  <Button variant="outline" onClick={() => setIsEditing(true)}>
-                    Edit
-                  </Button>
-                )}
-              </div>
-            </div>
-          </div>
-        </Card>
-
-        {/* Stats */}
-        <div className="grid grid-cols-2 gap-4">
-          <Card className="p-6 text-center">
-            <div className="text-3xl font-bold text-primary">{owner.programCount}</div>
-            <div className="text-sm text-muted-foreground">Programs</div>
-          </Card>
-          <Card className="p-6 text-center">
-            <div className="text-3xl font-bold text-green-600">{owner.enrollmentCount}</div>
-            <div className="text-sm text-muted-foreground">Active Enrollments</div>
-          </Card>
-        </div>
-
-        {/* Programs List */}
-        <Card className="p-6">
-          <h2 className="text-lg font-semibold mb-4">Programs</h2>
-          {owner.programs.length === 0 ? (
-            <p className="text-muted-foreground text-center py-4">No programs yet</p>
-          ) : (
-            <div className="space-y-3">
-              {owner.programs.map((program) => (
-                <div
-                  key={program.id}
-                  className="flex items-center justify-between p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors"
-                >
-                  <div>
-                    <div className="font-medium">{program.name}</div>
-                    <div className="text-sm text-muted-foreground">
-                      {program.enrollmentCount} enrollments
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Badge variant={program.isActive ? 'default' : 'secondary'}>
-                      {program.isActive ? 'Active' : 'Inactive'}
-                    </Badge>
-                    <span className="text-sm text-muted-foreground">
-                      {formatRelative(program.createdAt)}
-                    </span>
-                  </div>
                 </div>
-              ))}
+              </Card>
+
+              <Card className="border-slate-200 p-6 shadow-sm">
+                <div className="mb-5 flex items-start justify-between gap-4">
+                  <div>
+                    <h2 className="text-lg font-semibold text-slate-900">Programs</h2>
+                    <p className="mt-1 text-sm text-slate-500">
+                      Every program below links directly to its admin detail page.
+                    </p>
+                  </div>
+                  <Badge variant="secondary" className="rounded-full px-3 py-1 text-xs font-semibold">
+                    {owner.programs.length} total
+                  </Badge>
+                </div>
+
+                {owner.programs.length === 0 ? (
+                  <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/80 px-6 py-10 text-center">
+                    <p className="text-sm text-slate-500">No programs yet.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {owner.programs.map((program) => (
+                      <Link
+                        key={program.id}
+                        href={`/programs/${program.id}`}
+                        className="group block rounded-2xl border border-slate-200 bg-white p-4 transition hover:border-slate-300 hover:bg-slate-50 hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+                      >
+                        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-2">
+                              <div className="truncate text-base font-semibold text-slate-900">
+                                {program.name}
+                              </div>
+                              <ArrowUpRight className="h-4 w-4 shrink-0 text-slate-400 transition group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-slate-700" />
+                            </div>
+                            <div className="mt-1 text-sm text-slate-500">
+                              Created {formatAbsoluteDate(program.createdAt)}
+                            </div>
+                          </div>
+
+                          <div className="flex flex-wrap items-center gap-3">
+                            <Badge variant={program.isActive ? 'default' : 'secondary'}>
+                              {program.isActive ? 'Active' : 'Inactive'}
+                            </Badge>
+                            <div className="rounded-xl bg-slate-100 px-3 py-2 text-right">
+                              <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+                                Enrollments
+                              </div>
+                              <div className="text-sm font-semibold text-slate-900">
+                                {program.enrollmentCount}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </Card>
             </div>
           )}
-        </Card>
+        </div>
       </div>
+    </div>
+  )
+}
+
+interface StatCardProps {
+  icon: React.ReactNode
+  label: string
+  value: string
+  tone: 'blue' | 'emerald' | 'slate'
+}
+
+function StatCard({ icon, label, value, tone }: StatCardProps) {
+  const toneClasses = {
+    blue: 'bg-blue-50 text-blue-700 border-blue-100',
+    emerald: 'bg-emerald-50 text-emerald-700 border-emerald-100',
+    slate: 'bg-slate-100 text-slate-700 border-slate-200',
+  }
+
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
+      <div className="flex items-start gap-4">
+        <div className={cn('flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border', toneClasses[tone])}>
+          {icon}
+        </div>
+        <div className="min-w-0">
+          <div className="text-sm font-medium text-slate-500">{label}</div>
+          <div className="mt-1 text-lg font-semibold text-slate-900">{value}</div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+interface DetailItemProps {
+  label: string
+  value: string
+  icon: React.ReactNode
+}
+
+function DetailItem({ label, value, icon }: DetailItemProps) {
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4">
+      <div className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+        {icon}
+        {label}
+      </div>
+      <div className="text-sm font-medium text-slate-900">{value}</div>
+    </div>
+  )
+}
+
+interface FormFieldProps {
+  label: string
+  helpText?: string
+  children: React.ReactNode
+}
+
+function FormField({ label, helpText, children }: FormFieldProps) {
+  return (
+    <div className="space-y-2">
+      <div>
+        <label className="text-sm font-medium text-slate-700">{label}</label>
+        {helpText ? <p className="mt-1 text-xs text-slate-500">{helpText}</p> : null}
+      </div>
+      {children}
+    </div>
+  )
+}
+
+interface ImageEditorProps {
+  label: string
+  helpText?: string
+  uploadState: ImageUploadState
+  value: string
+  inputRef: React.RefObject<HTMLInputElement | null>
+  onModeChange: (mode: ImageInputMode) => void
+  onSelectFile: () => void
+  onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void
+  onUrlChange: (value: string) => void
+  previewClassName: string
+}
+
+function ImageEditor({
+  label,
+  helpText,
+  uploadState,
+  value,
+  inputRef,
+  onModeChange,
+  onSelectFile,
+  onFileChange,
+  onUrlChange,
+  previewClassName,
+}: ImageEditorProps) {
+  return (
+    <div className="space-y-3 rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
+      <div>
+        <div className="text-sm font-medium text-slate-700">{label}</div>
+        {helpText ? <p className="mt-1 text-xs text-slate-500">{helpText}</p> : null}
+      </div>
+
+      <div className="flex gap-2">
+        <Button
+          type="button"
+          variant={uploadState.mode === 'file' ? 'default' : 'outline'}
+          size="sm"
+          onClick={() => onModeChange('file')}
+        >
+          Upload File
+        </Button>
+        <Button
+          type="button"
+          variant={uploadState.mode === 'url' ? 'default' : 'outline'}
+          size="sm"
+          onClick={() => onModeChange('url')}
+        >
+          Enter URL
+        </Button>
+      </div>
+
+      {uploadState.mode === 'file' ? (
+        <div className="flex flex-wrap items-center gap-3">
+          <input
+            ref={inputRef}
+            type="file"
+            accept="image/*"
+            onChange={onFileChange}
+            className="hidden"
+          />
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onSelectFile}
+            disabled={uploadState.isUploading}
+          >
+            {uploadState.isUploading ? 'Uploading...' : 'Choose File'}
+          </Button>
+          {uploadState.previewUrl ? (
+            <img
+              src={uploadState.previewUrl}
+              alt={`${label} preview`}
+              className={previewClassName}
+            />
+          ) : null}
+        </div>
+      ) : (
+        <div className="flex flex-wrap items-center gap-3">
+          <Input
+            value={value}
+            onChange={(e) => onUrlChange(e.target.value)}
+            placeholder="https://..."
+            className="flex-1"
+          />
+          {uploadState.previewUrl ? (
+            <img
+              src={uploadState.previewUrl}
+              alt={`${label} preview`}
+              className={previewClassName}
+            />
+          ) : null}
+        </div>
+      )}
     </div>
   )
 }
 
 function LoadingSkeleton() {
   return (
-    <div className="container mx-auto px-4 py-6 max-w-4xl">
-      <div className="space-y-6">
-        <Skeleton className="h-6 w-48" />
-        <Card className="p-6">
-          <div className="flex flex-col md:flex-row md:items-start gap-6">
-            <Skeleton className="h-24 w-24 rounded-full" />
-            <div className="flex-1 space-y-4">
-              <Skeleton className="h-8 w-64" />
-              <Skeleton className="h-4 w-full" />
-              <Skeleton className="h-4 w-32" />
-            </div>
+    <div className="min-h-screen bg-slate-50">
+      <div className="container mx-auto max-w-6xl px-4 py-6">
+        <div className="space-y-6">
+          <div className="space-y-3">
+            <Skeleton className="h-5 w-40" />
+            <Skeleton className="h-9 w-44" />
           </div>
-        </Card>
-        <div className="grid grid-cols-2 gap-4">
-          <Card className="p-6">
-            <Skeleton className="h-12 w-full" />
+
+          <Card className="overflow-hidden border-slate-200">
+            <div className="px-6 py-8">
+              <div className="flex flex-col gap-6 sm:flex-row">
+                <Skeleton className="h-24 w-24 rounded-full" />
+                <div className="flex-1 space-y-3">
+                  <Skeleton className="h-8 w-64" />
+                  <Skeleton className="h-4 w-full max-w-2xl" />
+                  <Skeleton className="h-4 w-80" />
+                </div>
+              </div>
+            </div>
+            <div className="grid gap-4 border-t p-6 md:grid-cols-3">
+              <Skeleton className="h-24 rounded-2xl" />
+              <Skeleton className="h-24 rounded-2xl" />
+              <Skeleton className="h-24 rounded-2xl" />
+            </div>
           </Card>
-          <Card className="p-6">
-            <Skeleton className="h-12 w-full" />
-          </Card>
+
+          <div className="grid gap-6 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
+            <Card className="p-6">
+              <Skeleton className="h-6 w-36" />
+              <div className="mt-5 grid gap-4 sm:grid-cols-2">
+                <Skeleton className="h-24 rounded-2xl" />
+                <Skeleton className="h-24 rounded-2xl" />
+                <Skeleton className="h-24 rounded-2xl" />
+                <Skeleton className="h-24 rounded-2xl" />
+              </div>
+            </Card>
+
+            <Card className="p-6">
+              <Skeleton className="h-6 w-28" />
+              <div className="mt-5 space-y-3">
+                <Skeleton className="h-24 rounded-2xl" />
+                <Skeleton className="h-24 rounded-2xl" />
+                <Skeleton className="h-24 rounded-2xl" />
+              </div>
+            </Card>
+          </div>
         </div>
       </div>
     </div>
