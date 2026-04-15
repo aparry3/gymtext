@@ -265,7 +265,7 @@ export function createServices(repos: RepositoryContainer, clients?: ExternalCli
   });
 
   const programAgent = createProgramAgentService(agentRunner);
-  const messagingAgent = createMessagingAgentService({ agentRunner, markdown });
+  const messagingAgent = createMessagingAgentService({ agentRunner });
 
   const dailyMessage = createDailyMessageService({
     user,
@@ -291,7 +291,6 @@ export function createServices(repos: RepositoryContainer, clients?: ExternalCli
   const onboarding = createOnboardingService({
     markdown, training, workoutInstance,
     messagingOrchestrator: getMessagingOrchestrator(),
-    messagingAgent,
     enrollment, program,
     coachScheduling: coachSchedulingProxy,
   });
