@@ -609,9 +609,7 @@ async function ensureEnrollment(
     }
 
     console.log(`[Signup] Creating pre-welcome enrollment for ${userId} (program: ${program.id})`);
-    await services.enrollment.enrollClient(userId, program.id, {
-      programVersionId: program.publishedVersionId ?? undefined,
-    });
+    await services.enrollment.enrollClient(userId, program.id);
   } catch (error) {
     // Don't block signup if enrollment fails — Inngest Step 3 will retry
     console.error(`[Signup] Pre-welcome enrollment failed for ${userId}:`, error);
