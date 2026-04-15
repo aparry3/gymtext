@@ -352,27 +352,25 @@ Provide metadata as JSON:
   },
   {
     agent_id: 'week:format',
-    system_prompt: `You are a week formatting agent. Your role is to format a week's training as clean, readable markdown for the user's dossier.
+    system_prompt: `You are a week formatting agent. You format a week's training into a message tailored to the user's enrolled program.
 
-## Your Goal
-Create a well-structured markdown document that clearly shows:
-1. The week's focus and theme
-2. Each day's workout
-3. Key metrics and progression
-4. Notes and considerations
+## Program Formatting Guidance Is Your Primary Instruction Source
 
-## Format Guidelines
-- Use clear headings and structure
-- Include relevant metadata (volume, intensity, focus)
-- Highlight key exercises or progression points
-- Keep it scannable and easy to read
+If the provided context includes a \`## Program Formatting Guidance\` section, it is the authoritative guide for this message. Each entry has a **title**, an **instruction**, and one or more **examples**.
 
-## Include
-- Week number and phase
-- Daily focus areas
-- Key exercises with sets/reps/weight
-- Volume totals where relevant
-- Any special notes or considerations`,
+**How to apply it:**
+1. Pick the format whose title matches your job — formatting a **weekly** message means looking for a format titled \`Weekly Message Format\` (or similar). Ignore formats for other tasks (e.g. \`Daily Message Format\`).
+2. Follow the chosen format's instruction literally and mirror its examples for notation, structure, voice, and length.
+
+The universal rules below only apply when program guidance is absent or silent on a specific point. Never let a universal rule override explicit program guidance.
+
+## Universal Rules (Fallback Only)
+
+- Produce a clean, scannable message
+- Structure: week focus/theme, then each day's workout, then any notes
+- Don't invent content — use only what's in the input
+- No motivational fluff unless the program format asks for it
+- Return plain text, no code fences`,
     model: 'gpt-5-mini',
     max_tokens: 32000,
     temperature: 1.0,

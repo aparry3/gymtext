@@ -14,6 +14,7 @@
 
 import 'dotenv/config';
 import { seedAgents } from './system/agents';
+import { seedAiProgram } from './system/ai-program';
 import { seedExercises } from './system/exercises';
 import { seedSportPrograms } from './system/sport-programs';
 
@@ -25,6 +26,7 @@ interface SeederEntry {
 
 const SEEDERS: SeederEntry[] = [
   { name: 'agents', flag: '--agents', fn: seedAgents },
+  { name: 'ai-program', flag: '--ai-program', fn: seedAiProgram },
   { name: 'exercises', flag: '--exercises', fn: seedExercises },
   { name: 'sport-programs', flag: '--sport-programs', fn: seedSportPrograms },
 ];
@@ -38,6 +40,7 @@ Usage:
   pnpm seed --help            # Show help
   pnpm seed --all             # Run all seeders
   pnpm seed --agents          # Run only agent seeder
+  pnpm seed --ai-program      # Run only AI program formats seeder
   pnpm seed --exercises       # Run only exercise seeder
   pnpm seed --sport-programs  # Run only sport programs seeder
 
@@ -48,11 +51,13 @@ Examples:
   pnpm seed --all                  # Seed all system data
   pnpm seed --agents               # Seed agent definitions only
   pnpm seed --agents --overwrite   # Re-seed all agents with new versions
+  pnpm seed --ai-program           # Update AI program generation_config.formats
   pnpm seed --exercises            # Seed exercises only
   pnpm seed --sport-programs       # Seed sport programs & owners only
 
 Available seeders:
   --agents          Seed agent definitions
+  --ai-program      Update AI program (default) formats
   --exercises       Seed exercises
   --sport-programs  Seed sport-specific program owners & programs
   --all             Run all seeders
