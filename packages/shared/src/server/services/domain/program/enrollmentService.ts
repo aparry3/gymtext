@@ -26,7 +26,6 @@ export interface EnrollmentServiceInstance {
       cohortId?: string;
       cohortStartDate?: Date;
       startDate?: Date;
-      programVersionId?: string;
     }
   ): Promise<ProgramEnrollment>;
 
@@ -36,14 +35,9 @@ export interface EnrollmentServiceInstance {
   getActiveEnrollment(clientId: string): Promise<ProgramEnrollment | null>;
 
   /**
-   * Get enrollment with its program version and current plan instance
+   * Get enrollment with its latest published program version and current plan instance
    */
   getEnrollmentWithProgramVersion(clientId: string): Promise<EnrollmentWithProgramVersion | null>;
-
-  /**
-   * Link a program version to an enrollment
-   */
-  linkProgramVersion(enrollmentId: string, programVersionId: string): Promise<ProgramEnrollment | null>;
 
   /**
    * Update the current week for an enrollment
@@ -66,11 +60,6 @@ export interface EnrollmentServiceInstance {
   getByProgramId(programId: string, status?: EnrollmentStatus): Promise<ProgramEnrollment[]>;
 
   /**
-   * Get all enrollments for a program version
-   */
-  getByProgramVersionId(programVersionId: string): Promise<ProgramEnrollment[]>;
-
-  /**
    * Cancel an enrollment
    */
   cancelEnrollment(enrollmentId: string): Promise<ProgramEnrollment | null>;
@@ -89,11 +78,6 @@ export interface EnrollmentServiceInstance {
    * Count active enrollments for a program
    */
   countActiveEnrollments(programId: string): Promise<number>;
-
-  /**
-   * Count active enrollments for a program version
-   */
-  countActiveEnrollmentsByVersion(programVersionId: string): Promise<number>;
 
   /**
    * List all enrollments for a program
@@ -134,7 +118,6 @@ export function createEnrollmentService(
       const enrollmentData: NewProgramEnrollment = {
         clientId,
         programId,
-        programVersionId: options.programVersionId ?? null,
         cohortId: options.cohortId ?? null,
         cohortStartDate: options.cohortStartDate ?? null,
         startDate: options.startDate ?? new Date(),
@@ -155,19 +138,12 @@ export function createEnrollmentService(
         return null;
       }
 
-      let programVersion: ProgramVersion | null = null;
-      if (enrollment.programVersionId) {
-        programVersion = await repos.programVersion.findById(enrollment.programVersionId);
-      }
+      const programVersion: ProgramVersion | null = await repos.programVersion.findLatestPublished(enrollment.programId);
 
       // Get the current plan instance for this user
       const currentPlanInstance = await repos.fitnessPlan.getLatest(clientId);
 
       return { enrollment, programVersion, currentPlanInstance };
-    },
-
-    async linkProgramVersion(enrollmentId: string, programVersionId: string): Promise<ProgramEnrollment | null> {
-      return repos.programEnrollment.updateProgramVersionId(enrollmentId, programVersionId);
     },
 
     async updateCurrentWeek(enrollmentId: string, week: number): Promise<ProgramEnrollment | null> {
@@ -186,10 +162,6 @@ export function createEnrollmentService(
       return repos.programEnrollment.findByProgramId(programId, status);
     },
 
-    async getByProgramVersionId(programVersionId: string): Promise<ProgramEnrollment[]> {
-      return repos.programEnrollment.findByProgramVersionId(programVersionId);
-    },
-
     async cancelEnrollment(enrollmentId: string): Promise<ProgramEnrollment | null> {
       return repos.programEnrollment.cancel(enrollmentId);
     },
@@ -204,10 +176,6 @@ export function createEnrollmentService(
 
     async countActiveEnrollments(programId: string): Promise<number> {
       return repos.programEnrollment.countActiveByProgramId(programId);
-    },
-
-    async countActiveEnrollmentsByVersion(programVersionId: string): Promise<number> {
-      return repos.programEnrollment.countActiveByProgramVersionId(programVersionId);
     },
 
     async listByProgram(programId: string): Promise<ProgramEnrollment[]> {

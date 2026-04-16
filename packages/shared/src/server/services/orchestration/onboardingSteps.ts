@@ -157,9 +157,7 @@ export function createOnboardingSteps(services: ServiceContainer): OnboardingSte
         }
 
         console.log(`[Onboarding] Step 3: Creating program enrollment for ${user.id} (program: ${program.id})`);
-        enrollment = await enrollmentService.enrollClient(user.id, program.id, {
-          programVersionId: program.publishedVersionId ?? undefined,
-        });
+        enrollment = await enrollmentService.enrollClient(user.id, program.id);
       }
 
       // Only check for existing plan if not forcing creation
@@ -174,7 +172,6 @@ export function createOnboardingSteps(services: ServiceContainer): OnboardingSte
       console.log(`[Onboarding] Step 3: Creating plan for ${user.id} (LLM)${forceCreate ? ' [forceCreate]' : ''}`);
       const plan = await trainingService.createFitnessPlan(user, {
         programId: enrollment.programId,
-        programVersionId: enrollment.programVersionId ?? undefined,
       });
 
       return { plan, wasCreated: true };

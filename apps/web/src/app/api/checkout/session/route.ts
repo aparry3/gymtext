@@ -12,7 +12,7 @@ const stripe = new Stripe(secretKey, {
  * GET /api/checkout/session
  *
  * Handles the redirect from Stripe checkout after successful payment.
- * This ensures a subscription record exists before redirecting to /me.
+ * This ensures a subscription record exists before redirecting to /welcome.
  *
  * Flow:
  * 1. Get session_id from query params
@@ -20,7 +20,7 @@ const stripe = new Stripe(secretKey, {
  * 3. Check if subscription exists in DB
  * 4. If not, create it (webhook backup)
  * 5. Try to send onboarding messages
- * 6. Redirect to /me
+ * 6. Redirect to /welcome
  */
 export async function GET(req: NextRequest) {
   console.log('[Checkout Session] Processing redirect from Stripe');
@@ -31,7 +31,7 @@ export async function GET(req: NextRequest) {
 
     if (!sessionId) {
       console.error('[Checkout Session] Missing session_id parameter');
-      return NextResponse.redirect(new URL('/me', req.nextUrl.origin));
+      return NextResponse.redirect(new URL('/welcome', req.nextUrl.origin));
     }
 
     // Retrieve the checkout session from Stripe
@@ -42,7 +42,7 @@ export async function GET(req: NextRequest) {
     const userId = session.metadata?.userId || session.client_reference_id;
     if (!userId) {
       console.error('[Checkout Session] No userId in session metadata');
-      return NextResponse.redirect(new URL('/me', req.nextUrl.origin));
+      return NextResponse.redirect(new URL('/welcome', req.nextUrl.origin));
     }
 
     console.log(`[Checkout Session] Processing for user: ${userId}`);
@@ -50,7 +50,7 @@ export async function GET(req: NextRequest) {
     // Check if subscription exists in Stripe session
     if (!session.subscription) {
       console.error('[Checkout Session] No subscription in session');
-      return NextResponse.redirect(new URL('/me', req.nextUrl.origin));
+      return NextResponse.redirect(new URL('/welcome', req.nextUrl.origin));
     }
 
     const services = getServices();
@@ -100,12 +100,12 @@ export async function GET(req: NextRequest) {
       console.error(`[Checkout Session] Failed to send messages for user ${userId}:`, error);
     }
 
-    // Redirect to /me
-    console.log('[Checkout Session] Redirecting to /me');
-    return NextResponse.redirect(new URL('/me', req.nextUrl.origin));
+    // Redirect to /welcome
+    console.log('[Checkout Session] Redirecting to /welcome');
+    return NextResponse.redirect(new URL('/welcome', req.nextUrl.origin));
   } catch (error) {
     console.error('[Checkout Session] Error processing session:', error);
-    // Still redirect to /me even on error - user can retry or contact support
-    return NextResponse.redirect(new URL('/me', req.nextUrl.origin));
+    // Still redirect to /welcome even on error - user can retry or contact support
+    return NextResponse.redirect(new URL('/welcome', req.nextUrl.origin));
   }
 }

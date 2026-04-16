@@ -33,7 +33,7 @@ export interface WorkoutData {
 }
 
 export interface TrainingServiceInstance {
-  createFitnessPlan(user: UserWithProfile, options?: { programId?: string; programVersionId?: string }): Promise<FitnessPlan>;
+  createFitnessPlan(user: UserWithProfile, options?: { programId?: string }): Promise<FitnessPlan>;
   /**
    * Generate a microcycle for a specific date.
    * Supports both new signature (userId, date, timezone) and old signature (userId, plan, date, timezone).
@@ -67,15 +67,15 @@ export function createTrainingService(deps: TrainingServiceDeps): TrainingServic
   } = deps;
 
   return {
-    async createFitnessPlan(user: UserWithProfile, options?: { programId?: string; programVersionId?: string }): Promise<FitnessPlan> {
+    async createFitnessPlan(user: UserWithProfile, options?: { programId?: string }): Promise<FitnessPlan> {
       console.log(`[TrainingService] Creating fitness plan for user ${user.id}`);
 
       // Fetch profile context
       const context = await markdownService.getContext(user.id, ['profile']);
 
-      // Append program context if enrolling via a program
-      if (options?.programVersionId) {
-        const programContext = await markdownService.getProgramContext(options.programVersionId);
+      // Append program context if enrolling via a program (resolves latest published version)
+      if (options?.programId) {
+        const programContext = await markdownService.getProgramContext(options.programId);
         if (programContext) context.push(programContext);
       }
 

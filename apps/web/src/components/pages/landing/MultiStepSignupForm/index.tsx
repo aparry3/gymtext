@@ -196,7 +196,7 @@ export function MultiStepSignupForm() {
 
       const { checkoutUrl, redirectUrl } = await response.json();
 
-      // Redirect to Stripe checkout or /me for subscribed users
+      // Redirect to Stripe checkout or /welcome for subscribed users
       window.location.href = checkoutUrl || redirectUrl;
     } catch (error) {
       console.error('Error preparing signup:', error);
@@ -345,4 +345,3 @@ function getFieldsForStep(step: number): (keyof FormData)[] {
       return [];
   }
 }
-

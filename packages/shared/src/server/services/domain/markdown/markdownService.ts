@@ -22,7 +22,7 @@ export interface MarkdownServiceInstance {
   getWeekForDate(userId: string, date: Date): Promise<Microcycle | null>;
   createWeek(userId: string, planId: string, content: string, startDate: Date, options?: { message?: string }): Promise<Microcycle>;
   getContext(userId: string, types: ContextType[], options?: ContextOptions): Promise<string[]>;
-  getProgramContext(programVersionId: string): Promise<string | null>;
+  getProgramContext(programId: string): Promise<string | null>;
 }
 
 export function createMarkdownService(repos: RepositoryContainer): MarkdownServiceInstance {
@@ -74,10 +74,10 @@ export function createMarkdownService(repos: RepositoryContainer): MarkdownServi
         needsProgramFormat ? repos.programEnrollment.findActiveByClientId(userId) : Promise.resolve(null),
       ]);
 
-      // Resolve the program version for format guidance if needed
+      // Resolve the latest published program version for format guidance if needed
       let programFormatBlock: string | null = null;
-      if (needsProgramFormat && enrollment?.programVersionId) {
-        const version = await repos.programVersion.findById(enrollment.programVersionId);
+      if (needsProgramFormat && enrollment?.programId) {
+        const version = await repos.programVersion.findLatestPublished(enrollment.programId);
         const formats = version?.generationConfig?.formats ?? [];
         const sections: string[] = [];
         formats.forEach((fmt, idx) => {
@@ -140,8 +140,8 @@ export function createMarkdownService(repos: RepositoryContainer): MarkdownServi
       return context;
     },
 
-    async getProgramContext(programVersionId: string): Promise<string | null> {
-      const version = await repos.programVersion.findById(programVersionId);
+    async getProgramContext(programId: string): Promise<string | null> {
+      const version = await repos.programVersion.findLatestPublished(programId);
       if (!version) return null;
 
       const sections: string[] = [];

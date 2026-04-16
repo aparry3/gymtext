@@ -90,8 +90,8 @@ export function SimpleProfileView({ userId, initialData }: SimpleProfileViewProp
         preferredMessagingProvider: formState.preferredMessagingProvider || null,
       };
 
-      const res = await fetch(`/api/users/${userId}`, {
-        method: 'PATCH',
+      const res = await fetch(`/api/users/${userId}/account`, {
+        method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
