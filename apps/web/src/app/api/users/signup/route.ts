@@ -26,7 +26,7 @@ function isLocalDev(): boolean {
  * Signup flow with support for existing users:
  * - New user: Create user, Stripe customer, onboarding, checkout
  * - Existing user (not subscribed): Update user, continue to Stripe checkout
- * - Existing user (subscribed): Update user, re-onboard, redirect to /me
+ * - Existing user (subscribed): Update user, re-onboard, redirect to /welcome
  *
  * Response:
  * - success: boolean
@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
       const hasActiveSub = await services.subscription.hasActiveSubscription(existingUser.id);
 
       if (hasActiveSub) {
-        // SCENARIO 2: Subscribed user - re-onboard and redirect to /me
+        // SCENARIO 2: Subscribed user - re-onboard and redirect to /welcome
         console.log(`[Signup] Existing subscribed user: ${existingUser.id}`);
         return await handleSubscribedUserReOnboard(services, existingUser, formData);
       } else {
@@ -180,7 +180,7 @@ async function handleUnsubscribedUserSignup(
 
 /**
  * Handle re-onboarding for an existing subscribed user
- * Creates fresh plan/profile/workout, skips Stripe, redirects to /me
+ * Creates fresh plan/profile/workout, skips Stripe, redirects to /welcome
  */
 async function handleSubscribedUserReOnboard(
   services: ServiceContainer,
@@ -224,7 +224,7 @@ async function handleSubscribedUserReOnboard(
 
   const response = NextResponse.json({
     success: true,
-    redirectUrl: '/me',
+    redirectUrl: '/welcome',
   });
 
   response.cookies.set('gt_user_session', sessionToken, {
@@ -235,7 +235,7 @@ async function handleSubscribedUserReOnboard(
     path: '/',
   });
 
-  console.log('[Signup] Subscribed user re-onboarding started, redirecting to /me');
+  console.log('[Signup] Subscribed user re-onboarding started, redirecting to /welcome');
   return response;
 }
 
@@ -297,7 +297,7 @@ async function handleDevModeSignup(
 
   const response = NextResponse.json({
     success: true,
-    redirectUrl: '/me',
+    redirectUrl: '/welcome',
   });
 
   response.cookies.set('gt_user_session', sessionToken, {
@@ -308,7 +308,7 @@ async function handleDevModeSignup(
     path: '/',
   });
 
-  console.log('[Signup] Dev mode signup complete, redirecting to /me');
+  console.log('[Signup] Dev mode signup complete, redirecting to /welcome');
   return response;
 }
 
@@ -403,7 +403,7 @@ async function handleAdminTestSignup(
 
   const response = NextResponse.json({
     success: true,
-    redirectUrl: '/me',
+    redirectUrl: '/welcome',
   });
 
   response.cookies.set('gt_user_session', sessionToken, {
@@ -414,7 +414,7 @@ async function handleAdminTestSignup(
     path: '/',
   });
 
-  console.log(`[Signup] Admin test signup complete for "${program.name}", redirecting to /me`);
+  console.log(`[Signup] Admin test signup complete for "${program.name}", redirecting to /welcome`);
   return response;
 }
 

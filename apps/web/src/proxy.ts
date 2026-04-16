@@ -4,7 +4,7 @@ import { NextRequest, NextResponse, NextFetchEvent } from 'next/server';
  * Paths that should be tracked for analytics.
  * Dynamic segments will be normalized to placeholders.
  */
-const TRACKED_PATH_PREFIXES = ['/', '/me', '/l'];
+const TRACKED_PATH_PREFIXES = ['/', '/me', '/welcome', '/l'];
 
 /**
  * Check if a path should be tracked.
@@ -75,11 +75,12 @@ export function proxy(request: NextRequest, event: NextFetchEvent) {
     event.waitUntil(trackPageVisit(request));
   }
 
-  // User /me path protection
+  // User /me and welcome path protection
   const isClientPath = pathname.startsWith('/me');
   const isClientLoginPath = pathname === '/me/login' || pathname === '/me/login/';
+  const isWelcomePath = pathname === '/welcome' || pathname.startsWith('/welcome/');
 
-  if (isClientPath) {
+  if (isClientPath || isWelcomePath) {
     // Allow access to the login page without cookie
     if (isClientLoginPath) {
       return NextResponse.next();
@@ -107,6 +108,8 @@ export const config = {
     // User routes (auth + tracking)
     '/me',
     '/me/:path*',
+    '/welcome',
+    '/welcome/:path*',
     // Short links (tracking)
     '/l/:path*',
   ],
