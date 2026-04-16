@@ -18,6 +18,7 @@ import type { Microcycle } from '@/server/models/microcycle';
 import type { UserServiceInstance } from '../domain/user/userService';
 import type { MarkdownServiceInstance } from '../domain/markdown/markdownService';
 import type { WorkoutInstanceServiceInstance } from '../domain/training/workoutInstanceService';
+import type { ShortLinkServiceInstance } from '../domain/links/shortLinkService';
 import type { ProgramEnrollmentRepository } from '@/server/repositories/programEnrollmentRepository';
 import type { ProgramRepository } from '@/server/repositories/programRepository';
 import type { ProgramOwnerRepository } from '@/server/repositories/programOwnerRepository';
@@ -53,6 +54,7 @@ export interface TrainingServiceDeps {
   markdown: MarkdownServiceInstance;
   agentRunner: SimpleAgentRunnerInstance;
   workoutInstance: WorkoutInstanceServiceInstance;
+  shortLink: ShortLinkServiceInstance;
   enrollmentRepository: ProgramEnrollmentRepository;
   programRepository: ProgramRepository;
   programOwnerRepository: ProgramOwnerRepository;
@@ -68,6 +70,7 @@ export function createTrainingService(deps: TrainingServiceDeps): TrainingServic
     markdown: markdownService,
     agentRunner: simpleAgentRunner,
     workoutInstance: workoutInstanceService,
+    shortLink: shortLinkService,
     enrollmentRepository,
     programRepository,
     programOwnerRepository,
@@ -86,7 +89,16 @@ export function createTrainingService(deps: TrainingServiceDeps): TrainingServic
         { schedulingEnabled: program.schedulingEnabled, schedulingUrl: program.schedulingUrl },
       );
       if (!link) return '';
-      return `\n\n(Set up time with ${programOwner.displayName} here: ${link})`;
+
+      let shortUrl = link;
+      try {
+        const created = await shortLinkService.createCoachLink(user.id, link);
+        shortUrl = shortLinkService.getFullUrl(created.code);
+      } catch (err) {
+        console.error('[TrainingService] Failed to create coach short link, falling back to full URL:', err);
+      }
+
+      return `\n\n(Set up time with ${programOwner.displayName} here: ${shortUrl})`;
     } catch (error) {
       console.error('[TrainingService] Failed to build scheduling link:', error);
       return '';
