@@ -2,7 +2,6 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
-import { Button } from '@/components/ui/button'
 import { getServices } from '@/lib/context'
 import { decryptUserId } from '@/server/utils/sessionCrypto'
 
@@ -94,9 +93,12 @@ export default async function WelcomePage() {
           </p>
 
           <div className="mt-9 flex flex-col items-center justify-center gap-4 sm:mt-10 sm:flex-row sm:gap-5">
-            <Button asChild size="lg" className="min-w-56 rounded-full px-8 shadow-[0_14px_30px_rgba(59,99,241,0.22)]">
-              <Link href="/me">Open my dashboard</Link>
-            </Button>
+            <Link
+              href="/me"
+              className="inline-flex h-11 min-w-56 items-center justify-center whitespace-nowrap rounded-full bg-blue-600 px-8 text-base font-medium text-white shadow-lg shadow-blue-600/25 transition-all duration-200 hover:scale-[1.02] hover:bg-blue-700 hover:shadow-xl hover:shadow-blue-600/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 shadow-[0_14px_30px_rgba(59,99,241,0.22)]"
+            >
+              Open my dashboard
+            </Link>
             <Link
               href="/me"
               className="text-sm font-medium text-[#6e6255] underline-offset-4 transition hover:text-[#16120d] hover:underline"
