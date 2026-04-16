@@ -7,7 +7,7 @@
  */
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import type { QuestionnaireQuestion } from '@/lib/questionnaire/types';
 import { useQuestionnaire, clearQuestionnaireState } from '@/lib/questionnaire/useQuestionnaire';
 import {
@@ -40,6 +40,7 @@ interface QuestionnaireProps {
 }
 
 export function Questionnaire({ programId, programName, ownerWordmarkUrl, ownerDisplayName, questions }: QuestionnaireProps) {
+  const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   // Track consent separately from questionnaire answers
@@ -358,10 +359,16 @@ export function Questionnaire({ programId, programName, ownerWordmarkUrl, ownerD
     <div className={`questionnaire-theme flex flex-col bg-[hsl(var(--questionnaire-bg))] ${ownerWordmarkUrl ? 'h-screen-safe' : 'min-h-screen-safe'}`}>
       {/* Close button - top left */}
       <div className="pt-safe mt-2 px-4">
-        <Link
-          href="/"
+        <button
+          onClick={() => {
+            if (window.history.length > 1) {
+              router.back();
+            } else {
+              router.push("/");
+            }
+          }}
           className="inline-flex rounded-full p-2 transition-opacity hover:opacity-70"
-          aria-label="Close and return to home"
+          aria-label="Close"
         >
           <svg
             className="h-5 w-5 text-[hsl(var(--questionnaire-muted-foreground))]"
@@ -372,7 +379,7 @@ export function Questionnaire({ programId, programName, ownerWordmarkUrl, ownerD
           >
             <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
           </svg>
-        </Link>
+        </button>
       </div>
 
       {/* Branding header */}
