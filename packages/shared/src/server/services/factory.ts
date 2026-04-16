@@ -258,6 +258,9 @@ export function createServices(repos: RepositoryContainer, clients?: ExternalCli
     agentRunner,
     workoutInstance,
     shortLink,
+    enrollmentRepository: repos.programEnrollment,
+    programRepository: repos.program,
+    programOwnerRepository: repos.programOwner,
   });
 
   const regeneration = createRegenerationService({

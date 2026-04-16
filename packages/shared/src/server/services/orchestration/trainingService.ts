@@ -10,6 +10,7 @@
 import { DateTime } from 'luxon';
 import { getDayOfWeekName, now, parseDate, toISODate } from '@/shared/utils/date';
 import { normalizeWhitespace, stripCodeFences } from '@/server/utils/formatters';
+import { buildCoachLink } from '@/server/utils/coachLink';
 import type { UserWithProfile } from '@/server/models/user';
 import type { FitnessPlan } from '@/server/models/fitnessPlan';
 import type { Microcycle } from '@/server/models/microcycle';
@@ -18,6 +19,9 @@ import type { UserServiceInstance } from '../domain/user/userService';
 import type { MarkdownServiceInstance } from '../domain/markdown/markdownService';
 import type { WorkoutInstanceServiceInstance } from '../domain/training/workoutInstanceService';
 import type { ShortLinkServiceInstance } from '../domain/links/shortLinkService';
+import type { ProgramEnrollmentRepository } from '@/server/repositories/programEnrollmentRepository';
+import type { ProgramRepository } from '@/server/repositories/programRepository';
+import type { ProgramOwnerRepository } from '@/server/repositories/programOwnerRepository';
 
 // Agent services
 import type { SimpleAgentRunnerInstance } from '@/server/agents/runner';
@@ -51,6 +55,9 @@ export interface TrainingServiceDeps {
   agentRunner: SimpleAgentRunnerInstance;
   workoutInstance: WorkoutInstanceServiceInstance;
   shortLink: ShortLinkServiceInstance;
+  enrollmentRepository: ProgramEnrollmentRepository;
+  programRepository: ProgramRepository;
+  programOwnerRepository: ProgramOwnerRepository;
 }
 
 // =============================================================================
@@ -64,7 +71,39 @@ export function createTrainingService(deps: TrainingServiceDeps): TrainingServic
     agentRunner: simpleAgentRunner,
     workoutInstance: workoutInstanceService,
     shortLink: shortLinkService,
+    enrollmentRepository,
+    programRepository,
+    programOwnerRepository,
   } = deps;
+
+  async function buildSchedulingSuffix(user: UserWithProfile): Promise<string> {
+    try {
+      const enrollment = await enrollmentRepository.findActiveByClientId(user.id);
+      if (!enrollment) return '';
+      const program = await programRepository.findById(enrollment.programId);
+      if (!program || !program.schedulingEnabled || !program.schedulingUrl) return '';
+      const programOwner = await programOwnerRepository.findById(program.ownerId);
+      if (!programOwner?.displayName) return '';
+      const link = buildCoachLink(
+        { id: user.id, name: user.name, email: user.email ?? null },
+        { schedulingEnabled: program.schedulingEnabled, schedulingUrl: program.schedulingUrl },
+      );
+      if (!link) return '';
+
+      let shortUrl = link;
+      try {
+        const created = await shortLinkService.createCoachLink(user.id, link);
+        shortUrl = shortLinkService.getFullUrl(created.code);
+      } catch (err) {
+        console.error('[TrainingService] Failed to create coach short link, falling back to full URL:', err);
+      }
+
+      return `\n\n(Set up time with ${programOwner.displayName} here: ${shortUrl})`;
+    } catch (error) {
+      console.error('[TrainingService] Failed to build scheduling link:', error);
+      return '';
+    }
+  }
 
   return {
     async createFitnessPlan(user: UserWithProfile, options?: { programId?: string }): Promise<FitnessPlan> {
@@ -211,34 +250,14 @@ export function createTrainingService(deps: TrainingServiceDeps): TrainingServic
 
         const rawMessage = stripCodeFences(normalizeWhitespace(formatResult.response));
 
-        // Save workout instance first to get a real ID for the short link
+        const schedulingSuffix = await buildSchedulingSuffix(user);
+        const workoutMessage = `${dayName}\n\n${rawMessage}${schedulingSuffix}`;
+
         const workoutInstance = await workoutInstanceService.upsert({
           clientId: user.id,
           date: dateStr,
-          message: rawMessage,
+          message: workoutMessage,
         });
-
-        // Create short link using the actual workout instance ID
-        let shortLinkSuffix = '';
-        try {
-          const shortLink = await shortLinkService.createWorkoutLink(user.id);
-          const fullUrl = shortLinkService.getFullUrl(shortLink.code);
-          shortLinkSuffix = `\n\n(More details: ${fullUrl})`;
-        } catch (error) {
-          console.error(`[TrainingService] Failed to create short link:`, error);
-        }
-
-        // Compose final message: day name + content + short link
-        const workoutMessage = `${dayName}\n\n${rawMessage}${shortLinkSuffix}`;
-
-        // Update with final message including the short link
-        if (shortLinkSuffix) {
-          await workoutInstanceService.upsert({
-            clientId: user.id,
-            date: dateStr,
-            message: workoutMessage,
-          });
-        }
 
         console.log(`[TrainingService] Generated workout for user ${user.id} on ${dateStr}`);
 
@@ -287,33 +306,14 @@ export function createTrainingService(deps: TrainingServiceDeps): TrainingServic
 
       const rawMessage = stripCodeFences(normalizeWhitespace(result.response));
 
-      // Save workout instance first to get a real ID for the short link
-      const workoutInstance = await workoutInstanceService.upsert({
+      const schedulingSuffix = await buildSchedulingSuffix(user);
+      const regeneratedMessage = `${dayName}\n\n${rawMessage}${schedulingSuffix}`;
+
+      await workoutInstanceService.upsert({
         clientId: user.id,
         date: workoutISODate,
-        message: rawMessage,
+        message: regeneratedMessage,
       });
-
-      // Generate short link using the actual workout instance ID
-      let shortLinkSuffix = '';
-      try {
-        const shortLink = await shortLinkService.createWorkoutLink(user.id);
-        const fullUrl = shortLinkService.getFullUrl(shortLink.code);
-        shortLinkSuffix = `\n\n(More details: ${fullUrl})`;
-      } catch (error) {
-        console.error(`[TrainingService] Failed to create short link for regenerated workout:`, error);
-      }
-
-      const regeneratedMessage = `${dayName}\n\n${rawMessage}${shortLinkSuffix}`;
-
-      // Update with final message including the short link
-      if (shortLinkSuffix) {
-        await workoutInstanceService.upsert({
-          clientId: user.id,
-          date: workoutISODate,
-          message: regeneratedMessage,
-        });
-      }
 
       return regeneratedMessage;
     },
