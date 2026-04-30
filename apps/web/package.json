@@ -26,8 +26,8 @@
     "clsx": "^2.1.0",
     "date-fns": "^3.3.1",
     "lucide-react": "^0.331.0",
-    "next": "16.0.7",
-    "posthog-js": "^1.358.0",
+    "next": "^16.2.4",
+    "posthog-js": "^1.372.5",
     "react": "^19.0.0",
     "react-day-picker": "^9.13.0",
     "react-dom": "^19.0.0",
@@ -43,9 +43,9 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "autoprefixer": "^10.4.17",
-    "eslint": "^9",
+    "eslint": "^9.39.4",
     "eslint-config-next": "15.2.4",
-    "postcss": "^8.4.35",
+    "postcss": "^8.5.12",
     "tailwindcss": "^4",
     "typescript": "^5"
   }
