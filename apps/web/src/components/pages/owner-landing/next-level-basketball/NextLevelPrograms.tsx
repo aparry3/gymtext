@@ -146,7 +146,7 @@ export function NextLevelPricing() {
           Zoom film sessions with Coach Rhynia for players who want the next level of attention.
         </p>
 
-        <div className="mt-8 rounded-xl border border-nlb-orange/40 bg-nlb-orange/10 px-5 py-3 flex items-start gap-3">
+        <div className="mt-8 rounded-xl border border-nlb-orange/40 bg-nlb-orange/10 px-5 py-3 flex items-center gap-3">
           <span className="shrink-0 w-6 h-6 rounded-full bg-nlb-orange text-white text-xs font-bold flex items-center justify-center">
             !
           </span>
@@ -169,6 +169,7 @@ export function NextLevelPricing() {
             cta="START BASIC"
             href={SIGNUP_BASIC_URL}
             footnote="SPOTS ARE LIMITED · FIRST COME, FIRST SERVED"
+            placeholderBonus
           />
           <PricingCard
             tier="PREMIUM"
@@ -176,14 +177,13 @@ export function NextLevelPricing() {
             price="$60"
             period="/ MONTH"
             features={[
-              { title: 'Everything in Basic', body: 'Full 2-day camp + daily SMS workouts' },
+              { title: '2-Day Camp Access', body: 'Both sessions with Coach Rhynia, May 29 & 30' },
+              { title: 'Daily SMS Workouts', body: 'A coach-written workout texted to you every day' },
+              { title: 'Cancel anytime', body: "Stay as long as it's helping you grow" },
               {
                 title: 'Monthly 1:1 Zoom with Coach Rhynia',
-                body: 'Film review, IQ work, and a custom focus for the month',
-              },
-              {
-                title: 'Personalized programming',
-                body: "Daily texts adjust to what you're working on",
+                body: 'Film review, IQ work, and a custom focus just for you — only on Premium',
+                bonus: true,
               },
             ]}
             cta="START PREMIUM"
@@ -207,20 +207,22 @@ function PricingCard({
   href,
   footnote,
   highlight = false,
+  placeholderBonus = false,
 }: {
   tier: string;
   tagline: string;
   price: string;
   period: string;
-  features: { title: string; body: string }[];
+  features: { title: string; body: string; bonus?: boolean }[];
   cta: string;
   href: string;
   footnote: string;
   highlight?: boolean;
+  placeholderBonus?: boolean;
 }) {
   return (
     <div
-      className={`relative rounded-2xl p-7 md:p-8 border ${
+      className={`relative h-full flex flex-col rounded-2xl p-7 md:p-8 border ${
         highlight
           ? 'bg-nlb-orange/10 border-nlb-orange/40'
           : 'bg-white/[0.03] border-white/10'
@@ -244,27 +246,45 @@ function PricingCard({
         <span className="text-[11px] tracking-[0.2em] text-white/50 font-semibold">{period}</span>
       </div>
 
-      <ul className="space-y-4 mb-7">
+      <ul className="space-y-2 mb-6">
         {features.map((f) => (
-          <li key={f.title} className="flex items-start gap-3">
+          <li
+            key={f.title}
+            className={`flex items-start gap-3 min-h-[44px] ${
+              f.bonus ? '-mx-2 px-3 py-3 rounded-xl bg-nlb-orange/20 border border-nlb-orange/40' : ''
+            }`}
+          >
             <span
               className={`shrink-0 w-5 h-5 mt-0.5 rounded-full flex items-center justify-center text-xs font-bold ${
-                highlight ? 'bg-nlb-orange text-white' : 'bg-white/10 text-nlb-orange'
+                f.bonus || highlight ? 'bg-nlb-orange text-white' : 'bg-white/10 text-nlb-orange'
               }`}
             >
-              ✓
+              {f.bonus ? '+' : '✓'}
             </span>
-            <div>
-              <div className="text-sm font-bold text-white">{f.title}</div>
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-sm font-bold text-white">{f.title}</span>
+                {f.bonus && (
+                  <span className="text-[9px] tracking-[0.18em] font-bold text-nlb-orange bg-nlb-orange/10 border border-nlb-orange/40 px-1.5 py-0.5 rounded">
+                    PREMIUM BONUS
+                  </span>
+                )}
+              </div>
               <div className="text-xs text-white/55 mt-0.5">{f.body}</div>
             </div>
           </li>
         ))}
+        {placeholderBonus && (
+          <li
+            aria-hidden
+            className="-mx-2 px-3 py-3 rounded-xl border border-transparent min-h-[44px]"
+          />
+        )}
       </ul>
 
       <a
         href={href}
-        className={`block text-center text-xs tracking-[0.22em] font-bold py-4 rounded-full transition-all ${
+        className={`mt-auto block text-center text-xs tracking-[0.22em] font-bold py-4 rounded-full transition-all ${
           highlight
             ? 'bg-nlb-orange text-white hover:brightness-110'
             : 'bg-white text-nlb-dark hover:bg-white/90'
