@@ -3,7 +3,6 @@ import type { Metadata } from 'next';
 import { ClatcheyLandingPage } from '@/components/pages/owner-landing/ClatcheyLandingPage';
 import { MikeyLandingPage } from '@/components/pages/owner-landing/MikeyLandingPage';
 import { NextLevelLandingPage } from '@/components/pages/owner-landing/next-level-basketball';
-import { getRepositories } from '@/lib/context';
 import './clatchey.css';
 import './mikey.css';
 import './next-level.css';
@@ -103,21 +102,7 @@ export default async function OwnerLandingPage({ params }: OwnerLandingPageProps
   }
 
   if (slug === 'nextlevelbasketball') {
-    let startUrl = '/start';
-    try {
-      const repos = getRepositories();
-      const programOwner = await repos.programOwner.findBySlug('nextlevelbasketball');
-      if (programOwner) {
-        const programs = await repos.program.findByOwnerId(programOwner.id);
-        const activeProgram = programs.find((p) => p.isActive) ?? programs[0];
-        if (activeProgram) {
-          startUrl = `/start?program=${activeProgram.id}`;
-        }
-      }
-    } catch {
-      // Fall back to /start if DB lookup fails
-    }
-    return <NextLevelLandingPage startUrl={startUrl} />;
+    return <NextLevelLandingPage />;
   }
 
   notFound();
