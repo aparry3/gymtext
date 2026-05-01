@@ -1,58 +1,125 @@
-import Link from 'next/link';
-import Image from 'next/image';
-import { ArrowRight } from 'lucide-react';
+export function NextLevelHero() {
+  return (
+    <section className="relative bg-nlb-dark text-white overflow-hidden pt-28 md:pt-32 pb-16 md:pb-24">
+      <div
+        aria-hidden
+        className="absolute inset-0 pointer-events-none opacity-60"
+        style={{
+          background:
+            'radial-gradient(ellipse 60% 50% at 50% 0%, rgba(234,88,12,0.25), transparent 70%)',
+        }}
+      />
+      <div className="relative max-w-7xl mx-auto px-4 md:px-8">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] md:text-[11px] tracking-[0.22em] text-white/70 font-semibold mb-8">
+          <span>2-DAY ELITE CAMP</span>
+          <span className="text-nlb-orange">•</span>
+          <span>MEMPHIS, TN</span>
+          <span className="text-nlb-orange">•</span>
+          <span>AGES 10 &amp; UP</span>
+        </div>
 
-interface NextLevelHeroProps {
-  startUrl?: string;
+        <div className="grid lg:grid-cols-[1.4fr_1fr] gap-10 lg:gap-14 items-start">
+          <div>
+            <h1 className="font-display-condensed text-[3.75rem] sm:text-[5rem] md:text-[6.5rem] lg:text-[7rem] leading-[0.92] tracking-tight uppercase">
+              <span className="block">Take your</span>
+              <span className="block">game to the</span>
+              <span className="block text-nlb-orange">Next level.</span>
+            </h1>
+            <p className="mt-7 max-w-xl text-base md:text-lg text-white/70 leading-relaxed">
+              Two days in the gym with Coach Rhynia Henry, plus daily SMS workouts that keep
+              showing up after he goes home. Memphis, May 29–30.
+            </p>
+            <div className="mt-8 flex flex-wrap items-center gap-3">
+              <a
+                href="#pricing"
+                className="bg-nlb-orange text-white text-xs md:text-sm tracking-[0.18em] font-bold px-7 py-4 rounded-full hover:brightness-110 transition-all"
+              >
+                RESERVE YOUR SPOT
+              </a>
+              <a
+                href="#schedule"
+                className="border border-white/25 text-white/90 text-xs md:text-sm tracking-[0.18em] font-bold px-7 py-4 rounded-full hover:bg-white hover:text-nlb-dark transition-all"
+              >
+                SEE THE SCHEDULE
+              </a>
+            </div>
+          </div>
+
+          <ItineraryCard />
+        </div>
+      </div>
+    </section>
+  );
 }
 
-export function NextLevelHero({ startUrl = '/start' }: NextLevelHeroProps) {
+function ItineraryCard() {
   return (
-    <div className="relative min-h-[100vh] md:min-h-[90vh] flex items-center justify-center bg-black overflow-hidden pb-24 md:pb-28">
-      {/* Background Image with Overlay */}
-      <div className="absolute inset-0 z-0">
-        <Image
-          src="https://images.unsplash.com/photo-1574623452334-1e0ac2b3ccb4?w=1920&q=80"
-          alt="Basketball Training"
-          fill
-          className="object-cover opacity-40"
-          unoptimized
-          priority
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#ea580c]/80 via-black/70 to-black/80"></div>
+    <div className="w-full max-w-md ml-auto rounded-2xl bg-white/[0.04] border border-white/10 p-6 backdrop-blur-sm">
+      <div className="flex items-center justify-between mb-5">
+        <span className="text-[10px] tracking-[0.22em] text-white/50 font-semibold">
+          CAMP ITINERARY
+        </span>
+        <span className="text-[10px] tracking-[0.18em] font-bold text-white bg-nlb-orange px-2.5 py-1 rounded-full">
+          2026
+        </span>
       </div>
+      <DayRow
+        day="29"
+        weekday="Fri"
+        month="May"
+        sessionLabel="DAY 1 / 6 – 8 PM"
+        title="Skills + Scrimmage"
+        subtitle="Footwork, finishing, live reps"
+      />
+      <div className="border-t border-white/10 my-4" />
+      <DayRow
+        day="30"
+        weekday="Sat"
+        month="May"
+        sessionLabel="DAY 2 / 11 AM – 1 PM"
+        title="Game Concepts"
+        subtitle="IQ, reads, and team play"
+      />
+      <div className="mt-5 pt-4 border-t border-white/10 flex items-center justify-between text-[11px] text-white/50">
+        <span>St. Francis Middle School</span>
+        <span>Memphis, TN</span>
+      </div>
+    </div>
+  );
+}
 
-      <div className="relative z-10 container mx-auto px-4 text-center pt-16 lg:pt-0">
-        <div className="hidden lg:inline-block mb-4 px-4 py-1 border border-white/20 rounded-full bg-white/10 backdrop-blur-md">
-          <span className="text-white/90 text-sm font-semibold tracking-wider uppercase">
-            GymText Presents
-          </span>
+function DayRow({
+  day,
+  weekday,
+  month,
+  sessionLabel,
+  title,
+  subtitle,
+}: {
+  day: string;
+  weekday: string;
+  month: string;
+  sessionLabel: string;
+  title: string;
+  subtitle: string;
+}) {
+  return (
+    <div className="flex items-center gap-4">
+      <div className="flex flex-col items-center w-12 shrink-0">
+        <span className="text-[9px] tracking-[0.2em] text-white/40 font-semibold uppercase">
+          {weekday}
+        </span>
+        <span className="font-display-condensed text-4xl leading-none text-white">{day}</span>
+        <span className="text-[9px] tracking-[0.2em] text-white/40 font-semibold uppercase mt-0.5">
+          {month}
+        </span>
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="text-[9px] tracking-[0.22em] text-nlb-orange font-bold uppercase mb-1">
+          {sessionLabel}
         </div>
-
-        <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-8xl font-display font-bold text-white mb-4 md:mb-6 tracking-tight leading-tight">
-          TAKE YOUR GAME <br />
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#ea580c] to-yellow-300">
-            TO THE NEXT LEVEL
-          </span>
-        </h1>
-
-        <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-gray-300 max-w-3xl mx-auto mb-8 md:mb-10 font-light px-2">
-          Coach Rhynia Henry has been developing elite basketball skills since 2011.
-          <br className="hidden md:block" /> Now his championship-caliber training is in your pocket.
-        </p>
-
-        <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-          <Link
-            href={startUrl}
-            className="group bg-nlb-orange text-white px-8 py-4 rounded-full font-bold text-lg hover:bg-orange-500 transition-all transform hover:scale-105 shadow-[0_0_20px_rgba(234,88,12,0.4)] flex items-center gap-2"
-          >
-            Get The Workouts
-            <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-          </Link>
-          <span className="text-gray-400 text-sm mt-2 sm:mt-0">
-            Texted directly to your phone via GymText
-          </span>
-        </div>
+        <div className="text-base font-bold text-white leading-tight">{title}</div>
+        <div className="text-xs text-white/50 mt-0.5">{subtitle}</div>
       </div>
     </div>
   );

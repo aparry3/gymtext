@@ -1,100 +1,81 @@
-import Link from 'next/link';
 import Image from 'next/image';
-import { ExternalLink } from 'lucide-react';
 
-interface SocialLink {
-  title: string;
-  platform: string;
-  url: string;
-}
-
-const SOCIAL_LINKS: SocialLink[] = [
-  {
-    title: 'Next Level Basketball',
-    platform: 'Facebook',
-    url: 'https://www.facebook.com/rhyniahenrynextlevel/',
-  },
-  {
-    title: '@rhyniahenry',
-    platform: 'Instagram',
-    url: 'https://www.instagram.com/rhyniahenry/',
-  },
-  {
-    title: 'Next Level Basketball, MJCC',
-    platform: 'YouTube',
-    url: 'https://www.youtube.com/@rhyniahenry',
-  },
-  {
-    title: 'Rhynia Henry',
-    platform: 'LinkedIn',
-    url: 'https://www.linkedin.com/in/rhynia-henry-376a1523/',
-  },
-];
+const SIGNUP_BASIC_URL = 'https://coaching.gymtext.co/signup/basketball-fundamentals';
+const SIGNUP_PREMIUM_URL = 'https://coaching.gymtext.co/signup/basketball-fundamentals-plus';
 
 export function NextLevelFooter() {
   return (
-    <footer className="bg-black text-white py-12 md:py-16 border-t border-gray-800 pb-24 md:pb-16">
-      <div className="container mx-auto px-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-12">
-          <div>
-            <h4 className="text-xl md:text-2xl font-display font-bold mb-4 md:mb-6 flex items-center gap-2">
-              <Image
-                src="/WordmarkWhite.png"
-                alt="GymText"
-                width={80}
-                height={20}
-                className="h-5 md:h-6 w-auto"
-              />
-              <span className="text-nlb-orange">x</span> NEXT LEVEL
-            </h4>
-            <p className="text-gray-400 text-sm leading-relaxed max-w-sm">
-              Developing basketball fundamentals and athletic performance with certified training from
-              Coach Rhynia Henry. Memphis-based, results-driven.
-            </p>
-          </div>
-
-          <div>
-            <h5 className="font-bold text-lg mb-4 text-white">Connect</h5>
-            <ul className="space-y-3">
-              {SOCIAL_LINKS.map((link, idx) => (
-                <li key={idx}>
-                  <a
-                    href={link.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="group flex items-start gap-2 text-gray-400 hover:text-nlb-orange transition-colors text-sm"
-                  >
-                    <ExternalLink className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                    <span>
-                      <span className="block text-white group-hover:text-white font-medium">
-                        {link.title}
-                      </span>
-                      <span className="text-xs">{link.platform}</span>
-                    </span>
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div>
-            <h5 className="font-bold text-lg mb-4 text-white">Train With Coach Henry</h5>
-            <p className="text-gray-400 text-sm mb-4">
-              The grind doesn&apos;t wait for the season. Start building your skills today.
-            </p>
-            <Link
-              href="/privacy"
-              className="text-white border border-white/20 bg-white/5 hover:bg-white/10 px-4 py-2 rounded text-sm transition-colors inline-block"
-            >
-              View Privacy Policy
-            </Link>
-          </div>
+    <footer className="bg-nlb-dark text-white border-t border-white/5">
+      <div className="max-w-7xl mx-auto px-4 md:px-8 py-14 grid md:grid-cols-4 gap-10">
+        <div className="md:col-span-1">
+          <Image
+            src="/WordmarkWhite.png"
+            alt="GymText"
+            width={120}
+            height={28}
+            className="h-6 w-auto mb-4"
+          />
+          <p className="text-xs text-white/50 leading-relaxed">
+            Two-day elite camps + daily SMS coaching from Coach Rhynia Henry. Built for players
+            who want more.
+          </p>
         </div>
 
-        <div className="mt-10 md:mt-16 pt-6 md:pt-8 border-t border-gray-900 text-center text-gray-600 text-xs">
-          &copy; {new Date().getFullYear()} GymText. All Rights Reserved.
+        <FooterColumn title="CAMP">
+          <FooterLink href="#schedule">Schedule</FooterLink>
+          <FooterLink href="#coach">Coach</FooterLink>
+          <FooterLink href="#pricing">Pricing</FooterLink>
+          <FooterLink href="#faq">FAQ</FooterLink>
+        </FooterColumn>
+
+        <FooterColumn title="PROGRAMS">
+          <FooterLink href={SIGNUP_BASIC_URL}>Basic — $25/mo</FooterLink>
+          <FooterLink href={SIGNUP_PREMIUM_URL}>Premium — $60/mo</FooterLink>
+          <FooterLink href="#pricing">Camp Registration</FooterLink>
+        </FooterColumn>
+
+        <FooterColumn title="CONTACT">
+          <FooterLink href="mailto:hello@gymtext.co">hello@gymtext.co</FooterLink>
+          <span className="text-sm text-white/65">Memphis, TN</span>
+          <FooterLink href="https://coaching.gymtext.co">coaching.gymtext.co</FooterLink>
+        </FooterColumn>
+      </div>
+
+      <div className="border-t border-white/5">
+        <div className="max-w-7xl mx-auto px-4 md:px-8 py-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-3 text-[10px] tracking-[0.22em] text-white/40 font-semibold">
+          <span>© 2026 NEXT LEVEL BASKETBALL</span>
+          <div className="flex items-center gap-2">
+            <span>POWERED BY</span>
+            <Image
+              src="/WordmarkWhite.png"
+              alt="GymText"
+              width={70}
+              height={16}
+              className="h-3.5 w-auto opacity-60"
+            />
+          </div>
         </div>
       </div>
     </footer>
+  );
+}
+
+function FooterColumn({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <div className="text-[10px] tracking-[0.28em] text-white/40 font-bold mb-4">{title}</div>
+      <div className="flex flex-col gap-2.5">{children}</div>
+    </div>
+  );
+}
+
+function FooterLink({ href, children }: { href: string; children: React.ReactNode }) {
+  return (
+    <a
+      href={href}
+      className="text-sm text-white/65 hover:text-nlb-orange transition-colors"
+    >
+      {children}
+    </a>
   );
 }

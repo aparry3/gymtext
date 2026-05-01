@@ -1,50 +1,57 @@
-'use client';
-
 import Image from 'next/image';
 import Link from 'next/link';
 import { NextLevelHero } from './NextLevelHero';
 import { NextLevelStatsBar } from './NextLevelStatsBar';
+import { NextLevelCampDays, NextLevelPricing } from './NextLevelPrograms';
 import { NextLevelBioSection } from './NextLevelBioSection';
-import { NextLevelTestimonials } from './NextLevelTestimonials';
-import { NextLevelPrograms } from './NextLevelPrograms';
-import { NextLevelCTA } from './NextLevelCTA';
+import { NextLevelHowItWorks } from './NextLevelTestimonials';
+import { NextLevelSmsCoaching, NextLevelCTA } from './NextLevelCTA';
+import { NextLevelFAQ } from './NextLevelFAQ';
 import { NextLevelStickyCTA } from './NextLevelStickyCTA';
 import { NextLevelFooter } from './NextLevelFooter';
 
-interface NextLevelLandingPageProps {
-  startUrl?: string;
-}
-
-export function NextLevelLandingPage({ startUrl = '/start' }: NextLevelLandingPageProps) {
+export function NextLevelLandingPage() {
   return (
-    <div className="min-h-screen bg-white">
-      {/* Navigation Overlay */}
-      <nav className="absolute top-0 left-0 right-0 z-50 p-4 md:p-6 flex justify-between items-center container mx-auto">
-        <Link href="/" className="text-white font-bold text-2xl tracking-tighter">
-          <Image
-            src="/WordmarkWhite.png"
-            alt="GymText"
-            width={100}
-            height={24}
-            className="h-6 md:h-7 w-auto"
-          />
-        </Link>
-        <Link
-          href={startUrl}
-          className="bg-white/10 backdrop-blur-md border border-white/20 text-white px-4 md:px-5 py-2 rounded-full text-xs md:text-sm font-semibold hover:bg-white hover:text-black transition-all"
+    <div className="min-h-screen bg-nlb-dark text-white">
+      <nav className="absolute top-0 left-0 right-0 z-50 px-4 md:px-8 py-5 flex justify-between items-center">
+        <div className="flex items-center gap-3">
+          <span className="hidden sm:inline text-[10px] tracking-[0.2em] text-white/50 font-medium">POWERED BY</span>
+          <Link href="/" aria-label="GymText">
+            <Image
+              src="/WordmarkWhite.png"
+              alt="GymText"
+              width={100}
+              height={24}
+              className="h-5 md:h-6 w-auto"
+              priority
+            />
+          </Link>
+        </div>
+        <div className="hidden md:flex items-center gap-7 text-[11px] tracking-[0.18em] text-white/70 font-semibold">
+          <a href="#schedule" className="hover:text-white transition-colors">SCHEDULE</a>
+          <a href="#coach" className="hover:text-white transition-colors">COACH</a>
+          <a href="#pricing" className="hover:text-white transition-colors">PRICING</a>
+          <a href="#faq" className="hover:text-white transition-colors">FAQ</a>
+        </div>
+        <a
+          href="#pricing"
+          className="bg-nlb-orange text-white text-[11px] md:text-xs tracking-[0.18em] font-bold px-4 md:px-5 py-2.5 rounded-full hover:brightness-110 transition-all"
         >
-          Get Started
-        </Link>
+          RESERVE SPOT
+        </a>
       </nav>
 
-      <NextLevelHero startUrl={startUrl} />
+      <NextLevelHero />
       <NextLevelStatsBar />
+      <NextLevelCampDays />
       <NextLevelBioSection />
-      <NextLevelPrograms startUrl={startUrl} />
-      <NextLevelTestimonials />
-      <NextLevelCTA startUrl={startUrl} />
+      <NextLevelHowItWorks />
+      <NextLevelPricing />
+      <NextLevelSmsCoaching />
+      <NextLevelFAQ />
+      <NextLevelCTA />
       <NextLevelFooter />
-      <NextLevelStickyCTA startUrl={startUrl} />
+      <NextLevelStickyCTA />
     </div>
   );
 }

@@ -1,73 +1,50 @@
-import { Star } from 'lucide-react';
-
-interface Testimonial {
-  quote: string;
-  name: string;
-  role: string;
-}
-
-const TESTIMONIALS: Testimonial[] = [
+const STEPS = [
   {
-    quote: 'Coach Henry pushes you to be better every single day. The fundamentals I learned completely changed my game.',
-    name: 'MJCC Athlete',
-    role: 'Next Level Basketball Program',
+    number: '01',
+    title: 'PICK YOUR PLAN',
+    body:
+      'Choose Basic ($25/mo) or Premium ($60/mo). Both include the May 29–30 camp and daily SMS coaching.',
   },
   {
-    quote: 'The FIRE Workout is no joke. My speed and conditioning improved dramatically in just a few weeks.',
-    name: 'Training Client',
-    role: 'FIRE Workout Participant',
+    number: '02',
+    title: 'GET DAILY WORKOUTS',
+    body:
+      "Coach Rhynia's plan lands in your messages every morning — drills, reps, and a clear focus for the day.",
   },
   {
-    quote: 'My son has grown so much as a player under Coach Rhynia. His attention to fundamentals is exactly what young athletes need.',
-    name: 'Basketball Parent',
-    role: 'Singleton CC Program',
+    number: '03',
+    title: 'SHOW UP TO CAMP',
+    body:
+      'Two days, two sessions, in-person with Coach Rhynia at St. Francis Middle School in Memphis.',
   },
 ];
 
-export function NextLevelTestimonials() {
+export function NextLevelHowItWorks() {
   return (
-    <section className="py-16 md:py-24 bg-gray-900 relative">
-      {/* Texture overlay */}
-      <div
-        className="absolute inset-0 opacity-5"
-        style={{
-          backgroundImage: 'radial-gradient(#ffffff 1px, transparent 1px)',
-          backgroundSize: '30px 30px',
-        }}
-      ></div>
-
-      <div className="container mx-auto px-4 relative z-10">
-        <div className="text-center mb-10 md:mb-16">
-          <h2 className="text-nlb-orange font-bold tracking-wider uppercase mb-2 text-sm">
-            What Athletes Say
+    <section className="bg-nlb-dark text-white py-20 md:py-28 border-t border-white/5">
+      <div className="max-w-7xl mx-auto px-4 md:px-8">
+        <div className="grid lg:grid-cols-[1fr_1.6fr] gap-8 items-end mb-12">
+          <h2 className="font-display-condensed text-5xl md:text-7xl uppercase leading-[0.95] tracking-tight">
+            <span className="block">How it</span>
+            <span className="block text-nlb-orange">works.</span>
           </h2>
-          <h3 className="text-3xl md:text-5xl font-display font-bold text-white mb-4">
-            Real Results, Real Growth
-          </h3>
-          <p className="text-gray-400 max-w-2xl mx-auto text-sm md:text-base">
-            Athletes across Memphis trust Coach Henry to take their skills to the next level.
-            Here&apos;s what they have to say.
+          <p className="text-base md:text-lg text-white/65 leading-relaxed max-w-2xl">
+            Camp registration is your GymText sign-up. Pick a plan, lock in your spot, and start
+            getting daily workouts the day after you join.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
-          {TESTIMONIALS.map((testimonial, index) => (
+        <div className="grid md:grid-cols-3 gap-5">
+          {STEPS.map((s) => (
             <div
-              key={index}
-              className="bg-gray-800 rounded-xl border border-gray-700 p-6 md:p-8 hover:border-nlb-orange/50 transition-all duration-300"
+              key={s.number}
+              className="rounded-2xl bg-white/[0.03] border border-white/10 p-7"
             >
-              <div className="flex gap-1 mb-4">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="w-4 h-4 text-nlb-orange fill-nlb-orange" />
-                ))}
+              <div className="font-display-condensed text-5xl text-nlb-orange leading-none mb-5">
+                {s.number}
               </div>
-              <p className="text-gray-300 mb-6 text-sm md:text-base leading-relaxed">
-                &quot;{testimonial.quote}&quot;
-              </p>
-              <div>
-                <p className="text-white font-bold text-sm">{testimonial.name}</p>
-                <p className="text-gray-500 text-xs">{testimonial.role}</p>
-              </div>
+              <div className="text-sm tracking-[0.2em] text-white font-bold mb-3">{s.title}</div>
+              <p className="text-sm text-white/65 leading-relaxed">{s.body}</p>
             </div>
           ))}
         </div>

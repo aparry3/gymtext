@@ -16,6 +16,7 @@ export default {
     extend: {
       fontFamily: {
         display: ['var(--font-oswald)', 'Oswald', 'sans-serif'],
+        'display-condensed': ['var(--font-anton)', 'Impact', 'Arial Narrow', 'sans-serif'],
       },
       colors: {
         // Mount St. Joseph / Pat Clatchey theme

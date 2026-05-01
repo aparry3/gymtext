@@ -61,6 +61,13 @@
 .hover\:border-nlb-orange\/50:hover {
   border-color: rgb(234 88 12 / 0.5);
 }
+.border-nlb-orange\/40 {
+  border-color: rgb(234 88 12 / 0.4);
+}
+.border-y-nlb-orange\/40 {
+  border-top-color: rgb(234 88 12 / 0.4);
+  border-bottom-color: rgb(234 88 12 / 0.4);
+}
 .from-nlb-orange\/80 {
   --tw-gradient-from: rgb(234 88 12 / 0.8) var(--tw-gradient-from-position);
   --tw-gradient-to: rgb(234 88 12 / 0) var(--tw-gradient-to-position);
@@ -70,4 +77,20 @@
   --tw-shadow: 0 0 20px rgba(234, 88, 12, 0.4);
   --tw-shadow-colored: 0 0 20px rgba(234, 88, 12, 0.4);
   box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+}
+
+.font-display-condensed {
+  font-family: var(--font-anton), Impact, "Arial Narrow", sans-serif;
+  letter-spacing: 0.01em;
+}
+
+@keyframes nlb-marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.nlb-marquee-track {
+  animation: nlb-marquee 40s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .nlb-marquee-track { animation: none; }
 }
