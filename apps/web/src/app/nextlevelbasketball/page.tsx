@@ -9,7 +9,22 @@ const DESCRIPTION =
 export const metadata: Metadata = {
   title: TITLE,
   description: DESCRIPTION,
-  openGraph: { title: TITLE, description: DESCRIPTION, type: 'website' },
+  openGraph: {
+    title: TITLE,
+    description: DESCRIPTION,
+    type: 'website',
+    images: [
+      'https://1ozfgznamn324hl7.public.blob.vercel-storage.com/programs/01c8cee2-49ce-4972-9b8a-48ef66321191/sms-image-generated-1777915820910.png',
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: TITLE,
+    description: DESCRIPTION,
+    images: [
+      'https://1ozfgznamn324hl7.public.blob.vercel-storage.com/programs/01c8cee2-49ce-4972-9b8a-48ef66321191/sms-image-generated-1777915820910.png',
+    ],
+  },
 };
 
 export default function NextLevelBasketballPage() {
