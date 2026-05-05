@@ -1,16 +1,23 @@
 import type { Metadata } from 'next';
-import { ClatcheyLandingPage } from '@/components/pages/owner-landing/ClatcheyLandingPage';
+import { ClatcheyLandingPage } from '@/components/pages/owner-landing/clatchey';
 import './clatchey.css';
 
+const TITLE = 'Coach Pat Clatchey · Daily SMS Coaching · GymText';
+const DESCRIPTION =
+  '30 years of winning, now on your phone. Daily SMS basketball coaching from Hall-of-Fame coach Pat Clatchey — 850+ wins, 3 NBA players, 70+ NCAA Division I athletes. $25/mo. Cancel anytime.';
+
 export const metadata: Metadata = {
-  title: 'Train with Coach Pat Clatchey | GymText Legend Series',
-  description:
-    'Get championship-caliber basketball training from future Hall of Famer Pat Clatchey. 850+ wins, 3 NBA players developed, 70+ NCAA athletes. Workouts delivered via SMS.',
+  title: TITLE,
+  description: DESCRIPTION,
   openGraph: {
-    title: 'Train with Coach Pat Clatchey | GymText Legend Series',
-    description:
-      'Get championship-caliber basketball training from future Hall of Famer Pat Clatchey. 850+ wins, 3 NBA players developed.',
+    title: TITLE,
+    description: DESCRIPTION,
     type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: TITLE,
+    description: DESCRIPTION,
   },
 };
 
