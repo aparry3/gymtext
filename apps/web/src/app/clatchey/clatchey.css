@@ -1,6 +1,125 @@
-/* Pat Clatchey / Mount St. Joseph theme colors */
+/* Pat Clatchey / Mt. St. Joseph theme colors — purple & cream */
 :root {
-  --msj-purple: #4c1d95;
-  --msj-gold: #fbbf24;
-  --msj-dark: #1a1a1a;
+  --msj-night: #14082a;        /* near-black with purple cast */
+  --msj-purple-deep: #2e1855;  /* mid-tone deep purple */
+  --msj-purple: #7c3aed;       /* primary accent purple */
+  --msj-purple-tint: #d8b4fe;  /* muted highlight on dark */
+  --msj-cream: #f6efe1;        /* light brand color */
+
+  /* Tuple components for rgb(R G B / opacity) declarations */
+  --msj-night-rgb: 20 8 42;
+  --msj-purple-deep-rgb: 46 24 85;
+  --msj-purple-rgb: 124 58 237;
+  --msj-purple-tint-rgb: 216 180 254;
+  --msj-cream-rgb: 246 239 225;
+}
+
+/* Solid backgrounds */
+.bg-msj-night { background-color: var(--msj-night); }
+.bg-msj-purple-deep { background-color: var(--msj-purple-deep); }
+.bg-msj-purple { background-color: var(--msj-purple); }
+.bg-msj-purple-tint { background-color: var(--msj-purple-tint); }
+.bg-msj-cream { background-color: var(--msj-cream); }
+
+/* Solid text */
+.text-msj-night { color: var(--msj-night); }
+.text-msj-purple-deep { color: var(--msj-purple-deep); }
+.text-msj-purple { color: var(--msj-purple); }
+.text-msj-purple-tint { color: var(--msj-purple-tint); }
+.text-msj-cream { color: var(--msj-cream); }
+
+/* Solid borders */
+.border-msj-night { border-color: var(--msj-night); }
+.border-msj-purple-deep { border-color: var(--msj-purple-deep); }
+.border-msj-purple { border-color: var(--msj-purple); }
+.border-msj-purple-tint { border-color: var(--msj-purple-tint); }
+.border-msj-cream { border-color: var(--msj-cream); }
+
+/* Background opacity variants */
+.bg-msj-purple\/10 { background-color: rgb(var(--msj-purple-rgb) / 0.1); }
+.bg-msj-purple\/20 { background-color: rgb(var(--msj-purple-rgb) / 0.2); }
+.bg-msj-purple\/90 { background-color: rgb(var(--msj-purple-rgb) / 0.9); }
+.bg-msj-purple-deep\/5 { background-color: rgb(var(--msj-purple-deep-rgb) / 0.05); }
+.bg-msj-purple-deep\/10 { background-color: rgb(var(--msj-purple-deep-rgb) / 0.1); }
+.bg-msj-cream\/5 { background-color: rgb(var(--msj-cream-rgb) / 0.05); }
+.bg-msj-cream\/10 { background-color: rgb(var(--msj-cream-rgb) / 0.1); }
+.bg-msj-night\/85 { background-color: rgb(var(--msj-night-rgb) / 0.85); }
+.bg-msj-night\/10 { background-color: rgb(var(--msj-night-rgb) / 0.1); }
+
+/* Border opacity variants */
+.border-msj-purple\/30 { border-color: rgb(var(--msj-purple-rgb) / 0.3); }
+.border-msj-purple\/40 { border-color: rgb(var(--msj-purple-rgb) / 0.4); }
+.border-msj-purple-tint\/40 { border-color: rgb(var(--msj-purple-tint-rgb) / 0.4); }
+.border-msj-purple-deep\/10 { border-color: rgb(var(--msj-purple-deep-rgb) / 0.1); }
+.border-msj-cream\/5 { border-color: rgb(var(--msj-cream-rgb) / 0.05); }
+.border-msj-cream\/10 { border-color: rgb(var(--msj-cream-rgb) / 0.1); }
+.border-msj-cream\/20 { border-color: rgb(var(--msj-cream-rgb) / 0.2); }
+.border-msj-cream\/25 { border-color: rgb(var(--msj-cream-rgb) / 0.25); }
+.border-y-msj-purple\/40 {
+  border-top-color: rgb(var(--msj-purple-rgb) / 0.4);
+  border-bottom-color: rgb(var(--msj-purple-rgb) / 0.4);
+}
+
+/* Text opacity variants — cream on dark sections */
+.text-msj-cream\/35 { color: rgb(var(--msj-cream-rgb) / 0.35); }
+.text-msj-cream\/40 { color: rgb(var(--msj-cream-rgb) / 0.4); }
+.text-msj-cream\/50 { color: rgb(var(--msj-cream-rgb) / 0.5); }
+.text-msj-cream\/55 { color: rgb(var(--msj-cream-rgb) / 0.55); }
+.text-msj-cream\/60 { color: rgb(var(--msj-cream-rgb) / 0.6); }
+.text-msj-cream\/65 { color: rgb(var(--msj-cream-rgb) / 0.65); }
+.text-msj-cream\/70 { color: rgb(var(--msj-cream-rgb) / 0.7); }
+.text-msj-cream\/75 { color: rgb(var(--msj-cream-rgb) / 0.75); }
+.text-msj-cream\/85 { color: rgb(var(--msj-cream-rgb) / 0.85); }
+.text-msj-cream\/90 { color: rgb(var(--msj-cream-rgb) / 0.9); }
+
+/* Text opacity variants — purple-deep on cream sections */
+.text-msj-purple-deep\/50 { color: rgb(var(--msj-purple-deep-rgb) / 0.5); }
+.text-msj-purple-deep\/60 { color: rgb(var(--msj-purple-deep-rgb) / 0.6); }
+.text-msj-purple-deep\/65 { color: rgb(var(--msj-purple-deep-rgb) / 0.65); }
+.text-msj-purple-deep\/70 { color: rgb(var(--msj-purple-deep-rgb) / 0.7); }
+.text-msj-purple-deep\/75 { color: rgb(var(--msj-purple-deep-rgb) / 0.75); }
+.text-msj-purple-deep\/80 { color: rgb(var(--msj-purple-deep-rgb) / 0.8); }
+
+/* Gradient stops (used in hero portrait + player cards) */
+.from-msj-night {
+  --tw-gradient-from: var(--msj-night) var(--tw-gradient-from-position, );
+  --tw-gradient-to: rgb(var(--msj-night-rgb) / 0) var(--tw-gradient-to-position, );
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+}
+.via-msj-night\/10 {
+  --tw-gradient-to: rgb(var(--msj-night-rgb) / 0) var(--tw-gradient-to-position, );
+  --tw-gradient-stops: var(--tw-gradient-from), rgb(var(--msj-night-rgb) / 0.1) var(--tw-gradient-via-position, ), var(--tw-gradient-to);
+}
+.from-msj-night\/85 {
+  --tw-gradient-from: rgb(var(--msj-night-rgb) / 0.85) var(--tw-gradient-from-position, );
+  --tw-gradient-to: rgb(var(--msj-night-rgb) / 0) var(--tw-gradient-to-position, );
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+}
+
+/* Hover variants */
+.hover\:bg-msj-purple:hover { background-color: var(--msj-purple); }
+.hover\:bg-msj-purple-deep:hover { background-color: var(--msj-purple-deep); }
+.hover\:bg-msj-cream:hover { background-color: var(--msj-cream); }
+.hover\:text-msj-purple:hover { color: var(--msj-purple); }
+.hover\:text-msj-purple-tint:hover { color: var(--msj-purple-tint); }
+.hover\:text-msj-cream:hover { color: var(--msj-cream); }
+.hover\:text-msj-night:hover { color: var(--msj-night); }
+.hover\:border-msj-purple:hover { border-color: var(--msj-purple); }
+
+/* Display-condensed font (Anton, mirrors NLB) */
+.font-display-condensed {
+  font-family: var(--font-anton), Impact, "Arial Narrow", sans-serif;
+  letter-spacing: 0.01em;
+}
+
+/* Marquee animation */
+@keyframes msj-marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.msj-marquee-track {
+  animation: msj-marquee 40s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .msj-marquee-track { animation: none; }
 }
