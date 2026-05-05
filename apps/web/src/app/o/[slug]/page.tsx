@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
-import { ClatcheyLandingPage } from '@/components/pages/owner-landing/ClatcheyLandingPage';
+import { ClatcheyLandingPage } from '@/components/pages/owner-landing/clatchey';
 import { MikeyLandingPage } from '@/components/pages/owner-landing/MikeyLandingPage';
 import { NextLevelLandingPage } from '@/components/pages/owner-landing/next-level-basketball';
 import './clatchey.css';

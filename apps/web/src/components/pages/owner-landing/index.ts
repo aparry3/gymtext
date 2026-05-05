@@ -1,13 +1,3 @@
-export { ClatcheyLandingPage } from './ClatcheyLandingPage';
-export { ClatcheyHero } from './ClatcheyHero';
-export { ClatcheyStatsBar } from './ClatcheyStatsBar';
-export { ClatcheyBioSection } from './ClatcheyBioSection';
-export { ClatcheyPlayerShowcase } from './ClatcheyPlayerShowcase';
-export { ClatcheyProgramTracks } from './ClatcheyProgramTracks';
-export { ClatcheyCTA } from './ClatcheyCTA';
-export { ClatcheyStickyCTA } from './ClatcheyStickyCTA';
-export { ClatcheyFooter } from './ClatcheyFooter';
-
 export { MikeyLandingPage } from './MikeyLandingPage';
 export { MikeyHero } from './MikeyHero';
 export { MikeyStatsBar } from './MikeyStatsBar';
