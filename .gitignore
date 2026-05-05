@@ -64,3 +64,6 @@ _logs/
 _designs/
 
 envs/
+
+# superpowers brainstorming workspace
+.superpowers/
