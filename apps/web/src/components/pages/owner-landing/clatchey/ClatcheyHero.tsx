@@ -74,17 +74,17 @@ function PortraitCard() {
         unoptimized
         priority
       />
-      <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-msj-night via-msj-night/85 to-transparent pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-t from-msj-night from-22% via-msj-night/55 via-50% to-transparent to-70% pointer-events-none" />
       <div className="absolute bottom-5 left-5 right-5 flex items-end justify-between gap-3">
         <div>
-          <div className="text-[10px] tracking-[0.22em] text-msj-cream/85 font-semibold mb-1 [text-shadow:0_1px_2px_rgba(0,0,0,0.6)]">
+          <div className="text-[10px] tracking-[0.22em] text-msj-cream/90 font-semibold mb-1 [text-shadow:0_2px_6px_rgba(0,0,0,0.9)]">
             COACH PAT CLATCHEY
           </div>
-          <div className="text-[11px] tracking-[0.18em] text-msj-cream font-bold uppercase [text-shadow:0_1px_2px_rgba(0,0,0,0.6)]">
+          <div className="text-[11px] tracking-[0.18em] text-msj-cream font-bold uppercase [text-shadow:0_2px_6px_rgba(0,0,0,0.9)]">
             Head Coach · Mt. St. Joseph Gaels
           </div>
         </div>
-        <div className="text-[10px] tracking-[0.22em] text-msj-cream/85 font-semibold [text-shadow:0_1px_2px_rgba(0,0,0,0.6)]">
+        <div className="text-[10px] tracking-[0.22em] text-msj-cream/90 font-semibold [text-shadow:0_2px_6px_rgba(0,0,0,0.9)]">
           SINCE 1992
         </div>
       </div>

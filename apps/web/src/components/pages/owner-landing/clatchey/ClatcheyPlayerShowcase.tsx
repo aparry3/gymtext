@@ -77,7 +77,7 @@ export function ClatcheyPlayerShowcase() {
                   className="object-cover group-hover:scale-105 transition-transform duration-700"
                   unoptimized
                 />
-                <div className="absolute inset-x-0 bottom-0 h-3/5 bg-gradient-to-t from-msj-night via-msj-night/80 to-transparent"></div>
+                <div className="absolute inset-0 bg-gradient-to-t from-msj-night from-38% via-msj-night/40 via-60% to-transparent to-80%"></div>
               </div>
 
               <div className="absolute bottom-0 left-0 right-0 p-3 md:p-5">
@@ -86,13 +86,13 @@ export function ClatcheyPlayerShowcase() {
                     <BadgeCheck className="w-3 h-3" /> NBA
                   </div>
                 )}
-                <h4 className="text-base md:text-xl font-bold text-msj-cream mb-0.5 md:mb-1 [text-shadow:0_1px_2px_rgba(0,0,0,0.6)]">
+                <h4 className="text-base md:text-xl font-bold text-msj-cream mb-0.5 md:mb-1 [text-shadow:0_2px_6px_rgba(0,0,0,0.9)]">
                   {player.name}
                 </h4>
-                <p className="text-msj-purple-tint font-medium text-xs md:text-sm line-clamp-1 [text-shadow:0_1px_2px_rgba(0,0,0,0.6)]">
+                <p className="text-msj-purple-tint font-medium text-xs md:text-sm line-clamp-1 [text-shadow:0_2px_6px_rgba(0,0,0,0.9)]">
                   {player.achievement}
                 </p>
-                <p className="text-msj-cream/75 text-[10px] md:text-xs mt-0.5 md:mt-1 [text-shadow:0_1px_2px_rgba(0,0,0,0.6)]">
+                <p className="text-msj-cream/80 text-[10px] md:text-xs mt-0.5 md:mt-1 [text-shadow:0_2px_6px_rgba(0,0,0,0.9)]">
                   {player.classYear}
                 </p>
               </div>
