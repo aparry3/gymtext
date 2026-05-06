@@ -1,6 +1,3 @@
-import Image from 'next/image';
-import { CLATCHEY_PORTRAIT_URL } from './ClatcheyHero';
-
 export function ClatcheyBioSection() {
   return (
     <section
@@ -8,25 +5,7 @@ export function ClatcheyBioSection() {
       className="bg-msj-cream text-msj-purple-deep py-20 md:py-28"
     >
       <div className="max-w-7xl mx-auto px-4 md:px-8 grid lg:grid-cols-[1fr_1.2fr] gap-10 lg:gap-16 items-center">
-        <div className="relative w-full aspect-[4/5] rounded-2xl overflow-hidden bg-msj-purple-deep/5 border border-msj-purple-deep/10">
-          <Image
-            src={CLATCHEY_PORTRAIT_URL}
-            alt="Coach Pat Clatchey"
-            fill
-            sizes="(min-width: 1024px) 40vw, 100vw"
-            className="object-cover"
-            unoptimized
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-msj-night/85 via-msj-night/10 to-transparent pointer-events-none" />
-          <div className="absolute bottom-5 left-5 right-5">
-            <p className="font-display-condensed text-2xl md:text-3xl text-msj-cream uppercase leading-tight">
-              &ldquo;Fundamentals first.<br />Victory follows.&rdquo;
-            </p>
-            <p className="text-[10px] tracking-[0.22em] text-msj-cream/70 font-semibold mt-2">
-              — COACH PAT CLATCHEY
-            </p>
-          </div>
-        </div>
+        <QuoteCard />
 
         <div>
           <div className="text-[10px] tracking-[0.28em] text-msj-purple font-bold mb-4">
@@ -60,6 +39,43 @@ export function ClatcheyBioSection() {
         </div>
       </div>
     </section>
+  );
+}
+
+function QuoteCard() {
+  return (
+    <div className="relative w-full aspect-[4/5] rounded-2xl overflow-hidden bg-msj-purple-deep text-msj-cream p-8 md:p-12 flex flex-col justify-between">
+      <div
+        aria-hidden
+        className="absolute inset-0 pointer-events-none opacity-70"
+        style={{
+          background:
+            'radial-gradient(ellipse 70% 60% at 100% 0%, rgba(124,58,237,0.35), transparent 65%)',
+        }}
+      />
+
+      <div className="relative flex items-start justify-between text-[10px] tracking-[0.28em] text-msj-cream/65 font-bold">
+        <span>THE GAEL WAY</span>
+        <span>EST. 1992</span>
+      </div>
+
+      <div className="relative">
+        <div
+          aria-hidden
+          className="font-display-condensed text-msj-purple-tint text-[8rem] md:text-[10rem] leading-[0.7] select-none -mb-2"
+        >
+          &ldquo;
+        </div>
+        <p className="font-display-condensed text-4xl md:text-5xl lg:text-6xl text-msj-cream uppercase leading-[0.95] tracking-tight">
+          Fundamentals first.
+          <br />
+          Victory follows.
+        </p>
+        <p className="text-[10px] tracking-[0.28em] text-msj-cream/70 font-semibold mt-6">
+          — COACH PAT CLATCHEY
+        </p>
+      </div>
+    </div>
   );
 }
 
